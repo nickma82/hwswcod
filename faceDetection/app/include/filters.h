@@ -9,5 +9,4 @@
 void skinFilter(image_t *inputImage, image_t *outputImage);
 void erodeDilateFilter(image_t *inputImage, image_t *outputImage, uint8_t op);
 
-
 #endif // _filters_h_
