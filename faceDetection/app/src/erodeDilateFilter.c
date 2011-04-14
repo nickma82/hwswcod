@@ -10,7 +10,6 @@
 #define FOREGROUND_COLOR_G   0xff
 #define FOREGROUND_COLOR_B   0xff
 
-
 void erodeDilateFilter(image_t *inputImage, image_t *outputImage, uint8_t op)
 {
 	int x, y, dx, dy, wx, wy;
