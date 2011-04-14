@@ -4,10 +4,10 @@
 #include "image.h"
 
 typedef struct {
-  int topLeftX;
-  int topLeftY;
-  int bottomRightX;
-  int bottomRightY;
+	int topLeftX;
+	int topLeftY;
+	int bottomRightX;
+	int bottomRightY;
 } rect_t;
 
 void detectFace(image_t *faceMask, image_t *rawImage);
