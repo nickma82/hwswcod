@@ -1,2 +1,11 @@
 *~
 *.*~
+*.rpt
+*.done
+*.smsg
+*.summary
+*.pin
+*.qdf
+*.srec
+*.sof
+*.o

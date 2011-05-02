@@ -1,0 +1,23 @@
+20110501 - nick
+##### Log zum Aufzeichnen von Vergleichswerten #####
+##### Erster program upload: 
+[c0726179@ecslab4 app]$ ../tester/tester main.srec testimages/armstrong.tga testimages_out/armstrong.tga
+Downloading program, filesize: 194282 bytes.
+Downloading image "testimages/armstrong.tga", filesize: 921644 bytes.
+
+====== Debug messages of your program ======
+Images received, starting computation.
+selected rect: topLeft=(344, 106), bottomRight=(478, 307)
+============================================
+
+Computation completed, duration: 105.346 sec, 0.009 fps).
+
+##### ACHTUNG #####
+Jedes Mal vor Neuaufspielen der Software den FPGA Reseten (Key0)
+
+##### Compiling app code #####
+make TEST=1
+
+##### Documentation #####
+-) speqars 32 Header File location:
+	/opt/spear2_toolchain/spear32/include/drivers

@@ -72,23 +72,28 @@ int main(int argc, char **argv)
 					SDRAM_COLSIZE_1024 | SDRAM_CMD_LOAD_CMD_REG | 389;
 	#endif
 	
+
 	#ifdef TEST
 		computeSingleImage(argv[1], argv[2]);
 	#else
-		while (1) {
+		dis7seg_displayHexUInt32(&dispHandle, 0, 0x41);
+		printf("Hello\n", &argv[1]);
+		printf("erste Ausgaben\n", &argv[1]);
+		//computeSingleImage(argv[1], argv[2]); //testweise eingefügt
+		//while (1) {
 			// TODO:
 			// get picture from camera
 			// perform face detection
 			// outout result image on screen
-		}  
+		//}
 	#endif
-	
 	
 	#ifdef __SPEAR32__
 		counter_releaseHandle(&counterHandle);
 		dis7seg_releaseHandle(&dispHandle);
 	#endif
 	
+	dis7seg_displayHexUInt32(&dispHandle, 0, 0x00);
 	return 0;
 }
 
@@ -143,7 +148,7 @@ void computeSingleImage(const char *sourcePath, const char *targetPath)
 		// read image data
 		UART_read(0, (char *)inputImage.data, inputImage.dataLength);
 		
-		printf("Images received, starting computation.\n");
+		printf("Images received, starting computationn.\n");
 	#endif
 	
 	initializeImage(&inputImage, &skinFilterImage);

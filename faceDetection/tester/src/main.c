@@ -53,6 +53,7 @@ int main(int argc, char **argv)
   uint32_t cycles;
   float seconds, fps;
   char buffer[64];
+  char debug_only = 0;
 
   if (argc != 4) {
     usage();
@@ -106,33 +107,40 @@ int main(int argc, char **argv)
   
   // downloading image
   f = fopen(argv[2], "r");
-  if (!f) {
-    printf("Image file <%s> not found", argv[2]);
-    exit(1);
+  
+  //skip image transfer if no image was found
+  if (f) {
+	  fseek(f, 0, SEEK_END);
+	  filesize = ftell(f);
+	  fseek(f, 0, SEEK_SET);
+	  imageData = (unsigned char *)malloc(filesize);
+	  fread(imageData, 1, filesize, f);
+	  fclose(f);
+	
+	  // wait until program has been started on target
+	  sleep(2);
+	
+	  printf("Downloading image \"%s\", filesize: %d bytes.\n", argv[2], filesize);
+	
+	  
+	  // send image file size
+	  write(serialfd, &filesize, sizeof(filesize));
+	  // send image data
+	  write(serialfd, imageData, filesize);
+	  free(imageData);
+	  
+	  options.c_lflag |= (ICANON);
+	  options.c_cc[VMIN]     = 0;
+	  tcsetattr(serialfd, TCSANOW, &options);	  
   }
-  fseek(f, 0, SEEK_END);
-  filesize = ftell(f);
-  fseek(f, 0, SEEK_SET);
-  imageData = (unsigned char *)malloc(filesize);
-  fread(imageData, 1, filesize, f);
-  fclose(f);
-
-  // wait until program has been started on target
-  sleep(2);
-
-  printf("Downloading image \"%s\", filesize: %d bytes.\n", argv[2], filesize);
-
+  else {
+    printf("Image file <%s> not found\n", argv[2]);
+    //exit(1);
+    printf("Entering debug only mode");
+    debug_only=1;
+  }
   
-  // send image file size
-  write(serialfd, &filesize, sizeof(filesize));
-  // send image data
-  write(serialfd, imageData, filesize);
-  free(imageData);
   
-  options.c_lflag |= (ICANON);
-  options.c_cc[VMIN]     = 0;
-  tcsetattr(serialfd, TCSANOW, &options);
-
   printf("\n====== Debug messages of your program ======\n");
   // print debug messages
   while (1) {
@@ -158,23 +166,26 @@ int main(int argc, char **argv)
 
   printf("Computation completed, duration: %.3f sec, %.3f fps).\n", seconds, fps);
 
-  UART_read(serialfd, (char *)&filesize, sizeof(filesize));
-
-  f = fopen(argv[3], "w");
-  if (!f) {
-    printf("Image file <%s> couldn't be opened", argv[3]);
-    exit(1);
-  }
-    
-  while (filesize > 0) {
-    int bytesToRead = ((filesize > 1024) ? 1024 : filesize);
-    UART_read(serialfd, (char *)imageDataBlock, bytesToRead);
-    fwrite(imageDataBlock, 1, bytesToRead, f);
-    filesize -= bytesToRead;      
+  
+  if(!debug_only) { //Check if debug only mode
+	  UART_read(serialfd, (char *)&filesize, sizeof(filesize));
+	
+	  f = fopen(argv[3], "w");
+	  if (!f) {
+		printf("Image file <%s> couldn't be opened", argv[3]);
+		exit(1);
+	  }
+		
+	  while (filesize > 0) {
+		int bytesToRead = ((filesize > 1024) ? 1024 : filesize);
+		UART_read(serialfd, (char *)imageDataBlock, bytesToRead);
+		fwrite(imageDataBlock, 1, bytesToRead, f);
+		filesize -= bytesToRead;      
+	  }
+	  
+	  fclose(f);
   }
   
-  fclose(f);
-
   close(serialfd);
 
   return 0;
