@@ -13,8 +13,12 @@
 
 #define CLKPERIOD 20
 #define PRESCALER 4
-static const char* counterNames[]={"SkinFilter Gesamt", "Erode", "Dilate", 
-		"DetectFace", "Ausgabe"}; //, "SkinFilter 1pxl", "SkinFilter Convert Colour"};
+static const char* counterNames[]={
+	"SkinFilter",
+	"Erode",
+	"Dilate", 
+	"DetectFace"
+};
 
 int open_port(void)
 {
@@ -55,6 +59,7 @@ int main(int argc, char **argv)
   unsigned char imageDataBlock[1024];
   int ret;
   uint32_t cycles;
+  unsigned short counterSize;
   float mseconds, msecSum=0, fps;
   char buffer[64];
   int i;
@@ -157,20 +162,20 @@ int main(int argc, char **argv)
   
   
   //print out counters
-  printf("Computation completed, durations:\n");
-  for(i=0; i<ARRAY_SIZE(counterNames); i++) {
+  printf("Durations:\n");
+  UART_read(serialfd, (char *)&counterSize, sizeof(counterSize));
+  for(i=0; i< counterSize; i++) {
     UART_read(serialfd, (char *)&cycles, sizeof(cycles));
     mseconds = cycles;
     mseconds /= 1000000;
     mseconds *= CLKPERIOD * PRESCALER;
     msecSum += mseconds;
-    printf("%s, %.5f ms\n", counterNames[i], mseconds);
+    printf("  %s, %.5f ms\n", counterNames[i], mseconds);
   }
   
   fps = 1000 / msecSum;
-  printf("Summe, %.3f sec, %.3f fps\n", msecSum, fps);
-  
-  
+  printf("Sum: %.3f ms, %.3f fps\n", msecSum, fps);
+    
   
   UART_read(serialfd, (char *)&filesize, sizeof(filesize));
 
