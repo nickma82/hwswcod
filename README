@@ -1,6 +1,24 @@
 20110501 - nick
 ##### Log zum Aufzeichnen von Vergleichswerten #####
 ##### Erster program upload: 
+"testimages/armstrong_mini.tga"
+Computation completed, durations:
+SkinFilter Gesamt, 3689.35327 ms
+Erode, 116.19432 ms
+Dilate, 692.60596 ms
+DetectFace, 47.99192 ms
+Ausgabe, 347.68616 ms
+Summe, 4893.831 sec, 0.204 fps
+
+"armstrong.tga"
+Computation completed, durations:
+SkinFilter Gesamt, 92370.76562 ms
+Erode, 3294.63745 ms
+Dilate, 17259.44531 ms
+DetectFace, 1172.48279 ms
+Ausgabe, 1198.90942 ms
+Summe, 115296.242 sec, 0.009 fps
+
 
 
 ##### ACHTUNG #####
