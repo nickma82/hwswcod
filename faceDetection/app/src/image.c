@@ -15,14 +15,13 @@ ycbcr_color_t getYCbCrColorValue(image_t *i, int x, int y)
 	rgb_color_t c1 = getRGBColorValue(i, x, y);
 	ycbcr_color_t result;
 	
-	const float f = 1.0f / 255.0f;
-	float rf = c1.r * f;
-	float gf = c1.g * f;
-	float bf = c1.b * f; 
+	uint32_t rf = (1000 * c1.r) >> 8;
+	uint32_t gf = (1000 * c1.g) >> 8;
+	uint32_t bf = (1000 * c1.b) >> 8;
 	
-	result.y = 0.299f * rf + 0.587f * gf + 0.114f * bf;
-	result.cb = -0.168736f * rf + -0.331264f * gf + 0.5f * bf;
-	result.cr = 0.5f * rf + -0.418688f * gf + -0.081312f * bf;
+	result.y = 299000 * rf + 587000 * gf + 114000 * bf;
+	result.cb = -168736 * rf + -331264 * gf + 500000 * bf;
+	result.cr = 500000 * rf + -418688 * gf + -81312 * bf;
 	
 	return result;
 }

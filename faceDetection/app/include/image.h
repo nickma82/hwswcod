@@ -10,9 +10,9 @@ typedef struct {
 } rgb_color_t;
 
 typedef struct {
-	float y;
-	float cb;
-	float cr;
+	uint32_t y;
+	uint32_t cb;
+	uint32_t cr;
 } ycbcr_color_t;
 
 typedef struct {

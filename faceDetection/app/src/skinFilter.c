@@ -4,13 +4,13 @@
 #include <machine/modules.h>
 #include <drivers/counter.h>
 
-#define Y_LOW   0.10f
-#define CB_LOW -0.15f
-#define CR_LOW  0.05f
+#define Y_LOW   100000000
+#define CB_LOW -150000000
+#define CR_LOW   50000000
 
-#define Y_HIGH  1.00f
-#define CB_HIGH 0.05f
-#define CR_HIGH 0.20f
+#define Y_HIGH  1000000000
+#define CB_HIGH   50000000
+#define CR_HIGH  200000000
 
 void skinFilter(image_t *inputImage, image_t *outputImage)
 {
