@@ -63,7 +63,9 @@ vcom  -work techmap ../../../VHDL/amba_modules/techmap/maps/allmem.vhd
 vcom  -work gaisler ../../../VHDL/amba_modules/gaisler/misc/charrom_package.vhd
 vcom  -work gaisler ../../../VHDL/amba_modules/gaisler/misc/charrom.vhd
 vcom  -work gaisler ../../../VHDL/amba_modules/techmap/maps/syncram_2p.vhd
-vcom  -work work ../../../VHDL/amba_modules/gaisler/misc/apbvga.vhd
+vcom  -work gaisler ../../../VHDL/amba_modules/gaisler/misc/apbvga.vhd
+vcom  -work gaisler ../../../VHDL/amba_modules/gaisler/misc/ahbmst.vhd
+vcom  -work gaisler ../../../VHDL/amba_modules/gaisler/misc/svgactrl.vhd
 
 vcom  -work gaisler ../../../VHDL/amba_modules/gaisler/memctrl/memctrl.vhd
 vcom  -work gaisler ../../../VHDL/amba_modules/gaisler/memctrl/sdctrl.vhd

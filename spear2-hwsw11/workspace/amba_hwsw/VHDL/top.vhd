@@ -35,8 +35,17 @@ entity top is
     sddqm       : out std_logic_vector(3 downto 0);
     sdclk       : out std_logic;
     sa          : out std_logic_vector(14 downto 0);
-    sd          : inout std_logic_vector(31 downto 0)
-    );
+    sd          : inout std_logic_vector(31 downto 0);
+    -- LCD (AMBA)
+    ltm_hd      : out std_logic;
+    ltm_vd      : out std_logic;
+    ltm_r       : out std_logic_vector(7 downto 0);
+    ltm_g       : out std_logic_vector(7 downto 0);
+    ltm_b       : out std_logic_vector(7 downto 0);
+    ltm_nclk    : out std_logic;
+    ltm_den     : out std_logic;
+    ltm_grest   : out std_logic
+  );
 end top;
 
 architecture behaviour of top is
@@ -64,7 +73,7 @@ architecture behaviour of top is
   
   -- signals for AHB slaves and APB slaves
   signal ahbmi            : ahb_master_in_type;
-  signal ahbmo            : ahb_master_out_type;
+  signal spear_ahbmo      : ahb_master_out_type;
   signal grlib_ahbmi      : ahb_mst_in_type;
   signal grlib_ahbmo      : ahb_mst_out_vector;
   signal ahbsi            : ahb_slv_in_type;
@@ -77,6 +86,12 @@ architecture behaviour of top is
   -- signals for SDRAM Controller
   signal sdi            : sdctrl_in_type;
   signal sdo            : sdctrl_out_type;
+  
+  -- signals for VGA Controller
+  signal vgao           : apbvga_out_type;
+  signal vga_clk_int    : std_logic;
+  signal vga_clk_sel    : std_logic_vector(1 downto 0);
+  signal svga_ahbmo     : ahb_mst_out_type;
   
   component altera_pll IS
     PORT
@@ -95,7 +110,7 @@ begin
     areset	 => '0',
     inclk0	 => db_clk,
     c0	         => clk,
-    c1	         => open,
+    c1	         => vga_clk_int,
     locked	 => open
     );
 
@@ -121,7 +136,7 @@ begin
       speari => speari,
       spearo => spearo,
       ahbmi  => ahbmi,
-      ahbmo  => ahbmo,
+      ahbmo  => spear_ahbmo,
       debugi_if => debugi_if,
       debugo_if => debugo_if
       );
@@ -135,7 +150,7 @@ begin
     generic map(
       defmast => 0,                  -- default master
       split   => 0,                  -- split support
-      nahbm   => 1,                  -- number of masters
+      nahbm   => 2,                  -- number of masters
       nahbs   => AHB_SLAVE_COUNT,    -- number of slaves
       fixbrst => 1                   -- support fix-length bursts
       )
@@ -149,7 +164,7 @@ begin
       );
 
 
-  process(grlib_ahbmi, ahbmo)
+  process(grlib_ahbmi, spear_ahbmo, svga_ahbmo)
   begin  -- process
     ahbmi.hgrant  <=  grlib_ahbmi.hgrant(0);
     ahbmi.hready  <=  grlib_ahbmi.hready;
@@ -157,19 +172,24 @@ begin
     ahbmi.hrdata  <=  grlib_ahbmi.hrdata;
     ahbmi.hirq    <=  grlib_ahbmi.hirq(MAX_AHB_IRQ-1 downto 0);
 
-    grlib_ahbmo             <= (others => ahbm_none);
-    grlib_ahbmo(0).hbusreq  <=  ahbmo.hbusreq;
-    grlib_ahbmo(0).hlock    <=  ahbmo.hlock;
-    grlib_ahbmo(0).htrans   <=  ahbmo.htrans;
-    grlib_ahbmo(0).haddr    <=  ahbmo.haddr;
-    grlib_ahbmo(0).hwrite   <=  ahbmo.hwrite;
-    grlib_ahbmo(0).hsize    <=  ahbmo.hsize;
-    grlib_ahbmo(0).hburst   <=  ahbmo.hburst;
-    grlib_ahbmo(0).hprot    <=  ahbmo.hprot;
-    grlib_ahbmo(0).hwdata   <=  ahbmo.hwdata;
+    for i in 2 to grlib_ahbmo'length - 1 loop
+      grlib_ahbmo(i) <= ahbm_none;
+    end loop;
+
+    grlib_ahbmo(0).hbusreq  <=  spear_ahbmo.hbusreq;
+    grlib_ahbmo(0).hlock    <=  spear_ahbmo.hlock;
+    grlib_ahbmo(0).htrans   <=  spear_ahbmo.htrans;
+    grlib_ahbmo(0).haddr    <=  spear_ahbmo.haddr;
+    grlib_ahbmo(0).hwrite   <=  spear_ahbmo.hwrite;
+    grlib_ahbmo(0).hsize    <=  spear_ahbmo.hsize;
+    grlib_ahbmo(0).hburst   <=  spear_ahbmo.hburst;
+    grlib_ahbmo(0).hprot    <=  spear_ahbmo.hprot;
+    grlib_ahbmo(0).hwdata   <=  spear_ahbmo.hwdata;
     grlib_ahbmo(0).hirq     <=  (others => '0');
     grlib_ahbmo(0).hconfig  <=  AMBA_MASTER_CONFIG;
-    grlib_ahbmo(0).hindex   <=  0;    
+    grlib_ahbmo(0).hindex   <=  0;
+
+    grlib_ahbmo(1)          <=  svga_ahbmo;
   end process;
 
 
@@ -270,7 +290,44 @@ begin
     ahbso(1) <= sdram_ahbso;
   end process;
 
+  -----------------------------------------------------------------------------
+  -- SVGA controller (LCD)
+  -----------------------------------------------------------------------------
+  
+  svgactrl0 : svgactrl
+    generic map
+    (
+      pindex => 0,
+      paddr => 16#001#,
+      pmask => 16#fff#,
+      hindex => 1,
+      memtech => 7
+    )
+    port map
+    (
+      rst => syncrst,
+      clk => clk,
+      vgaclk => vga_clk_int,
+      apbi => apbi,
+      apbo => apbo(0),
+      vgao => vgao,
+      ahbi => grlib_ahbmi,
+      ahbo => svga_ahbmo,
+      clk_sel => vga_clk_sel
+    );  
 
+    vga_clk_sel <= (others => '0');	
+    ltm_hd <= vgao.hsync;
+    ltm_vd <= vgao.vsync;
+    ltm_r <= vgao.video_out_r(7 downto 0);
+    ltm_g <= vgao.video_out_g(7 downto 0);
+    ltm_b <= vgao.video_out_b(7 downto 0);
+    ltm_nclk <= vga_clk_int;    
+    ltm_den <= vgao.blank;
+    ltm_grest <= '1';
+  
+
+  
 
   -----------------------------------------------------------------------------
   -- Spear extension modules
@@ -350,6 +407,5 @@ begin
       syncrst <= rst;
     end if;
   end process;
-
 
 end behaviour;

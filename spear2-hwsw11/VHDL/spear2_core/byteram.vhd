@@ -34,25 +34,15 @@ signal ram : ram_array := (others => (others => '0'));
 
 begin
 
-  process(wclk)
+  process(rclk)
   begin
-    if rising_edge(wclk) then 
-      if (enable = '1') then
+    if rising_edge(rclk) then 
+     if (enable = '1') then
+        rdata <= ram(to_integer(unsigned(raddr)));
         if wen = '1' then
           ram(to_integer(unsigned(waddr))) <= wdata;
         end if;
       end if;
     end if;
   end process;
-
-  process(rclk)
-  begin
-    if rising_edge(rclk) then 
-      if (enable = '1') then
-        rdata <= (others => '0');
-        rdata <= ram(to_integer(unsigned(raddr)));
-      end if;
-    end if;
-  end process;
-
 end behaviour;

@@ -22,7 +22,7 @@ Erklärung der Output-Files:
 - main.srec
 
 Programmer-File zum Download auf das Target-System. Das macht man im Normalfall
-einfach mit dem Programmer (siehe ../tester), der sich um den kompletten Download
+einfach mit dem Testprogramm (siehe ../tester), das sich um den kompletten Download
 kümmert. Man kann aber auch einfach eine serielle Konsole öffnen (z.B. gtkterm) und 
 die Datei als raw-File runterladen. Die serielle Schnittstelle muss dann folgendermaßen
 konfiguriert werden:

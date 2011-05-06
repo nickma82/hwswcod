@@ -32,6 +32,15 @@ architecture behaviour of top_tb is
   signal sdclk    : std_logic;
   signal sa       : std_logic_vector(14 downto 0);
   signal sd       : std_logic_vector(31 downto 0);
+  -- LCD (AMBA)
+  signal ltm_hd      : std_logic;
+  signal ltm_vd      : std_logic;
+  signal ltm_r       : std_logic_vector(7 downto 0);
+  signal ltm_g       : std_logic_vector(7 downto 0);
+  signal ltm_b       : std_logic_vector(7 downto 0);
+  signal ltm_nclk    : std_logic;
+  signal ltm_den     : std_logic;
+  signal ltm_grest   : std_logic;
   
   file appFile : text  open read_mode is "app.srec";
 
@@ -52,7 +61,16 @@ architecture behaviour of top_tb is
       sddqm       : out std_logic_vector(3 downto 0);
       sdclk       : out std_logic;
       sa          : out std_logic_vector(14 downto 0);
-      sd          : inout std_logic_vector(31 downto 0)
+      sd          : inout std_logic_vector(31 downto 0);
+      -- LCD (AMBA)
+      ltm_hd      : out std_logic;
+      ltm_vd      : out std_logic;
+      ltm_r       : out std_logic_vector(7 downto 0);
+      ltm_g       : out std_logic_vector(7 downto 0);
+      ltm_b       : out std_logic_vector(7 downto 0);
+      ltm_nclk    : out std_logic;
+      ltm_den     : out std_logic;
+      ltm_grest   : out std_logic
       );    
   end component;
   
@@ -74,7 +92,16 @@ begin
       sddqm          => sddqm,
       sdclk          => sdclk,
       sa             => sa,
-      sd             => sd);
+      sd             => sd,
+      ltm_hd         => ltm_hd,
+      ltm_vd         => ltm_vd,
+      ltm_r          => ltm_r,
+      ltm_g          => ltm_g,
+      ltm_b          => ltm_b,
+      ltm_nclk       => ltm_nclk,
+      ltm_den        => ltm_den,
+      ltm_grest      => ltm_grest
+      );
 
   clkgen : process
   begin

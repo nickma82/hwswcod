@@ -9,3 +9,5 @@
 *.srec
 *.sof
 *.o
+*.bak
+quartus/**/*

@@ -68,6 +68,7 @@ architecture behaviour of ext_AMBA is
 -- Controlsignals AMBA-Statemachine (for PortMap)
   signal BAtS : brg_amba_to_spear_type;
   signal BStA : brg_spear_to_amba_type;
+  signal BStA_latched : brg_spear_to_amba_type;
 
 
   subtype BYTE is std_logic_vector(7 downto 0);
@@ -113,8 +114,23 @@ begin
              -- Bridge AMBA-SPEAR Inputs
              BAtS => BAtS,
              -- Bridge AMBA-SPEAR Outputs
-             BStA => BStA
+             BStA => BStA_latched
              );
+
+  process(clk, rst)
+  begin
+    if rstint = RST_ACT then
+	   BStA_latched.sMRDATA <= (others => '0');
+      BStA_latched.sHBUSREQ <= '0';
+      BStA_latched.sBADDR <= (others => '0');
+      BStA_latched.sHADDR <= (others => '0');
+      BStA_latched.sHWRITE <= '0';
+      BStA_latched.sHSIZE <= (others => '0');
+      BStA_latched.sWAIT <= '0';
+    elsif rising_edge(clk) then
+      BStA_latched <= BStA;
+    end if;
+  end process;
   
   -- Memorysignals to DRAM and back
   AtD_data_in <= BAtS.sMWDATA;
