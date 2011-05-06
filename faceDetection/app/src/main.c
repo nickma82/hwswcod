@@ -24,7 +24,8 @@
 
 // Gesamt skin_gesamt erode dilsate detectface ausgabe skinfilter_einpixel skinfilter_convert
 
-module_handle_t counterHandle[COUNTER_COUNT];
+module_handle_t counterHandle;
+uint32_t counterValues[COUNTER_COUNT];
 
 static uint32_t sdramBytesAllocated;
 
@@ -65,11 +66,12 @@ int main(int argc, char **argv)
 	int i;
 	// initialize HW modules
 	// Cycle counter
-	for(i=0; i<COUNTER_COUNT; i++) {
-		counter_initHandle(&counterHandle[i], COUNTER_BADDR);
-		counter_setPrescaler(&counterHandle[i], 3);
-		counter_reset(&counterHandle[i]);
-	}
+	for(i=0; i<COUNTER_COUNT; i++)
+			counterValues[i] = 0;
+
+	counter_initHandle(&counterHandle, COUNTER_BADDR);
+	counter_setPrescaler(&counterHandle, 3);
+
 	// UART
 	cfg.fclk = 50000000;
 	cfg.baud = UART_CFG_BAUD_115200;
@@ -115,9 +117,7 @@ int main(int argc, char **argv)
 	
 	
 	#ifdef __SPEAR32__
-	for(i=0; i<COUNTER_COUNT; i++) {
-		counter_releaseHandle(&counterHandle[i]);
-	}
+	counter_releaseHandle(&counterHandle);
 	dis7seg_releaseHandle(&dispHandle);
 	#endif
 	
@@ -189,34 +189,34 @@ void computeSingleImage(const char *sourcePath, const char *targetPath)
 	
 	#ifdef __SPEAR32__
 	
-	counter_reset(&counterHandle[0]);
-	counter_start(&counterHandle[0]);
-	
 	#endif 
 	
 	// perform face detection
-	counter_reset(&counterHandle[1]);
-	counter_start(&counterHandle[1]);
+
+	counter_start(&counterHandle);
 	skinFilter(&inputImage, &skinFilterImage);
-	counter_stop(&counterHandle[1]);
-	
-	counter_reset(&counterHandle[2]);
-	counter_start(&counterHandle[2]);
+	counter_stop(&counterHandle);
+	counterValues[0] = counter_getValue(&counterHandle);
+
+
+	counter_start(&counterHandle);
 	erodeDilateFilter(&skinFilterImage, &erodeFilterImage, FILTER_ERODE);
-	counter_stop(&counterHandle[2]);
-	
-	counter_reset(&counterHandle[3]);
-	counter_start(&counterHandle[3]);
+	counter_stop(&counterHandle);
+	counterValues[1] = counter_getValue(&counterHandle);
+
+
+	counter_start(&counterHandle);
 	erodeDilateFilter(&erodeFilterImage, &dilateFilterImage, FILTER_DILATE);
-	counter_stop(&counterHandle[3]);
-	
-	counter_reset(&counterHandle[4]);
-	counter_start(&counterHandle[4]);
+	counter_stop(&counterHandle);
+	counterValues[2] = counter_getValue(&counterHandle);
+
+
+	counter_start(&counterHandle);
 	detectFace(&dilateFilterImage, &inputImage);
-	counter_stop(&counterHandle[4]);
-	
-	counter_reset(&counterHandle[5]);
-	counter_start(&counterHandle[5]);
+	counter_stop(&counterHandle);
+	counterValues[3] = counter_getValue(&counterHandle);
+
+	counter_start(&counterHandle);
 	// output image on touchscreen
 	for (y=0; y<SCREEN_HEIGHT; y++) {
 		for (x=0; x<SCREEN_WIDTH; x++) {
@@ -234,11 +234,8 @@ void computeSingleImage(const char *sourcePath, const char *targetPath)
 			}
 		}
 	}
-	counter_stop(&counterHandle[5]);
-	
-	#ifdef __SPEAR32__
-	counter_stop(&counterHandle[0]);
-	#endif 
+	counter_stop(&counterHandle);
+	counterValues[4] = counter_getValue(&counterHandle);
 	
 	// send output
 	memset(tgaHeader,0,sizeof(tgaHeader));
@@ -267,8 +264,8 @@ void computeSingleImage(const char *sourcePath, const char *targetPath)
 	printf("\x04\n");
 	
 	// send elapsed time for computation
-	for(i=0; i<COUNTER_COUNT; i++) {
-		cycles = counter_getValue(&counterHandle[i]);
+	for(i=0; i<ARRAY_SIZE(counterValues); i++) {
+		cycles = counterValues[i];
 		UART_write(1, (char *)&cycles, sizeof(cycles));
 		
 	}

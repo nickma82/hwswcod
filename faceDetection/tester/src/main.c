@@ -9,8 +9,12 @@
 #include <termios.h> 
 #include <signal.h>
 
+#define ARRAY_SIZE(a) (sizeof(a) / sizeof(a[0]))
+
 #define CLKPERIOD 20
 #define PRESCALER 4
+static const char* counterNames[]={"SkinFilter Gesamt", "Erode", "Dilate", 
+		"DetectFace", "Ausgabe"}; //, "SkinFilter 1pxl", "SkinFilter Convert Colour"};
 
 int open_port(void)
 {
@@ -51,8 +55,9 @@ int main(int argc, char **argv)
   unsigned char imageDataBlock[1024];
   int ret;
   uint32_t cycles;
-  float seconds, fps;
+  float mseconds, msecSum=0, fps;
   char buffer[64];
+  int i;
 
   if (argc != 4) {
     usage();
@@ -150,28 +155,20 @@ int main(int argc, char **argv)
   options.c_cc[VMIN]     = 1;
   tcsetattr(serialfd, TCSANOW, &options);
   
-  UART_read(serialfd, (char *)&cycles, sizeof(cycles));
-  seconds = cycles;
-  seconds /= 1000000000;
-  seconds *= CLKPERIOD * PRESCALER;
-  fps = 1 / seconds;
-
-  printf("Whole Computation completed, duration: %.3f sec, %.3f fps).\n", seconds, fps);
-  UART_read(serialfd, (char *)&cycles, sizeof(cycles));
-  seconds = cycles;
-  seconds /= 1000000000;
-  seconds *= CLKPERIOD * PRESCALER;
-  fps = 1 / seconds;
-
-  printf("skinFilter completed, duration: %.3f sec, %.3f fps).\n", seconds, fps);
-  UART_read(serialfd, (char *)&cycles, sizeof(cycles));
-  seconds = cycles;
-  seconds /= 1000000000;
-  seconds *= CLKPERIOD * PRESCALER;
-  fps = 1 / seconds;
-
-  printf("erodeFilter completed, duration: %.3f sec, %.3f fps).\n", seconds, fps);
   
+  //print out counters
+  printf("Computation completed, durations:\n");
+  for(i=0; i<ARRAY_SIZE(counterNames); i++) {
+    UART_read(serialfd, (char *)&cycles, sizeof(cycles));
+    mseconds = cycles;
+    mseconds /= 1000000;
+    mseconds *= CLKPERIOD * PRESCALER;
+    msecSum += mseconds;
+    printf("%s, %.5f ms\n", counterNames[i], mseconds);
+  }
+  
+  fps = 1000 / msecSum;
+  printf("Summe, %.3f sec, %.3f fps\n", msecSum, fps);
   
   
   
