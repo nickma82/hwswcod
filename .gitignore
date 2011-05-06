@@ -10,4 +10,8 @@
 *.sof
 *.o
 *.bak
-quartus/**/*
+spear2-hwsw11/workspace/amba_hwsw/quartus/**/*
+myTests/
+faceDetection/app/main
+faceDetection/app/main.txt
+.metadata

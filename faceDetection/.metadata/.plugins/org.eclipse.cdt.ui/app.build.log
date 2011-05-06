@@ -1,8 +1,0 @@
-
-**** Build of configuration Default for project app ****
-
-make all 
-spear32-gcc -c -Wall -O2 -Iinclude src/main.c -o src/main.o
-spear32-gcc -Wl,--nmagic,--no-check-sections,--strip-all,-Tspear32-de2-115.ld src/main.o src/image.o src/skinFilter.o src/erodeDilateFilter.o src/detectFace.o -lspeardrivers -o main
-spear32-objcopy -O srec main main.srec
-spear32-objdump -DGlrswxz main > main.txt
