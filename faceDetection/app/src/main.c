@@ -5,6 +5,7 @@
 #include "filters.h"
 #include "detectFace.h"
 
+
 #ifdef __SPEAR32__
   #include "sdram.h"
   #include <machine/modules.h>
@@ -20,8 +21,10 @@
   #define SCREEN_WIDTH  800
   #define SCREEN_HEIGHT 480
 
+  #define COUNTER_COUNT 5
+
 static uint32_t sdramBytesAllocated;
-static module_handle_t counterHandle;
+static module_handle_t counterHandle[COUNTER_COUNT];
 static dis7seg_handle_t dispHandle;
 static volatile uint32_t *screenData;
 #endif
@@ -56,11 +59,13 @@ int main(int argc, char **argv)
   
 #ifdef __SPEAR32__
   UART_Cfg cfg;
-
+  int i;
   // initialize HW modules
   // Cycle counter
-  counter_initHandle(&counterHandle, COUNTER_BADDR);
-  counter_setPrescaler(&counterHandle, 3);
+  for(i=0; i<COUNTER_COUNT; i++) {
+	  counter_initHandle(&counterHandle[i], COUNTER_BADDR);
+	  counter_setPrescaler(&counterHandle[i], 3);
+  }
   // UART
   cfg.fclk = 50000000;
   cfg.baud = UART_CFG_BAUD_115200;
@@ -106,7 +111,9 @@ int main(int argc, char **argv)
 
 
 #ifdef __SPEAR32__
-  counter_releaseHandle(&counterHandle);
+  for(i=0; i<COUNTER_COUNT; i++) {
+	  counter_releaseHandle(&counterHandle[i]);
+  }
   dis7seg_releaseHandle(&dispHandle);
 #endif
 
@@ -122,7 +129,7 @@ void computeSingleImage(const char *sourcePath, const char *targetPath)
   image_t erodeFilterImage;
   image_t dilateFilterImage;
   char tgaHeader[18];
-  int x, y;
+  int x, y, i;
 
 #ifndef __SPEAR32__
   FILE *f;
@@ -178,13 +185,17 @@ void computeSingleImage(const char *sourcePath, const char *targetPath)
 
 #ifdef __SPEAR32__
   
-  counter_reset(&counterHandle);
-  counter_start(&counterHandle);
+  counter_reset(&counterHandle[0]);
+  counter_start(&counterHandle[0]);
 
 #endif 
 
   // perform face detection
+  counter_reset(&counterHandle[1]);
+  counter_start(&counterHandle[1]);
   skinFilter(&inputImage, &skinFilterImage);
+  counter_stop(&counterHandle[1]);
+
   erodeDilateFilter(&skinFilterImage, &erodeFilterImage, FILTER_ERODE);
   erodeDilateFilter(&erodeFilterImage, &dilateFilterImage, FILTER_DILATE);
   detectFace(&dilateFilterImage, &inputImage);
@@ -207,7 +218,7 @@ void computeSingleImage(const char *sourcePath, const char *targetPath)
   }
 
 #ifdef __SPEAR32__
-  counter_stop(&counterHandle);
+  counter_stop(&counterHandle[0]);
 #endif 
 
   // send output
@@ -237,8 +248,11 @@ void computeSingleImage(const char *sourcePath, const char *targetPath)
   printf("\x04\n");
 
   // send elapsed time for computation
-  cycles = counter_getValue(&counterHandle);
-  UART_write(1, (char *)&cycles, sizeof(cycles));
+  for(i=0; i<COUNTER_COUNT; i++) {
+	  cycles = counter_getValue(&counterHandle[i]);
+	  UART_write(1, (char *)&cycles, sizeof(cycles));
+
+  }
   // send length of whole image file
   UART_write(1, (char *)&imageLen, sizeof(imageLen));
   // send image header

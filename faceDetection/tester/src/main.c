@@ -156,8 +156,25 @@ int main(int argc, char **argv)
   seconds *= CLKPERIOD * PRESCALER;
   fps = 1 / seconds;
 
-  printf("Computation completed, duration: %.3f sec, %.3f fps).\n", seconds, fps);
+  printf("Whole Computation completed, duration: %.3f sec, %.3f fps).\n", seconds, fps);
+  UART_read(serialfd, (char *)&cycles, sizeof(cycles));
+  seconds = cycles;
+  seconds /= 1000000000;
+  seconds *= CLKPERIOD * PRESCALER;
+  fps = 1 / seconds;
 
+  printf("skinFilter completed, duration: %.3f sec, %.3f fps).\n", seconds, fps);
+  UART_read(serialfd, (char *)&cycles, sizeof(cycles));
+  seconds = cycles;
+  seconds /= 1000000000;
+  seconds *= CLKPERIOD * PRESCALER;
+  fps = 1 / seconds;
+
+  printf("erodeFilter completed, duration: %.3f sec, %.3f fps).\n", seconds, fps);
+  
+  
+  
+  
   UART_read(serialfd, (char *)&filesize, sizeof(filesize));
 
   f = fopen(argv[3], "w");
