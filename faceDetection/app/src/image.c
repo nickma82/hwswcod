@@ -1,4 +1,6 @@
+#include <stdlib.h>
 #include "image.h"
+#include "sdram.h"
 
 rgb_color_t getRGBColorValue(image_t *i, int x, int y)
 {
@@ -24,4 +26,24 @@ ycbcr_color_t getYCbCrColorValue(image_t *i, int x, int y)
 	result.cr = 500000 * rf + -418688 * gf + -81312 * bf;
 	
 	return result;
+}
+
+void initializeImage(image_t *template, image_t *image)
+{
+	image->width = template->width;
+	image->height = template->height;
+	image->dataLength = template->dataLength;
+	#ifdef __SPEAR32__
+		// allocate memory in external SDRAM
+		image->data = (unsigned char *)(SDRAM_BASE+sdramBytesAllocated);
+		sdramBytesAllocated += template->dataLength;
+	#else
+		// allocate memory on heap
+		image->data = (unsigned char *)malloc(template->dataLength);    
+	#endif
+}
+
+void freeImage(image_t *image) 
+{
+	free(image->data);
 }

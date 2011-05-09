@@ -22,6 +22,8 @@ typedef struct {
 	unsigned char *data;
 } image_t;
 
+void initializeImage(image_t *template, image_t *image);
+void freeImage(image_t *image);
 rgb_color_t getRGBColorValue(image_t *i, int x, int y);
 ycbcr_color_t getYCbCrColorValue(image_t *i, int x, int y);
 

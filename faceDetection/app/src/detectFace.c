@@ -1,8 +1,9 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
-#include "image.h"
 #include "detectFace.h"
+#include "filters.h"
+#include "test.h"
 
 #define FOREGROUND_COLOR_R   0xff
 #define FOREGROUND_COLOR_G   0xff
@@ -11,6 +12,7 @@
 
 int getIndexBelowThreshold(int *hist, int histLen, int start, int step, int threshold);
 void paintRectangle(image_t *image, rect_t rectangle);
+void detectFace(image_t *faceMask, image_t *rawImage);
 
 void detectFace(image_t *faceMask, image_t *rawImage)
 {
@@ -186,4 +188,25 @@ int getIndexBelowThreshold(int *hist, int histLen, int start, int step, int thre
 	}
 	
 	return result;
+}
+
+void faceDetection(image_t* inputImage)
+{
+	image_t temp,temp2;
+	
+	printf("Starting computation.\n");
+	
+	initializeImage(inputImage, &temp);
+	initializeImage(inputImage, &temp2);
+	
+	// perform face detection
+	benchmark_messure(skinFilter(inputImage, &temp));
+	benchmark_messure(erodeDilateFilter(&temp, &temp2, FILTER_ERODE));
+	benchmark_messure(erodeDilateFilter(&temp2, &temp, FILTER_DILATE));
+	benchmark_messure(detectFace(&temp, inputImage));
+	
+	freeImage(&temp);
+	freeImage(&temp2);
+	
+	printf("Computation completed.\n");	 
 }
