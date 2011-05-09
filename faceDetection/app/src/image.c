@@ -15,9 +15,9 @@ ycbcr_color_t getYCbCrColorValue(image_t *i, int x, int y)
 	rgb_color_t c1 = getRGBColorValue(i, x, y);
 	ycbcr_color_t result;
 	
-	uint32_t rf = (1000 * c1.r) >> 8;
-	uint32_t gf = (1000 * c1.g) >> 8;
-	uint32_t bf = (1000 * c1.b) >> 8;
+	int32_t rf = (1000 * c1.r) >> 8;
+	int32_t gf = (1000 * c1.g) >> 8;
+	int32_t bf = (1000 * c1.b) >> 8;
 	
 	result.y = 299000 * rf + 587000 * gf + 114000 * bf;
 	result.cb = -168736 * rf + -331264 * gf + 500000 * bf;

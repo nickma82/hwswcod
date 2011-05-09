@@ -16,21 +16,17 @@
 #include <drivers/counter.h>
 #include "svga.h"
 
-#define COUNTER_COUNT 5
-
 #define COUNTER_BADDR ((uint32_t)-320)
 #define DISP_BADDR    ((uint32_t)-288)
-
-#define SCREEN_WIDTH  800
-#define SCREEN_HEIGHT 480
 
 static uint32_t sdramBytesAllocated;
 
 static dis7seg_handle_t dispHandle;
 static volatile uint32_t *screenData;
 
-static module_handle_t counterHandle;
+#define COUNTER_COUNT 5
 static uint32_t counterValues[COUNTER_COUNT];
+static module_handle_t counterHandle;
 static unsigned short counterSize = 0;
 
 #define benchmark_messure(callable) \
@@ -50,10 +46,10 @@ static unsigned short counterSize = 0;
 void test_receiveImage(image_t *inputImage, const char *sourcePath);
 void test_sendImage(image_t *inputImage, const char *targetPath);
 void faceDetection(image_t *inputImage);
+void outputImage(image_t *image);
 
 void initializeImage(image_t *template, image_t *image);
 void freeImage(image_t *image);
-
 
 
 void initializeImage(image_t *template, image_t *image)
@@ -135,7 +131,7 @@ int main(int argc, char **argv)
 		while (1) {
 			// TODO:
 			// get picture from camera
-			faceDetection();
+			//faceDetection();
 			// outout result image on screen
 		}  
 	#endif
@@ -197,8 +193,6 @@ void test_sendImage(image_t *inputImage, const char *targetPath) {
 	char tgaHeader[18];
 	int i;
 	
-	printf("\nTEST: Sending image.\n");
-	
 	memset(tgaHeader,0,sizeof(tgaHeader));
 	tgaHeader[12] = (unsigned char) (inputImage->width & 0xFF);
 	tgaHeader[13] = (unsigned char) (inputImage->width >> 8);
@@ -211,6 +205,8 @@ void test_sendImage(image_t *inputImage, const char *targetPath) {
 	imageLen = sizeof(tgaHeader) + inputImage->dataLength;
 	
 	#ifdef __SPEAR32__
+		printf("\nTEST: Sending image.\n");
+		
 		// send signal to PC client that output data will be sent
 		printf("\x04\n");
 		
@@ -220,13 +216,13 @@ void test_sendImage(image_t *inputImage, const char *targetPath) {
 			uint32_t cycles = counterValues[i];
 			UART_write(1, (char *)&cycles, sizeof(cycles));
 		}
-		
+		/*
 		// send length of whole image file
 		UART_write(1, (char *)&imageLen, sizeof(imageLen));
 		// send image header
 		UART_write(1, tgaHeader, sizeof(tgaHeader));
 		// send image data
-		UART_write(1, (char *)inputImage->data, inputImage->dataLength);	
+		UART_write(1, (char *)inputImage->data, inputImage->dataLength); */	
 	#else
 		f = fopen(targetPath, "w");
 		if (!f) {
@@ -242,21 +238,41 @@ void test_sendImage(image_t *inputImage, const char *targetPath) {
 
 void faceDetection(image_t* inputImage)
 {
-	image_t temp;
-	int x, y;
+	image_t temp,temp2;
 	
 	printf("Starting computation.\n");
+	
+	initializeImage(inputImage, &temp);
+	initializeImage(inputImage, &temp2);
+	
+	// perform face detection
+	benchmark_messure(skinFilter(inputImage, &temp));
+	benchmark_messure(erodeDilateFilter(&temp, &temp2, FILTER_ERODE));
+	benchmark_messure(erodeDilateFilter(&temp2, &temp, FILTER_DILATE));
+	benchmark_messure(detectFace(&temp, inputImage));
+	
+	printf("Computation completed.\n");
+	
+	outputImage(inputImage);
+	
+	freeImage(inputImage);	 
+}
+
+void outputImage(image_t *image) {
+	int x, y;
+	
+	printf("Image -> VGA.\n");
 	
 	// output image on touchscreen
 	for (y=0; y<SCREEN_HEIGHT; y++) {
 		for (x=0; x<SCREEN_WIDTH; x++) {
-			if (x < inputImage->width && y < inputImage->height) {
+			if (x < image->width && y < image->height) {
 				int pIndex;
 				rgb_color_t color;
-				pIndex = (y*inputImage->width+x)*3;
-				color.b = inputImage->data[pIndex];
-				color.g = inputImage->data[pIndex+1];
-				color.r = inputImage->data[pIndex+2];
+				pIndex = (y*image->width+x)*3;
+				color.b = image->data[pIndex];
+				color.g = image->data[pIndex+1];
+				color.r = image->data[pIndex+2];
 				screenData[y*SCREEN_WIDTH+x] = (color.r << 16) | (color.g << 8) | color.b;
 			}
 			else {
@@ -264,19 +280,4 @@ void faceDetection(image_t* inputImage)
 			}
 		}
 	}
-	
-	initializeImage(inputImage, &temp);
-	
-	// perform face detection
-
-	benchmark_messure(skinFilter(inputImage, &temp));
-	benchmark_messure(erodeDilateFilter(&temp, inputImage, FILTER_ERODE));
-	benchmark_messure(erodeDilateFilter(inputImage, &temp, FILTER_DILATE));
-	benchmark_messure(detectFace(&temp, inputImage));
-	
-	// TODO: draw lines on screen
-	
-	freeImage(inputImage);
-	
-	printf("Computation completed.\n"); 
 }

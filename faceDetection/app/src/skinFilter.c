@@ -4,9 +4,9 @@
 #include <machine/modules.h>
 #include <drivers/counter.h>
 
-#define Y_LOW   100000000
-#define CB_LOW -150000000
-#define CR_LOW   50000000
+#define Y_LOW    100000000
+#define CB_LOW  -150000000
+#define CR_LOW    50000000
 
 #define Y_HIGH  1000000000
 #define CB_HIGH   50000000

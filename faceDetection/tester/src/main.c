@@ -176,7 +176,7 @@ int main(int argc, char **argv)
   fps = 1000 / msecSum;
   printf("Sum: %.3f ms, %.3f fps\n", msecSum, fps);
     
-  
+  /*
   UART_read(serialfd, (char *)&filesize, sizeof(filesize));
 
   f = fopen(argv[3], "w");
@@ -193,7 +193,7 @@ int main(int argc, char **argv)
   }
   
   fclose(f);
-
+  */
   close(serialfd);
 
   return 0;
