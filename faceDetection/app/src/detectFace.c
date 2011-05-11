@@ -138,7 +138,7 @@ void detectFace(image_t *faceMask, image_t *rawImage)
 			}
 		}
 		
-		printf("selected rect: topLeft=(%d, %d), bottomRight=(%d, %d)\n", resultRect.topLeftX, resultRect.topLeftY, resultRect.bottomRightX, resultRect.bottomRightY);
+		//printf("selected rect: topLeft=(%d, %d), bottomRight=(%d, %d)\n", resultRect.topLeftX, resultRect.topLeftY, resultRect.bottomRightX, resultRect.bottomRightY);
 		
 		paintRectangle(rawImage, resultRect);
 	}

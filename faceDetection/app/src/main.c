@@ -26,8 +26,6 @@ void outputImage(image_t *image);
 void outputImage(image_t *image) {
 	int x, y;
 	
-	printf("Image -> VGA.\n");
-	
 	// output image on touchscreen
 	for (y=0; y<SCREEN_HEIGHT; y++) {
 		for (x=0; x<SCREEN_WIDTH; x++) {
@@ -45,6 +43,8 @@ void outputImage(image_t *image) {
 			}
 		}
 	}
+	
+	//printf("Image -> VGA.\n");
 }
 
 int main(int argc, char **argv)

@@ -1,17 +1,12 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <drivers/counter.h>
 #include <machine/UART.h>
 #include "image.h"
 #include "sdram.h"
+#include "test.h"
 
 #define COUNTER_BADDR ((uint32_t)-320)
-#define COUNTER_COUNT 5
-
-uint32_t counterValues[COUNTER_COUNT];
-module_handle_t counterHandle;
-unsigned short counterSize;
 
 void test_init(void) {
 	int i;

@@ -5,9 +5,9 @@
 
 #define COUNTER_COUNT 5
 
-extern uint32_t *counterValues;
-extern module_handle_t counterHandle;
-extern unsigned short counterSize;
+uint32_t counterValues[COUNTER_COUNT];
+module_handle_t counterHandle;
+unsigned short counterSize;
 
 void test_init(void);
 void test_release(void);
@@ -21,6 +21,8 @@ void test_sendImage(image_t *inputImage, const char *targetPath);
 	counter_stop(&counterHandle); \
 	if (counterSize < COUNTER_COUNT) { \
 		counterValues[counterSize] = counter_getValue(&counterHandle); \
+		if (!counterValues[counterSize]) \
+			counterValues[counterSize] = 1; \
 		counterSize++; \
 	} \
 	} while (0)
