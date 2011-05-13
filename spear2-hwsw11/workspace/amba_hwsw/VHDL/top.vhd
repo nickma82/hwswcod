@@ -6,6 +6,8 @@ use work.spear_pkg.all;
 use work.spear_amba_pkg.all;
 use work.pkg_dis7seg.all;
 use work.pkg_counter.all;
+use work.pkg_writeframe.all;
+
 
 library grlib;
 use grlib.amba.all;
@@ -16,6 +18,8 @@ use techmap.gencomp.all;
 library gaisler;
 use gaisler.misc.all;
 use gaisler.memctrl.all;
+
+
 
 entity top is
   port(
@@ -71,6 +75,10 @@ architecture behaviour of top is
   signal counter_segsel : std_logic;
   signal counter_exto : module_out_type;
   
+  -- signals for writeframe extension module
+  signal writeframe_segsel : std_logic;
+  signal writeframe_exto : module_out_type;
+  
   -- signals for AHB slaves and APB slaves
   signal ahbmi            : ahb_master_in_type;
   signal spear_ahbmo      : ahb_master_out_type;
@@ -92,6 +100,9 @@ architecture behaviour of top is
   signal vga_clk_int    : std_logic;
   signal vga_clk_sel    : std_logic_vector(1 downto 0);
   signal svga_ahbmo     : ahb_mst_out_type;
+  
+  -- signals for writeframe AMBA Master
+  signal writeframe_ahbmo : ahb_mst_out_type;
   
   component altera_pll IS
     PORT
@@ -164,7 +175,7 @@ begin
       );
 
 
-  process(grlib_ahbmi, spear_ahbmo, svga_ahbmo)
+  process(grlib_ahbmi, spear_ahbmo, svga_ahbmo, writeframe_ahbmo)
   begin  -- process
     ahbmi.hgrant  <=  grlib_ahbmi.hgrant(0);
     ahbmi.hready  <=  grlib_ahbmi.hready;
@@ -190,6 +201,8 @@ begin
     grlib_ahbmo(0).hindex   <=  0;
 
     grlib_ahbmo(1)          <=  svga_ahbmo;
+    
+    grlib_ahbmo(2)			<=  writeframe_ahbmo;
   end process;
 
 
@@ -326,13 +339,21 @@ begin
     ltm_den <= vgao.blank;
     ltm_grest <= '1';
   
-
-  
-
   -----------------------------------------------------------------------------
   -- Spear extension modules
   -----------------------------------------------------------------------------
-    
+  
+  writeframe_unit: ext_writeframe
+  	port map(
+      clk       => clk,
+      extsel    => writeframe_segsel,
+      exti      => exti,
+      exto      => writeframe_exto,
+      ahbi 		=> grlib_ahbmi,
+      ahbo 		=> writeframe_ahbmo      
+      );
+      
+  
   dis7seg_unit: ext_dis7seg
     generic map (
       DIGIT_COUNT => 8,
@@ -356,7 +377,7 @@ begin
       exto       => counter_exto
       );
   
-  comb : process(spearo, debugo_if, D_RxD, dis7segexto, counter_exto)  --extend!
+  comb : process(spearo, debugo_if, D_RxD, dis7segexto, counter_exto, writeframe_exto)  --extend!
     variable extdata : std_logic_vector(31 downto 0);
   begin   
     exti.reset    <= spearo.reset;
@@ -367,6 +388,7 @@ begin
 
     dis7segsel <= '0';
     counter_segsel <= '0';
+    writeframe_segsel <= '0';
     
     if spearo.extsel = '1' then
       case spearo.addr(14 downto 5) is
@@ -376,6 +398,8 @@ begin
         when "1111110110" => -- (-320)              
           --Counter Module
           counter_segsel <= '1';
+        when "1111110101" =>
+        	writeframe_segsel <= '1';
         when others =>
           null;
       end case;
@@ -383,7 +407,7 @@ begin
     
     extdata := (others => '0');
     for i in extdata'left downto extdata'right loop
-      extdata(i) := dis7segexto.data(i) or counter_exto.data(i); 
+      extdata(i) := dis7segexto.data(i) or counter_exto.data(i) or writeframe_exto.data(i); 
     end loop;
 
     speari.data <= (others => '0');

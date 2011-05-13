@@ -51,8 +51,12 @@ package devices is
   constant VENDOR_SIEMENS    : amba_vendor_type := 16#1A#;
   constant VENDOR_EMBEDDIT   : amba_vendor_type := 16#EA#;
   constant VENDOR_CAL        : amba_vendor_type := 16#CA#;
-
-
+  
+  
+  --- bla
+  
+  constant VENDOR_WIR        : amba_vendor_type := 16#AA#;  
+  constant WIR_WRITEFRAME	 : amba_device_type := 16#002#;
 
 -- Gaisler Research device id's
 
