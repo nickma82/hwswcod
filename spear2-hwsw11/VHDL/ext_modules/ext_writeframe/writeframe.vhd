@@ -49,7 +49,8 @@ architecture rtl of ext_writeframe is
 	signal r_next : reg_type;
 	signal r : reg_type := 
 	(
-		ifacereg => (others => (others => '0'))
+		ifacereg => (others => (others => '0')),
+		getframe => '0'
 	);
 	
 	signal rstint : std_ulogic;

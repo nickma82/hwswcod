@@ -303,8 +303,36 @@ set_global_assignment -name OUTPUT_IO_TIMING_NEAR_END_VMEAS "HALF VCCIO" -fall
 set_global_assignment -name OUTPUT_IO_TIMING_FAR_END_VMEAS "HALF SIGNAL SWING" -rise
 set_global_assignment -name OUTPUT_IO_TIMING_FAR_END_VMEAS "HALF SIGNAL SWING" -fall
 
-set_global_assignment -name VHDL_FILE ../../../VHDL/ext_modules/ext_writeframe/writeframe_pgk.vhd
-set_global_assignment -name VHDL_FILE ../../../VHDL/ext_modules/ext_writeframe/writeframe.vhd
+
+
+##### Cam
+#set_location_assignment PIN_ -to CM_
+set_location_assignment PIN_J28 -to PIXCLK
+set_location_assignment PIN_T22 -to CM_D[11]
+set_location_assignment PIN_V24 -to CM_XCLKIN
+#line Valid
+set_location_assignment PIN_L22 -to CM_LVAL
+set_location_assignment PIN_N26 -to CM_RESET
+set_location_assignment PIN_P26 -to CM_D[0]
+set_location_assignment PIN_R21 -to CM_D[4]
+set_location_assignment PIN_R23 -to CM_D[8]
+set_location_assignment PIN_L21 -to CM_SDATA
+set_location_assignment PIN_N25 -to CM_TRIGGER
+set_location_assignment PIN_P21 -to CM_D[2]
+set_location_assignment PIN_R22 -to CM_D[6]
+set_location_assignment PIN_T21 -to CM_D[10]
+set_location_assignment PIN_V26 -to CM_SCLK
+set_location_assignment PIN_R28 -to CM_STROBE
+set_location_assignment PIN_U28 -to CM_D[1]
+set_location_assignment PIN_V28 -to CM_D[5]
+set_location_assignment PIN_V22 -to CM_D[9]
+set_location_assignment PIN_R27 -to CM_FVAL
+set_location_assignment PIN_V27 -to CM_D[3]
+set_location_assignment PIN_U22 -to CM_D[7]
+
+#tests
+set_location_assignment PIN_G19 -to LED_RED[0]
+
 set_global_assignment -name VHDL_FILE ../../../VHDL/amba_modules/gaisler/misc/ahbmst.vhd
 set_global_assignment -name VHDL_FILE ../../../VHDL/amba_modules/gaisler/misc/svgactrl.vhd
 set_global_assignment -name VHDL_FILE ../../../VHDL/common/spear_amba_pkg.vhd
@@ -336,6 +364,8 @@ set_global_assignment -name VHDL_FILE ../../../VHDL/ext_modules/ext_Dis7Seg/pkg_
 set_global_assignment -name VHDL_FILE ../../../VHDL/ext_modules/ext_counter/pkg_counter.vhd
 set_global_assignment -name VHDL_FILE ../../../VHDL/ext_modules/ext_counter/ext_counter_ent.vhd
 set_global_assignment -name VHDL_FILE ../../../VHDL/ext_modules/ext_counter/ext_counter.vhd
+set_global_assignment -name VHDL_FILE ../../../VHDL/ext_modules/ext_writeframe/pkg_writeframe.vhd
+set_global_assignment -name VHDL_FILE ../../../VHDL/ext_modules/ext_writeframe/writeframe.vhd
 set_global_assignment -name VHDL_FILE ../../../VHDL/amba_modules/grlib/stdlib/stdlib.vhd
 set_global_assignment -name VHDL_FILE ../../../VHDL/amba_modules/grlib/stdlib/stdio.vhd
 set_global_assignment -name VHDL_FILE ../../../VHDL/amba_modules/grlib/stdlib/version.vhd
