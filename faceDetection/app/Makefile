@@ -10,7 +10,8 @@ SOURCES=src/main.c \
 	src/skinFilter.c \
 	src/erodeDilateFilter.c \
 	src/detectFace.c \
-	src/test.c
+	src/test.c \
+	src/writeframe.c
 
 OBJECTS=$(SOURCES:.c=.o)
 PROGRAM=main
