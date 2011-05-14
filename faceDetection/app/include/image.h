@@ -4,6 +4,13 @@
 #include <stdint.h>
 
 typedef struct {
+	int topLeftX;
+	int topLeftY;
+	int bottomRightX;
+	int bottomRightY;
+} rect_t;
+
+typedef struct {
 	uint8_t r;
 	uint8_t g;
 	uint8_t b;
@@ -29,8 +36,8 @@ typedef struct {
 #define FOREGROUND_COLOR_G   0xff
 #define FOREGROUND_COLOR_B   0xff
 
-const rgb_color_t color_white = {FOREGROUND_COLOR_R,FOREGROUND_COLOR_G,FOREGROUND_COLOR_B}
-const rgb_color_t color_black = {BACKGROUND_COLOR_R,BACKGROUND_COLOR_G,BACKGROUND_COLOR_B}
+extern const rgb_color_t color_white;
+extern const rgb_color_t color_black;
 
 void image_init(image_t *template, image_t *image);
 void image_free(image_t *image);

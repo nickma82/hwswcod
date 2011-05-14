@@ -2,8 +2,11 @@
 #include <machine/modules.h>
 #include <machine/interrupts.h>
 
+#include "sdram.h"
 #include "svga.h"
 #include "image.h"
+
+volatile uint32_t *screenData;
 
 void svga_init(void) {
 	SVGA_VIDEO_LENGTH = ((SCREEN_HEIGHT-1)<<16) | (SCREEN_WIDTH-1);

@@ -2,9 +2,11 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include <machine/UART.h>
+#ifdef __SPEAR32__
+	#include <machine/UART.h>
+	#include "sdram.h"
+#endif
 
-#include "sdram.h"
 #include "image.h"
 #include "test.h"
 
@@ -40,7 +42,6 @@ void test_release(void) {
 void test_sendImage(image_t *inputImage, const char *targetPath) {
 	uint32_t imageLen;
 	char tgaHeader[18];
-	int i;
 	
 	memset(tgaHeader,0,sizeof(tgaHeader));
 	tgaHeader[12] = (unsigned char) (inputImage->width & 0xFF);
@@ -54,6 +55,7 @@ void test_sendImage(image_t *inputImage, const char *targetPath) {
 	imageLen = sizeof(tgaHeader) + inputImage->dataLength;
 	
 	#ifdef __SPEAR32__
+		int i;
 		printf("\nTEST: Sending image.\n");
 		
 		// send signal to PC client that output data will be sent
@@ -73,7 +75,7 @@ void test_sendImage(image_t *inputImage, const char *targetPath) {
 		// send image data
 		UART_write(1, (char *)inputImage->data, inputImage->dataLength); */	
 	#else
-		f = fopen(targetPath, "w");
+		FILE *f = fopen(targetPath, "w");
 		if (!f) {
 			printf("Image file <%s> couldn't be opened", targetPath);
 			exit(1);

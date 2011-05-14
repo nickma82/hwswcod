@@ -3,6 +3,7 @@
 #include "dis7seg.h"
 
 #define DISP_BADDR    ((uint32_t)-288)
+static dis7seg_handle_t dispHandle;
 
 void dis7seg_init(void) {
 	

@@ -21,7 +21,8 @@
 		counterSize++; \
 	} \
 	} while (0)
-	
+#else
+	#define benchmark_messure(callable) callable
 #endif // __SPEAR32__
 
 void test_init(void);

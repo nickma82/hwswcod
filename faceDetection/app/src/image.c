@@ -1,6 +1,12 @@
 #include <stdlib.h>
+
+#ifdef __SPEAR32__
+	#include "sdram.h"
+#endif // __SPEAR32__
 #include "image.h"
-#include "sdram.h"
+
+const rgb_color_t color_white = {FOREGROUND_COLOR_R,FOREGROUND_COLOR_G,FOREGROUND_COLOR_B};
+const rgb_color_t color_black = {BACKGROUND_COLOR_R,BACKGROUND_COLOR_G,BACKGROUND_COLOR_B};
 
 void image_init(image_t *template, image_t *image) {
 	image->width = template->width;
@@ -9,17 +15,17 @@ void image_init(image_t *template, image_t *image) {
 	#ifdef __SPEAR32__
 		// allocate memory in external SDRAM
 		image->data = (unsigned char *)(SDRAM_BASE+sdramBytesAllocated);
-		sdramBytesAllocated += template->dataLength;
+		sdramBytesAllocated += image->dataLength;
 	#else
 		// allocate memory on heap
-		image->data = (unsigned char *)malloc(template->dataLength);    
+		image->data = (unsigned char *)malloc(image->dataLength);    
 	#endif
 }
 
 void image_free(image_t *image) {
 	free(image->data);
 	#ifdef __SPEAR32__
-		sdramBytesAllocated -= template->dataLength;
+		sdramBytesAllocated -= image->dataLength;
 	#endif
 }
 
@@ -42,9 +48,9 @@ void image_setPixelValue(image_t *i, int x, int y, rgb_color_t cl) {
 ycbcr_color_t convertToYCbCrColor(rgb_color_t cl) {
 	ycbcr_color_t result;
 	
-	int32_t rf = (1000 * c1.r) >> 8;
-	int32_t gf = (1000 * c1.g) >> 8;
-	int32_t bf = (1000 * c1.b) >> 8;
+	int32_t rf = (1000 * cl.r) >> 8;
+	int32_t gf = (1000 * cl.g) >> 8;
+	int32_t bf = (1000 * cl.b) >> 8;
 	
 	result.y = 299000 * rf + 587000 * gf + 114000 * bf;
 	result.cb = -168736 * rf + -331264 * gf + 500000 * bf;
@@ -55,7 +61,7 @@ ycbcr_color_t convertToYCbCrColor(rgb_color_t cl) {
 
 void image_paintRectangle(image_t *image, rect_t rectangle) {
 	int i;
-	rbg_color_t cl = {0,FOREGROUND_COLOR_G,0};
+	rgb_color_t cl = {0,FOREGROUND_COLOR_G,0};
 	
 	// paint rectangle on original image
 	// horizontal lines

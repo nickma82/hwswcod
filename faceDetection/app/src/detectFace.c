@@ -8,30 +8,32 @@
 #define STEP_SIZE 10
 
 int getIndexBelowThreshold(int *hist, int histLen, int start, int step, int threshold);
-void detectFace(image_t *faceMask, image_t *rawImage);
+rect_t detectFace(image_t *faceMask, image_t *rawImage);
 
-void faceDetection(image_t* inputImage)
-{
+rect_t faceDetection(image_t* inputImage) {
 	image_t temp,temp2;
+	rect_t face;
 	
 	printf("Starting computation.\n");
 	
-	initializeImage(inputImage, &temp);
-	initializeImage(inputImage, &temp2);
+	image_init(inputImage, &temp);
+	image_init(inputImage, &temp2);
 	
 	// perform face detection
 	benchmark_messure(skinFilter(inputImage, &temp));
 	benchmark_messure(erodeDilateFilter(&temp, &temp2, FILTER_ERODE));
 	benchmark_messure(erodeDilateFilter(&temp2, &temp, FILTER_DILATE));
-	benchmark_messure(detectFace(&temp, inputImage));
+	benchmark_messure(face = detectFace(&temp, inputImage));
 	
-	freeImage(&temp);
-	freeImage(&temp2);
+	image_free(&temp);
+	image_free(&temp2);
 	
-	printf("Computation completed.\n"); 
+	printf("Computation completed.\n");
+
+	return face;
 }
 
-void detectFace(image_t *faceMask, image_t *rawImage)
+rect_t detectFace(image_t *faceMask, image_t *rawImage)
 {
 	int *histX;
 	int *histY;

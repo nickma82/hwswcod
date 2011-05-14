@@ -33,9 +33,7 @@ void skinFilter(image_t *inputImage, image_t *outputImage) {
 void erodeDilateFilter(image_t *inputImage, image_t *outputImage, uint8_t op)
 {// TODO: Split in two functions for seperate optimization.
 	int x, y;
-	int pIndex;
 	rgb_color_t c, compare;
-	uint8_t foundMatch;
 	
 	// erode: look for neighbor pixels in background color
 	// dilate: look for neighbor pixels in foreground color
@@ -63,10 +61,10 @@ uint8_t findInWindow(image_t *i, int x, int y, rgb_color_t compare) {
 	
 	for (dy = -WINDOW_OFFSET; dy <= WINDOW_OFFSET; ++dy) {
 		wy = y+dy;
-		if (wy >= 0 && wy < inputImage->height) {
+		if (wy >= 0 && wy < i->height) {
 			for (dx = -WINDOW_OFFSET; dx <= WINDOW_OFFSET; ++dx) {
 				wx = x+dx;
-				if (wx >= 0 && wx < inputImage->width) {
+				if (wx >= 0 && wx < i->width) {
 					c = image_getPixelValue(i, wx, wy);
 					if (c.r == compare.r && c.g == compare.g && c.b == compare.b) {
 						foundMatch = 1;
