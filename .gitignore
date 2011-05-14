@@ -15,3 +15,4 @@ myTests/
 faceDetection/app/main
 faceDetection/app/main.txt
 .metadata
+.DS_Store
