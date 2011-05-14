@@ -1,35 +1,40 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+
 #include <machine/UART.h>
-#include "image.h"
+
 #include "sdram.h"
+#include "image.h"
 #include "test.h"
 
 #define COUNTER_BADDR ((uint32_t)-320)
 
 void test_init(void) {
-	int i;
-	
-	UART_Cfg cfg;
-	// UART
-	cfg.fclk = 50000000;
-	cfg.baud = UART_CFG_BAUD_115200;
-	cfg.frame.msg_len = UART_CFG_MSG_LEN_8;
-	cfg.frame.parity = UART_CFG_PARITY_EVEN;
-	cfg.frame.stop_bits = UART_CFG_STOP_BITS_1;
-	UART_init (cfg);
-	
-	counterSize = 0;
-	for(i = 0; i < COUNTER_COUNT; i++)
-		counterValues[i] = 0;
-	
-	counter_initHandle(&counterHandle, COUNTER_BADDR);
-	counter_setPrescaler(&counterHandle, 3);
+	#ifdef __SPEAR32__
+		int i;
+		UART_Cfg cfg;
+		// UART
+		cfg.fclk = 50000000;
+		cfg.baud = UART_CFG_BAUD_115200;
+		cfg.frame.msg_len = UART_CFG_MSG_LEN_8;
+		cfg.frame.parity = UART_CFG_PARITY_EVEN;
+		cfg.frame.stop_bits = UART_CFG_STOP_BITS_1;
+		UART_init (cfg);
+		
+		counterSize = 0;
+		for(i = 0; i < COUNTER_COUNT; i++)
+			counterValues[i] = 0;
+		
+		counter_initHandle(&counterHandle, COUNTER_BADDR);
+		counter_setPrescaler(&counterHandle, 3);
+	#endif // __SPEAR32__
 }
 
 void test_release(void) {
-	counter_releaseHandle(&counterHandle);
+	#ifdef __SPEAR32__
+		counter_releaseHandle(&counterHandle);
+	#endif // __SPEAR32__
 }
 
 void test_sendImage(image_t *inputImage, const char *targetPath) {
@@ -77,6 +82,11 @@ void test_sendImage(image_t *inputImage, const char *targetPath) {
 		fwrite(tgaHeader, 1, sizeof(tgaHeader), f);
 		fwrite(inputImage->data, 1, inputImage->dataLength, f);
 		fclose(f);
+	#endif
+	
+	image_free(inputImage);
+	#ifdef __SPEAR32__
+		sdramBytesAllocated -= inputImage->dataLength;
 	#endif
 }
 

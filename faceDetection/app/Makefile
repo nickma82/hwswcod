@@ -6,10 +6,12 @@ LDFLAGS=-Wl,--nmagic,--no-check-sections,--strip-all,-Tspear32-de2-115.ld
 LIBS=-lspeardrivers
 
 SOURCES=src/main.c \
-	src/image.c \
-	src/skinFilter.c \
-	src/erodeDilateFilter.c \
 	src/detectFace.c \
+	src/dis7seg.c \
+	src/filters.c \
+	src/image.c \
+	src/sdram.c \
+	src/svga.c \
 	src/test.c
 
 OBJECTS=$(SOURCES:.c=.o)
