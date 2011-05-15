@@ -11,7 +11,8 @@ SOURCES=src/main.c \
 	src/erodeDilateFilter.c \
 	src/detectFace.c \
 	src/test.c \
-	src/writeframe.c
+	src/writeframe.c \
+	src/aluext.c
 
 OBJECTS=$(SOURCES:.c=.o)
 PROGRAM=main

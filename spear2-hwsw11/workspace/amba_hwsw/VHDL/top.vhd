@@ -7,7 +7,7 @@ use work.spear_amba_pkg.all;
 use work.pkg_dis7seg.all;
 use work.pkg_counter.all;
 use work.pkg_writeframe.all;
-
+use work.pkg_aluext.all;
 
 library grlib;
 use grlib.amba.all;
@@ -78,6 +78,10 @@ architecture behaviour of top is
   -- signals for writeframe extension module
   signal writeframe_segsel : std_logic;
   signal writeframe_exto : module_out_type;
+
+  -- signals for aluext extension module
+  signal aluext_segsel : std_logic;
+  signal aluext_exto : module_out_type;
   
   -- signals for AHB slaves and APB slaves
   signal ahbmi            : ahb_master_in_type;
@@ -343,93 +347,104 @@ begin
   -- Spear extension modules
   -----------------------------------------------------------------------------
   
-  writeframe_unit: ext_writeframe
+	aluext_unit : ext_aluext
+	port map(
+		clk       => clk,
+		extsel    => writeframe_segsel,
+		exti      => exti,
+		exto      => aluext_exto
+	);
+
+	writeframe_unit: ext_writeframe
   	port map(
-      clk       => clk,
-      extsel    => writeframe_segsel,
-      exti      => exti,
-      exto      => writeframe_exto,
-      ahbi 		=> grlib_ahbmi,
-      ahbo 		=> writeframe_ahbmo      
-      );
+		clk       => clk,
+		extsel    => writeframe_segsel,
+		exti      => exti,
+		exto      => writeframe_exto,
+		ahbi 		=> grlib_ahbmi,
+		ahbo 		=> writeframe_ahbmo      
+	);
       
   
-  dis7seg_unit: ext_dis7seg
-    generic map (
-      DIGIT_COUNT => 8,
-      MULTIPLEXED => 0)
-    port map(
-      clk        => clk,
-      extsel     => dis7segsel,
-      exti       => exti,
-      exto       => dis7segexto,
-      digits     => digits,
-      DisEna     => open,
-      PIN_select => open
-      );
-
-
-  counter_unit: ext_counter
-    port map(
-      clk        => clk,
-      extsel     => counter_segsel,
-      exti       => exti,
-      exto       => counter_exto
-      );
+	dis7seg_unit: ext_dis7seg
+	  generic map (
+	    DIGIT_COUNT => 8,
+	    MULTIPLEXED => 0)
+	  port map(
+	    clk        => clk,
+	    extsel     => dis7segsel,
+	    exti       => exti,
+	    exto       => dis7segexto,
+	    digits     => digits,
+	    DisEna     => open,
+	    PIN_select => open
+	  );
+	
+	
+	counter_unit: ext_counter
+	  port map(
+	    clk        => clk,
+	    extsel     => counter_segsel,
+	    exti       => exti,
+	    exto       => counter_exto
+	  );
   
-  comb : process(spearo, debugo_if, D_RxD, dis7segexto, counter_exto, writeframe_exto)  --extend!
-    variable extdata : std_logic_vector(31 downto 0);
-  begin   
-    exti.reset    <= spearo.reset;
-    exti.write_en <= spearo.write_en;
-    exti.data     <= spearo.data;
-    exti.addr     <= spearo.addr;
-    exti.byte_en  <= spearo.byte_en;
+	comb : process(spearo, debugo_if, D_RxD, dis7segexto, counter_exto, writeframe_exto,)  --extend!
+	  variable extdata : std_logic_vector(31 downto 0);
+	begin   
+		exti.reset    <= spearo.reset;
+		exti.write_en <= spearo.write_en;
+		exti.data     <= spearo.data;
+		exti.addr     <= spearo.addr;
+		exti.byte_en  <= spearo.byte_en;
+		
+		dis7segsel <= '0';
+		counter_segsel <= '0';
+		writeframe_segsel <= '0';
+		aluext_segsel <= '0';
+		if spearo.extsel = '1' then
+		  case spearo.addr(14 downto 5) is
+		    when "1111110111" => -- (-288)
+		      --DIS7SEG Module
+		      dis7segsel <= '1';
+		    when "1111110110" => -- (-320)              
+		      --Counter Module
+		      counter_segsel <= '1';
+		    when "1111110101" =>
+		    	writeframe_segsel <= '1';
+			-- auf 0xFFFFFE80
+			when "1111110100" =>
+				aluext_segsel <= '1';
+		    when others =>
+		      null;
+		  end case;
+		end if;
+		
+		extdata := (others => '0');
+		for i in extdata'left downto extdata'right loop
+		  extdata(i) := dis7segexto.data(i) or counter_exto.data(i) or writeframe_exto.data(i) or aluext_exto.data(i); 
+		end loop;
+		
+		speari.data <= (others => '0');
+		speari.data <= extdata;
+		speari.hold <= '0';
+		speari.interruptin <= (others => '0');
+		
+		
+		--Debug interface
+		D_TxD             <= debugo_if.D_TxD;
+		debugi_if.D_RxD   <= D_RxD;
+	end process;
 
-    dis7segsel <= '0';
-    counter_segsel <= '0';
-    writeframe_segsel <= '0';
-    
-    if spearo.extsel = '1' then
-      case spearo.addr(14 downto 5) is
-        when "1111110111" => -- (-288)
-          --DIS7SEG Module
-          dis7segsel <= '1';
-        when "1111110110" => -- (-320)              
-          --Counter Module
-          counter_segsel <= '1';
-        when "1111110101" =>
-        	writeframe_segsel <= '1';
-        when others =>
-          null;
-      end case;
-    end if;
-    
-    extdata := (others => '0');
-    for i in extdata'left downto extdata'right loop
-      extdata(i) := dis7segexto.data(i) or counter_exto.data(i) or writeframe_exto.data(i); 
-    end loop;
 
-    speari.data <= (others => '0');
-    speari.data <= extdata;
-    speari.hold <= '0';
-    speari.interruptin <= (others => '0');
-    
-
-    --Debug interface
-    D_TxD             <= debugo_if.D_TxD;
-    debugi_if.D_RxD   <= D_RxD;
-  end process;
-
-
-  reg : process(clk)
-  begin
-    if rising_edge(clk) then
-      --
-      -- input flip-flops
-      --
-      syncrst <= rst;
-    end if;
-  end process;
+	reg : process(clk)
+	begin
+		if rising_edge(clk) then
+			--
+			-- input flip-flops
+			--
+			syncrst <= rst;
+		end if;
+	end process;
 
 end behaviour;

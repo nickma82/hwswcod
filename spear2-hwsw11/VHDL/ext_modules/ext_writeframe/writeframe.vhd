@@ -1,10 +1,8 @@
-------------------------------------------------------------------------------
---  
 -----------------------------------------------------------------------------
--- Entity:      write frame buffer
--- File:        frame_controller.vhd
--- Author:      Hans Soderlund
--- Description: Vga Controller main file
+-- Entity:      writeframe
+-- Author:      Johannes Kasberger
+-- Description: Ein Bild in Framebuffer übertragen
+-- Date:		15.05.2011
 -----------------------------------------------------------------------------
 
 library ieee;
@@ -94,29 +92,30 @@ begin
 			v.done := '0';
 		else
 			-- übertragung eines bildes starten
-			if (r.getframe and amba_r.running) = '0' then
-				v.running := '1';
-				v.adress := FRAMEBUFFER_BASE_ADR;
-				v.start := '1';
-				v.done := '0';
-			end if;
-
-			-- ein pixel übertragen
-			if (amba_r.running and dmao.ready) = '1' then
-				-- ein bild übertragen => aufhören
-				if amba_r.adress = FRAMEBUFFER_END_ADR then
-					v.done := 1;
-					v.running := 0;
-				-- sonst nächsten pixel senden
+			if r.getframe = '1' then
+				if (amba_r.running = '0') and (r.done = '0') then
+					v.running := '1';
+					v.adress := FRAMEBUFFER_BASE_ADR;
+					v.start := '1';
 				else
-					v.adress := amba_r.adress + 1;
-					v.start := 1;
+					-- übertragung läuft aber letzter wert fertig geschickt
+					if dmao.active= '0' then  
+						-- ein bild übertragen => aufhören
+						if amba_r.adress = FRAMEBUFFER_END_ADR then
+							v.done := 1;
+							v.running := 0;
+						-- sonst nächsten pixel senden
+						else
+							v.adress := amba_r.adress + 1;
+							v.start := 1;
+						end if;
+					end if;
 				end if;
-			end if;
-			
 			-- wenn getframe nicht mehr high und done noch gesetzt zurück setzen
-			if  (not r.getframe and amba_r.done) = '1' then
-				v.done := '0';
+			else
+				if amba_r.done = '1' then
+					v.done := '0';
+				end if;
 			end if;
 		end if;
 		 
@@ -211,7 +210,7 @@ begin
 		exto.intreq <= r.ifacereg(STATUSREG)(STA_INT);
 		
 		-- wenn ein bild übertragen getframe wieder auf 0 setzen um programm weiter arbeiten zu lassen
-		if (amba_r.done and amba_r.running and r.getframe) = '1' then
+		if (amba_r.done and not amba_r.running and r.getframe) = '1' then
 			v.getframe := '0';
 		end if;
 		r_next <= v;
@@ -231,15 +230,5 @@ begin
 			end if;
 		end if;
 	end process;
-
-    -- Default Zuweisungen
-	--dmai.address <= "11100000000000000000000000000000";
-	--dmai.wdata  <= (others => '0');
-    --dmai.burst  <= '0';
-    --dmai.irq    <= '0';
-    --dmai.size   <= "10";                    
-    --dmai.write  <= '0';
-    --dmai.busy   <= '0';
-    --dmai.start    <= '0';
 end ;
 
