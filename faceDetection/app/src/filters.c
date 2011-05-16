@@ -31,6 +31,18 @@ void skinFilter(image_t *inputImage, bwimage_t *outputImage) {
 	}
 }
 
+void dummyFilter(bwimage_t *inputImage, bwimage_t *outputImage) {
+	int x, y;
+	uint8_t c;
+	
+	for (y = 0; y < inputImage->height; ++y) {
+		for (x = 0; x < inputImage->width; ++x) {
+			c = bwimage_getPixelValue(inputImage, x, y);
+			bwimage_setPixelValue(outputImage, x, y, c); 
+		}
+	}
+}
+
 void erodeFilter(bwimage_t *inputImage, bwimage_t *outputImage) {
 	int x, y;
 	uint8_t c;

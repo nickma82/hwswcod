@@ -1,7 +1,7 @@
 CC=spear32-gcc
 OBJCOPY=spear32-objcopy
 OBJDUMP=spear32-objdump
-CFLAGS=-c -Wall -O2
+CFLAGS=-c -Wall -O0
 LDFLAGS=-Wl,--nmagic,--no-check-sections,--strip-all,-Tspear32-de2-115.ld
 LIBS=-lspeardrivers
 

@@ -9,13 +9,13 @@ const uint8_t color_black = BACKGROUND_COLOR;
 void bwimage_init(image_t *template, bwimage_t *image) {
 	image->width = template->width;
 	image->height = template->height;
-	image->dataLength = (template->dataLength / 3 + 31) >> 5;
+	image->dataLength = sizeof(*(image->data))*(template->dataLength / 3 + 31) >> 5;
 	image->data = (typeof(image->data))malloc(image->dataLength);
 	// Print memory addresses
-	/*printf("Template: %ux%u, %u; Bw: %X, %u\n",
+	printf("Template: %ux%u, %u; Bw: %X, %u\n",
 		(unsigned int)image->width, (unsigned int)image->height,
 		(unsigned int)template->dataLength, (unsigned int)image->data,
-		(unsigned int)image->dataLength); */
+		(unsigned int)image->dataLength);
 }
 
 void bwimage_free(bwimage_t *image) {
@@ -26,14 +26,17 @@ uint8_t bwimage_getPixelValue(bwimage_t* image, int x, int y) {
 	uint32_t p = image->width * y + x;
 	uint8_t pp = (31 - (p & 31)); // pixelposition
 	typeof(image->data) b = &image->data[p >> 5];
-	return (*b & ((typeof(*b))1 << pp)) ? color_white : color_black;
+	p = (typeof(*b))1 << pp;
+	return *b & p ? color_white : color_black;
 }
 
 void bwimage_setPixelValue(bwimage_t* image, int x, int y, uint8_t color) {
 	uint32_t p = image->width * y + x;
 	uint8_t pp = (31 - (p & 31)); // pixelposition
-	typeof(image->data) b = &image->data[p >> 5];
-	*b &= ~((typeof(*b))1 << pp); // mask pixel
+	uint32_t i = p >> 5;
+	typeof(image->data) b = &image->data[i];
+	//printf("%.4X,%d\n",(unsigned)b,(int)i);
+	*b &= ~(1 << pp); // mask pixel
 	if (color == color_white)
 		*b |= (1 << pp); // set color
 }

@@ -30,7 +30,7 @@ int main(int argc, char **argv)
 			test_receiveImage(&image, argv[1]);
 			face = faceDetection(&image);
 			image_paintRectangle(&image, face);
-			//svga_outputImage(&image);
+			svga_outputImage(&image);
 			test_sendImage(&image, argv[2]);
 		}
 	#else

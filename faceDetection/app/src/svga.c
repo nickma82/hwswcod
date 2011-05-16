@@ -1,4 +1,5 @@
 #include <string.h>
+#include <stdio.h>
 #include <machine/modules.h>
 #include <machine/interrupts.h>
 
@@ -62,5 +63,11 @@ void svga_outputBwImage(bwimage_t *image) {
 			screenData[y*SCREEN_WIDTH+x] = (color.r << 16) | (color.g << 8) | color.b;
 		}
 	}
+	
+	//printf("\nImage %X, %d bytes:\n",(unsigned)image->data,(unsigned)image->dataLength);
+	/*for (y = 0; y < image->dataLength; y++) {
+		printf("%.8X",(unsigned)image->data[y]);
+	}
+	printf("\n"); */
 }
 
