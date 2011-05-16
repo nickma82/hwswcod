@@ -4,8 +4,8 @@
 
 #include "drivers.h"
 
-#define WRITEFRAME_BASE 	((uint32_t)-352)
-#define WRITEFRAME_CMD		(*(volatile uint_8 *const)(WRITEFRAME_BASE+4))
+#define WRITEFRAME_BASE 	(0xFFFFFEA0)
+#define WRITEFRAME_CMD		(*(volatile uint8_t *const)(WRITEFRAME_BASE+4))
 
 uint8_t getFrame();
 

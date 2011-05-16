@@ -350,7 +350,7 @@ begin
 	aluext_unit : ext_aluext
 	port map(
 		clk       => clk,
-		extsel    => writeframe_segsel,
+		extsel    => aluext_segsel,
 		exti      => exti,
 		exto      => aluext_exto
 	);
@@ -389,7 +389,7 @@ begin
 	    exto       => counter_exto
 	  );
   
-	comb : process(spearo, debugo_if, D_RxD, dis7segexto, counter_exto, writeframe_exto,)  --extend!
+	comb : process(spearo, debugo_if, D_RxD, dis7segexto, counter_exto, writeframe_exto,aluext_exto)  --extend!
 	  variable extdata : std_logic_vector(31 downto 0);
 	begin   
 		exti.reset    <= spearo.reset;
