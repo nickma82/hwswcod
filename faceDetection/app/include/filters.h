@@ -3,9 +3,10 @@
 
 #include "image.h"
 
+#define FILTER_ERODE  0
+#define FILTER_DILATE 1
+
 void skinFilter(image_t *inputImage, bwimage_t *outputImage);
-void erodeFilter(bwimage_t *inputImage, bwimage_t *outputImage);
-void dilateFilter(bwimage_t *inputImage, bwimage_t *outputImage);
-void dummyFilter(bwimage_t *inputImage, bwimage_t *outputImage);
+void erodeDilateFilter(bwimage_t *inputImage, bwimage_t *outputImage, uint8_t op);
 
 #endif // _filters_h_

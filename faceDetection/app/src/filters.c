@@ -31,49 +31,20 @@ void skinFilter(image_t *inputImage, bwimage_t *outputImage) {
 	}
 }
 
-void dummyFilter(bwimage_t *inputImage, bwimage_t *outputImage) {
+void erodeDilateFilter(bwimage_t *inputImage, bwimage_t *outputImage, uint8_t op) {
 	int x, y;
 	uint8_t c;
+	uint8_t c1 = op == FILTER_ERODE ? color_black : color_white;
+	uint8_t c2 = op == FILTER_ERODE ? color_white : color_black;
 	
 	for (y = 0; y < inputImage->height; ++y) {
 		for (x = 0; x < inputImage->width; ++x) {
-			c = bwimage_getPixelValue(inputImage, x, y);
-			bwimage_setPixelValue(outputImage, x, y, c); 
-		}
-	}
-}
-
-void erodeFilter(bwimage_t *inputImage, bwimage_t *outputImage) {
-	int x, y;
-	uint8_t c;
-	
-	for (y = 0; y < inputImage->height; ++y) {
-		for (x = 0; x < inputImage->width; ++x) {
-			dis7seg_hex(0xE0000000 | y << 16 | x);
-			
 			// erode: look for neighbor pixels in background color
-			if (findInWindow(inputImage, x, y, color_black))
-				c = color_black;
-			else
-				c = color_white;
-			bwimage_setPixelValue(outputImage, x, y, c);
-		}
-	}
-}
-
-void dilateFilter(bwimage_t *inputImage, bwimage_t *outputImage) {
-	int x, y;
-	uint8_t c;
-	
-	for (y = 0; y < inputImage->height; ++y) {
-		for (x = 0; x < inputImage->width; ++x) {
-			dis7seg_hex(0xD0000000 | y << 16 | x);
-			
-			// dilate: look for neighbor pixels in foreground color
-			if (findInWindow(inputImage, x, y, color_white))
-				c = color_white;
-			else
-				c = color_black;
+			c = c1;
+			if (bwimage_getPixelValue(inputImage, x, y) == c2) {
+				if (!findInWindow(inputImage, x, y, c1))
+					c = c2;
+			}
 			bwimage_setPixelValue(outputImage, x, y, c);
 		}
 	}

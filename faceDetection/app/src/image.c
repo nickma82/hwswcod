@@ -12,10 +12,10 @@ void bwimage_init(image_t *template, bwimage_t *image) {
 	image->dataLength = sizeof(*(image->data))*(template->dataLength / 3 + 31) >> 5;
 	image->data = (typeof(image->data))malloc(image->dataLength);
 	// Print memory addresses
-	printf("Template: %ux%u, %u; Bw: %X, %u\n",
+	/*printf("Template: %ux%u, %u; Bw: %X, %u\n",
 		(unsigned int)image->width, (unsigned int)image->height,
 		(unsigned int)template->dataLength, (unsigned int)image->data,
-		(unsigned int)image->dataLength);
+		(unsigned int)image->dataLength); */
 }
 
 void bwimage_free(bwimage_t *image) {
