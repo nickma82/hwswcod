@@ -56,6 +56,7 @@
 #define SDRAM_CMD_LOAD_CMD_REG	        (6<<18)
 #define SDRAM_CMD_LOAD_EXT_CMD_REG      (7<<18)
 
-extern uint32_t sdramBytesAllocated;
+uint32_t sdramBytesAllocated;
+void sdram_init(void);
 
 #endif // __SDRAM_H__

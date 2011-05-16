@@ -5,21 +5,39 @@
 #include "filters.h"
 #include "test.h"
 
-#define FOREGROUND_COLOR_R   0xff
-#define FOREGROUND_COLOR_G   0xff
-#define FOREGROUND_COLOR_B   0xff
-#define STEP_SIZE            10
+#define STEP_SIZE 10
 
 int getIndexBelowThreshold(int *hist, int histLen, int start, int step, int threshold);
-void paintRectangle(image_t *image, rect_t rectangle);
-void detectFace(image_t *faceMask, image_t *rawImage);
+rect_t detectFace(image_t *faceMask, image_t *rawImage);
 
-void detectFace(image_t *faceMask, image_t *rawImage)
+rect_t faceDetection(image_t* inputImage) {
+	image_t temp,temp2;
+	rect_t face;
+	
+	printf("Starting computation.\n");
+	
+	image_init(inputImage, &temp);
+	image_init(inputImage, &temp2);
+	
+	// perform face detection
+	benchmark_messure(skinFilter(inputImage, &temp));
+	benchmark_messure(erodeDilateFilter(&temp, &temp2, FILTER_ERODE));
+	benchmark_messure(erodeDilateFilter(&temp2, &temp, FILTER_DILATE));
+	benchmark_messure(face = detectFace(&temp, inputImage));
+	
+	image_free(&temp);
+	image_free(&temp2);
+	
+	printf("Computation completed.\n");
+
+	return face;
+}
+
+rect_t detectFace(image_t *faceMask, image_t *rawImage)
 {
 	int *histX;
 	int *histY;
 	int x, y;
-	int pIndex;
 	rgb_color_t c;
 	int i, j;
 	int width, height;
@@ -46,16 +64,12 @@ void detectFace(image_t *faceMask, image_t *rawImage)
 	
 	for (y = 0; y < faceMask->height; y++) {
 		for (x = 0; x < faceMask->width; x++) {
-			pIndex = (y*faceMask->width + x)*3;
-			c.b = faceMask->data[pIndex];
-			c.g = faceMask->data[pIndex + 1];
-			c.r = faceMask->data[pIndex + 2];
-			
+			c = image_getPixelValue(faceMask, x, y);			
 			if (c.r == FOREGROUND_COLOR_R && 
 				c.g == FOREGROUND_COLOR_G && 
 				c.b == FOREGROUND_COLOR_B) {
-			histX[x]++;
-			histY[y]++;
+				histX[x]++;
+				histY[y]++;
 				}
 		}
 	}
@@ -133,48 +147,15 @@ void detectFace(image_t *faceMask, image_t *rawImage)
 		width = resultRect.bottomRightX-resultRect.topLeftX;
 		height = resultRect.bottomRightY-resultRect.topLeftY;
 		if (width < height) {
-			if (height > width/2*3) {
-				resultRect.bottomRightY = resultRect.topLeftY + width/2*3;
+			width = (3*width) >> 1;
+			if (height > width) {
+				resultRect.bottomRightY = resultRect.topLeftY + width;
 			}
 		}
-		
-		//printf("selected rect: topLeft=(%d, %d), bottomRight=(%d, %d)\n", resultRect.topLeftX, resultRect.topLeftY, resultRect.bottomRightX, resultRect.bottomRightY);
-		
-		paintRectangle(rawImage, resultRect);
+		//printf("Selected rect: topLeft=(%d, %d), bottomRight=(%d, %d)\n", resultRect.topLeftX, resultRect.topLeftY, resultRect.bottomRightX, resultRect.bottomRightY);
 	}
-}
-
-
-void paintRectangle(image_t *image, rect_t rectangle)
-{
-	int pIndex;
-	int i;
 	
-	// paint rectangle on original image
-	// horizontal lines
-	for (i=rectangle.topLeftX; i<rectangle.bottomRightX; i++) {
-		pIndex = (rectangle.topLeftY*image->width+i)*3;
-		image->data[pIndex] = 0x00;
-		image->data[pIndex+1] = 0xff;
-		image->data[pIndex+2] = 0x00;
-		
-		pIndex = (rectangle.bottomRightY*image->width+i)*3;
-		image->data[pIndex] = 0x00;
-		image->data[pIndex+1] = 0xff;
-		image->data[pIndex+2] = 0x00;
-	}
-	// vertical lines
-	for (i=rectangle.topLeftY; i<rectangle.bottomRightY; i++) {
-		pIndex = (i*image->width+rectangle.topLeftX)*3;
-		image->data[pIndex] = 0x00;
-		image->data[pIndex+1] = 0xff;
-		image->data[pIndex+2] = 0x00;
-		
-		pIndex = (i*image->width+rectangle.bottomRightX)*3;
-		image->data[pIndex] = 0x00;
-		image->data[pIndex+1] = 0xff;
-		image->data[pIndex+2] = 0x00;
-	}
+	return resultRect;
 }
 
 int getIndexBelowThreshold(int *hist, int histLen, int start, int step, int threshold) {
@@ -188,25 +169,4 @@ int getIndexBelowThreshold(int *hist, int histLen, int start, int step, int thre
 	}
 	
 	return result;
-}
-
-void faceDetection(image_t* inputImage)
-{
-	image_t temp,temp2;
-	
-	printf("Starting computation.\n");
-	
-	initializeImage(inputImage, &temp);
-	initializeImage(inputImage, &temp2);
-	
-	// perform face detection
-	benchmark_messure(skinFilter(inputImage, &temp));
-	benchmark_messure(erodeDilateFilter(&temp, &temp2, FILTER_ERODE));
-	benchmark_messure(erodeDilateFilter(&temp2, &temp, FILTER_DILATE));
-	benchmark_messure(detectFace(&temp, inputImage));
-	
-	freeImage(&temp);
-	freeImage(&temp2);
-	
-	printf("Computation completed.\n");	 
 }
