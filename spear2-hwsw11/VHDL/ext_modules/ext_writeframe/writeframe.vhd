@@ -80,7 +80,7 @@ begin
 	------------------------
 	---	ASync Über Ambabus Daten 
 	------------------------
-	amba_logic : process(r,dmao,rstint)
+	amba_logic : process(r,amba_r,dmao,rstint)
 	variable v : amba_reg_type;
 	begin
 		v := amba_r;
@@ -93,7 +93,7 @@ begin
 		else
 			-- übertragung eines bildes starten
 			if r.getframe = '1' then
-				if (amba_r.running = '0') and (r.done = '0') then
+				if (amba_r.running = '0') and (amba_r.done = '0') then
 					v.running := '1';
 					v.adress := FRAMEBUFFER_BASE_ADR;
 					v.start := '1';
@@ -102,12 +102,12 @@ begin
 					if dmao.active= '0' then  
 						-- ein bild übertragen => aufhören
 						if amba_r.adress = FRAMEBUFFER_END_ADR then
-							v.done := 1;
-							v.running := 0;
+							v.done := '1';
+							v.running := '0';
 						-- sonst nächsten pixel senden
 						else
 							v.adress := amba_r.adress + 1;
-							v.start := 1;
+							v.start := '1';
 						end if;
 					end if;
 				end if;

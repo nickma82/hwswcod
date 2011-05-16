@@ -18,5 +18,5 @@ component ext_aluext
     exto       : out module_out_type
   );
 end component;
-    
+  
 end pkg_aluext;

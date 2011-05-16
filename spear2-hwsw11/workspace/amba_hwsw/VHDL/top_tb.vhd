@@ -5,6 +5,9 @@ use ieee.numeric_std.all;
 use work.spear_pkg.all;
 use work.pkg_dis7seg.all;
 
+use work.pkg_writeframe.all;
+use work.pkg_aluext.all;
+
 use std.textio.all;
 
 entity top_tb is

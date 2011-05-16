@@ -3,16 +3,19 @@
 
 #include "drivers.h"
 
-#define ALUEXT_BASE 		((uint32_t)-396)
+#define ALUEXT_BASE 		(0xFFFFFE80)
 
-#define ALUEXT_OP_A	(*(volatile int *const)(ALUEXT_BASE+4))
-#define ALUEXT_OP_B	(*(volatile int *const)(ALUEXT_BASE+8))
-#define ALUEXT_RES	(*(volatile int *const)(ALUEXT_BASE+12))
-#define ALUEXT_CMD	(*(volatile int *const)(ALUEXT_BASE+16))
+#define ALUEXT_R	(*(volatile uint8_t *const)(ALUEXT_BASE+4))
+#define ALUEXT_G	(*(volatile uint8_t *const)(ALUEXT_BASE+5))
+#define ALUEXT_B	(*(volatile uint8_t *const)(ALUEXT_BASE+6))
+#define ALUEXT_Y	(*(volatile int32_t *const)(ALUEXT_BASE+8))
+#define ALUEXT_CB	(*(volatile int32_t *const)(ALUEXT_BASE+12))
+#define ALUEXT_CR	(*(volatile int32_t *const)(ALUEXT_BASE+16))
 
-#define ALUEXT_MULT 0x01
+//#define ALUEXT_MULT 0x01
 
-int mult(int a,int b);
+//inline int32_t mult(int32_t a,int32_t b) __attribute__((always_inline));
+
 
 #endif // __aluext_h__
 

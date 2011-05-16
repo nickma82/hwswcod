@@ -22,9 +22,9 @@ package pkg_writeframe is
 
 constant SCREEN_W					: integer := 800;
 constant SCREEN_H					: integer := 480;
-constant PIXEL_COUNT				: SCREEN_W*SCREEN_H;
-constant FRAMEBUFFER_BASE_ADR 		: 16#E0000000#;
-constant FRAMEBUFFER_END_ADR		: FRAMEBUFFER_BASE_ADR+PIXEL_COUNT;
+constant PIXEL_COUNT				: integer := SCREEN_W*SCREEN_H;
+constant FRAMEBUFFER_BASE_ADR : std_logic_vector(31 downto 0) := "11100000000000000000000000000000";
+constant FRAMEBUFFER_END_ADR	: std_logic_vector(31 downto 0) := FRAMEBUFFER_BASE_ADR+PIXEL_COUNT;
 
 component ext_writeframe
   port (
