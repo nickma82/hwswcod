@@ -57,6 +57,7 @@ begin
 	comb : process(r, exti, extsel)
 	variable v : reg_type;
 	variable rf,gf,bf : std_logic_vector(31 downto 0);
+	variable tmp_rf,tmp_gf,tmp_bf : std_logic_vector(31 downto 0);
 	variable tmp_y,tmp_cb,tmp_cr : signed(63 downto 0);
 	begin
     	v := r;
@@ -141,17 +142,17 @@ begin
 		exto.intreq <= r.ifacereg(STATUSREG)(STA_INT);
 
 		
-		rf := "0000000000000000" & std_logic_vector(unsigned(r.r)*to_unsigned(1000,8));
-		gf := "0000000000000000" & std_logic_vector(unsigned(r.g)*to_unsigned(1000,8));
-		bf := "0000000000000000" & std_logic_vector(unsigned(r.b)*to_unsigned(1000,8));
+		tmp_rf := "0000000000000000" & std_logic_vector(unsigned(r.r)*to_unsigned(1000,10));
+		tmp_gf := "0000000000000000" & std_logic_vector(unsigned(r.g)*to_unsigned(1000,10));
+		tmp_bf := "0000000000000000" & std_logic_vector(unsigned(r.b)*to_unsigned(1000,10));
 		
-		rf := To_StdLogicVector(to_bitvector(rf) sra 8);
-		gf := To_StdLogicVector(to_bitvector(gf) sra 8);
-		bf := To_StdLogicVector(to_bitvector(bf) sra 8);
+		rf := To_StdLogicVector(to_bitvector(rf_tmp) sra 8);
+		gf := To_StdLogicVector(to_bitvector(gf_tmp) sra 8);
+		bf := To_StdLogicVector(to_bitvector(bf_tmp) sra 8);
 		
-		tmp_y := (299000*signed(rf)+587000*signed(gf)+114000*signed(bf));
-		tmp_cb := -168736*signed(rf) +(-331264*signed(gf)) + 500000*signed(bf);
-		tmp_cr := 500000*signed(rf) + (-418688*signed(gf)) + (-81312*signed( bf));
+		tmp_y  := (to_signed(299000,32) *signed(rf))  + (to_signed(587000,32) *signed(gf))  + (to_signed(114000,32)*signed(bf));
+		tmp_cb := (to_signed(-168736,32)*signed(rf)) + (to_signed(-331264,32) *signed(gf)) + (to_signed(500000,32) *signed(bf));
+		tmp_cr := (to_signed(500000,32) *signed(rf))  + (to_signed(-418688,32)*signed(gf)) + (to_signed(-81312,32) *signed(bf));
 		
 		v.y := std_logic_vector(tmp_y(31 downto 0));
 		v.cb := std_logic_vector(tmp_cb(31 downto 0));
