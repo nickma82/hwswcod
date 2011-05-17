@@ -51,17 +51,17 @@ ycbcr_color_t convertToYCbCrColor(rgb_color_t cl) {
 	ALUEXT_R = cl.r;
 	ALUEXT_G = cl.g;
 	ALUEXT_B = cl.b;
-	/*int32_t rf = (mult(1000,cl.r)) >> 8;
-	int32_t gf = (mult(1000,cl.g)) >> 8;
-	int32_t bf = (mult(1000,cl.b)) >> 8;
-	
-	result.y = mult(299000,rf) + mult(587000,gf) + mult(114000,bf);
-	result.cb = mult(-168736,rf) + mult(-331264,gf) + mult(500000,bf);
-	result.cr = mult(500000, rf) + -mult(418688,gf) + mult(-81312, bf);*/
-	
 	result.y = ALUEXT_Y;
 	result.cb = ALUEXT_CB;
 	result.cr = ALUEXT_CR;
+	/*int32_t rf = (1000 * cl.r) >> 8;
+	int32_t gf = (1000 * cl.g) >> 8;
+	int32_t bf = (1000 * cl.b) >> 8;
+
+	result.y = 299000 * rf + 587000 * gf + 114000 * bf;
+	result.cb = -168736 * rf + -331264 * gf + 500000 * bf;
+	result.cr = 500000 * rf + -418688 * gf + -81312 * bf;*/
+
 	return result;
 }
 
