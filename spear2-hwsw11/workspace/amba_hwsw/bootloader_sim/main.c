@@ -10,33 +10,55 @@
   #error "Unsupported target machine type"
 #endif
 
-#define ALUEXT_BASE 		(0xFFFFFE80)
+#define WRITEFRAME_BASE 	(0xFFFFFEA0)
+#define WRITEFRAME_CMD		(*(volatile uint8_t *const)(WRITEFRAME_BASE+4))
 
-#define ALUEXT_R	(*(volatile uint8_t *const)(ALUEXT_BASE+4))
-#define ALUEXT_G	(*(volatile uint8_t *const)(ALUEXT_BASE+5))
-#define ALUEXT_B	(*(volatile uint8_t *const)(ALUEXT_BASE+6))
-#define ALUEXT_Y	(*(volatile int32_t *const)(ALUEXT_BASE+8))
-#define ALUEXT_CB	(*(volatile int32_t *const)(ALUEXT_BASE+12))
-#define ALUEXT_CR	(*(volatile int32_t *const)(ALUEXT_BASE+16))
+#define SCREEN_WIDTH  800
+#define SCREEN_HEIGHT 480
+
+#define SDRAM_BASE      (0xE0000000)
+#define SDRAM_BASE_IO   (0xFFF00000)
+
+#define SVGA_BASE (0xF0000100)
+#define SVGA_STATUS (*(volatile int *const) (SVGA_BASE))
+#define SVGA_VIDEO_LENGTH (*(volatile int *const) (SVGA_BASE+4))
+#define SVGA_FRONT_PORCH (*(volatile int *const) (SVGA_BASE+8))
+#define SVGA_SYNC_LENGTH (*(volatile int *const) (SVGA_BASE+12))
+#define SVGA_LINE_LENGTH (*(volatile int *const) (SVGA_BASE+16))
+#define SVGA_FRAME_BUFFER (*(volatile int *const) (SVGA_BASE+20))
+#define SVGA_DYN_CLOCK0 (*(volatile int *const) (SVGA_BASE+24))
+#define SVGA_DYN_CLOCK1 (*(volatile int *const) (SVGA_BASE+28))
+#define SVGA_DYN_CLOCK2 (*(volatile int *const) (SVGA_BASE+32))
+#define SVGA_DYN_CLOCK3 (*(volatile int *const) (SVGA_BASE+36))
+#define SVGA_CLUT (*(volatile int *const) (SVGA_BASE+40))
 
 
+#define SVGA_VVIDEOLEN(x) (x<<16)
+#define SVGA_HVIDEOLEN(x) (x)
+
+#define SVGA_VPORCH(x)	(x<<16)
+#define SVGA_HPORCH(x)	(x)
+
+#define SVGA_VLINELEN(x)	(x<<16)
+#define SVGA_HLINELEN(x)	(x)
 
 int main (int argc, char *argv[])
 {
-	ALUEXT_R = 100;
-	ALUEXT_G = 255;
-	ALUEXT_B = 10;
-	/*int32_t rf = (mult(1000,cl.r)) >> 8;
-	int32_t gf = (mult(1000,cl.g)) >> 8;
-	int32_t bf = (mult(1000,cl.b)) >> 8;
+	WRITEFRAME_CMD = 1;
 	
-	result.y = mult(299000,rf) + mult(587000,gf) + mult(114000,bf);
-	result.cb = mult(-168736,rf) + mult(-331264,gf) + mult(500000,bf);
-	result.cr = mult(500000, rf) + -mult(418688,gf) + mult(-81312, bf);*/
-	int32_t tmp;
-	tmp = ALUEXT_Y;
-	tmp = ALUEXT_CB;
-	tmp = ALUEXT_CR;
+	while (WRITEFRAME_CMD) {
+		asm("nop");
+	}
+	
+	/*SVGA_VIDEO_LENGTH = ((SCREEN_HEIGHT-1)<<16) | (SCREEN_WIDTH-1);
+	SVGA_FRONT_PORCH = (10<<16) | 40;
+	SVGA_SYNC_LENGTH = (1<<16) | 1;
+	SVGA_LINE_LENGTH = (526<<16) | 1056;
+	SVGA_FRAME_BUFFER = SDRAM_BASE;
+	SVGA_DYN_CLOCK0 = 30000;
+	SVGA_STATUS = (1<<0) | (3<<4);*/
+	
+	
 	return 0;
 }
 

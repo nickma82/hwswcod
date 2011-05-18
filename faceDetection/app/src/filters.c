@@ -1,4 +1,5 @@
 #include "filters.h"
+#include "aluext.h"
 
 #define WINDOW_LENGTH 5
 #define WINDOW_OFFSET ((WINDOW_LENGTH-1)/2)
@@ -18,10 +19,16 @@ void skinFilter(image_t *inputImage, image_t *outputImage) {
 	
 	for (y = 0; y < inputImage->height; ++y) {
 		for (x = 0; x < inputImage->width; ++x) {
-			ycbcr_color_t ycbcr = convertToYCbCrColor(image_getPixelValue(inputImage, x, y));
+			/*ycbcr_color_t ycbcr = convertToYCbCrColor(image_getPixelValue(inputImage, x, y));
 			if (ycbcr.y >= Y_LOW && ycbcr.y <= Y_HIGH
 				&& ycbcr.cb >= CB_LOW && ycbcr.cb <= CB_HIGH
 				&& ycbcr.cr >= CR_LOW && ycbcr.cr <= CR_HIGH) {
+				image_setPixelValue(outputImage, x, y, color_white); 
+			} else {
+				image_setPixelValue(outputImage, x, y, color_black);
+			}*/
+			ALUEXT_RGB = 0;//(uint32_t)image_getPixelValue(inputImage, x, y);
+			if (ALUEXT_SKIN) {
 				image_setPixelValue(outputImage, x, y, color_white); 
 			} else {
 				image_setPixelValue(outputImage, x, y, color_black);
