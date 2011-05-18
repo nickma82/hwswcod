@@ -31,9 +31,7 @@ architecture rtl of ext_aluext is
 		r		: std_logic_vector(7 downto 0);
 		g		: std_logic_vector(7 downto 0);
 		b		: std_logic_vector(7 downto 0);
-		y		: std_logic_vector(31 downto 0);
-		cb		: std_logic_vector(31 downto 0);
-		cr		: std_logic_vector(31 downto 0);
+		result  : std_logic;
   	end record;
 
 	signal r_next : reg_type;
@@ -43,9 +41,7 @@ architecture rtl of ext_aluext is
 		r => (others => '0'),
 		g => (others => '0'),
 		b => (others => '0'),
-		y => (others => '0'),
-		cb => (others => '0'),
-		cr => (others => '0')
+		result => '0'
 	);
 	
 	signal rstint : std_ulogic;
@@ -106,11 +102,7 @@ begin
 					exto.data <= r.ifacereg(3) & r.ifacereg(2) & r.ifacereg(1) & r.ifacereg(0);
 				-- ergebnis auslesen
 				when "010" =>
-					exto.data(31 downto 0) <= r.y(31 downto 0);
-				when "011" =>
-					exto.data(31 downto 0) <= r.cb(31 downto 0);
-				when "100" =>
-					exto.data(31 downto 0) <= r.cr(31 downto 0);
+					exto.data(0) <= r.result;
 				when others =>
 					null;
 			end case;
@@ -151,9 +143,6 @@ begin
 		gf := "0000000000000" & To_StdLogicVector(to_bitvector(std_logic_vector(tmp_gf)) sra 8);
 		bf := "0000000000000" & To_StdLogicVector(to_bitvector(std_logic_vector(tmp_bf)) sra 8);
 		
-		--v.y := rf;
-		--v.cb := gf;
-		--v.cr := bf;
 		a1 := signed(rf)*signed(gf);
 		a1 := to_signed(299000,32) *signed(rf);
 		a2 := to_signed(587000,32) *signed(gf);
@@ -173,9 +162,15 @@ begin
 		c4 :=  c1 - c2;
 		tmp_cr := c4 - c3;
 		
-		v.y := std_logic_vector(tmp_y(31 downto 0));
-		v.cb := std_logic_vector(tmp_cb(31 downto 0));
-		v.cr := std_logic_vector(tmp_cr(31 downto 0));
+		
+		if 	tmp_y >= Y_LOW and tmp_y <= Y_HIGH and 
+			tmp_cb >= CB_LOW and tmp_cb <= CB_HIGH and 
+			tmp_cr >= CR_LOW and tmp_cr <= CR_HIGH then
+			v.result := '1';
+		else
+			v.result := '0';
+		end if;
+		
 		r_next <= v;
     end process;	
 

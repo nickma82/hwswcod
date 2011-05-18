@@ -165,7 +165,7 @@ begin
     generic map(
       defmast => 0,                  -- default master
       split   => 0,                  -- split support
-      nahbm   => 2,                  -- number of masters
+      nahbm   => 3,                  -- number of masters
       nahbs   => AHB_SLAVE_COUNT,    -- number of slaves
       fixbrst => 1                   -- support fix-length bursts
       )

@@ -7,12 +7,15 @@
 
 library ieee;
 use ieee.std_logic_1164.all;
+
 library grlib;
 use grlib.amba.all;
 use grlib.stdlib.all;
 use grlib.devices.all;
+
 library techmap;
 use techmap.gencomp.all;
+
 library gaisler;
 use gaisler.misc.all;
 
@@ -38,37 +41,26 @@ architecture rtl of ext_writeframe is
 	-- Core Ext Signale
 	subtype BYTE is std_logic_vector(7 downto 0);
 	type register_set is array (0 to 4) of BYTE;
-
+	type state_type is (idle, adr, data, done, reset);
+	
 	type reg_type is record
   		ifacereg	: register_set;
 		getframe	: std_logic;
-  	end record;
-
-	type amba_reg_type is record
 		adress		: std_logic_vector(31 downto 0);
 		wdata		: std_logic_vector(31 downto 0);
+		state		: state_type;
 		start		: std_logic;
-		done		: std_logic;
-		running		: std_logic;
-	end record;
-	
-	--type state_type is (running, not_running, reset);
+  	end record;
 
 	signal r_next : reg_type;
 	signal r : reg_type := 
 	(
 		ifacereg => (others => (others => '0')),
-		getframe => '0'
-	);
-	
-	signal amba_r_next : amba_reg_type;
-	signal amba_r : amba_reg_type := 
-	(
+		getframe => '0',
 		adress 	=> (others => '0'),
 		wdata  	=> (others => '0'),
-		start  	=> '0',
-		done 	=> '0',
-		running => '0'
+		state	=> reset,
+		start	=> '0'
 	);
 	
 	signal rstint : std_ulogic;
@@ -78,64 +70,9 @@ begin
 	port map (rstint, clk, dmai, dmao, ahbi, ahbo);
   
 	------------------------
-	---	ASync Über Ambabus Daten 
-	------------------------
-	amba_logic : process(r,amba_r,dmao,rstint)
-	variable v : amba_reg_type;
-	begin
-		v := amba_r;
-		v.start := '0';
-		
-		if rstint = '1' then
-			v.running := '0';
-			v.start := '0';
-			v.done := '0';
-		else
-			-- übertragung eines bildes starten
-			if r.getframe = '1' then
-				if (amba_r.running = '0') and (amba_r.done = '0') then
-					v.running := '1';
-					v.adress := FRAMEBUFFER_BASE_ADR;
-					v.start := '1';
-				else
-					-- übertragung läuft aber letzter wert fertig geschickt
-					if dmao.active= '0' then  
-						-- ein bild übertragen => aufhören
-						if amba_r.adress = FRAMEBUFFER_END_ADR then
-							v.done := '1';
-							v.running := '0';
-						-- sonst nächsten pixel senden
-						else
-							v.adress := amba_r.adress + 1;
-							v.start := '1';
-						end if;
-					end if;
-				end if;
-			-- wenn getframe nicht mehr high und done noch gesetzt zurück setzen
-			else
-				if amba_r.done = '1' then
-					v.done := '0';
-				end if;
-			end if;
-		end if;
-		 
-		amba_r_next <= v;
-		
-		-- Werte auf Interface zu Bus legen
-		dmai.wdata  <= (24 downto 16 => '1', others=>'0'); --amba_r.wdata;
-	    dmai.burst  <= '0';
-	    dmai.irq    <= '0';
-	    dmai.size   <= "10";
-	    dmai.write  <= '1';
-	    dmai.busy   <= '0';
-	    dmai.start    <= amba_r.start;
-	    dmai.address  <= amba_r.adress;
-	end process;
-
-	------------------------
 	---	ASync Core Ext Interface Daten übernehmen und schreiben
 	------------------------
-	comb : process(r, exti, extsel,amba_r)
+	comb : process(r, exti, extsel)
 	variable v : reg_type;
 	begin
     	v := r;
@@ -177,7 +114,7 @@ begin
 					exto.data <= r.ifacereg(3) & r.ifacereg(2) & r.ifacereg(1) & r.ifacereg(0);
 				when "001" =>
 					if ((exti.byte_en(0) = '1')) then
-    					exto.data(0) <= r.getframe;
+    					exto.data(7 downto 0) <= (0 => r.getframe, others=>'0');
     				end if;
 				when others =>
 					null;
@@ -209,10 +146,48 @@ begin
 		end if; 
 		exto.intreq <= r.ifacereg(STATUSREG)(STA_INT);
 		
-		-- wenn ein bild übertragen getframe wieder auf 0 setzen um programm weiter arbeiten zu lassen
-		if (amba_r.done and not amba_r.running and r.getframe) = '1' then
-			v.getframe := '0';
-		end if;
+		------------------
+		--- Statemachine
+		------------------
+		case r.state is
+			when reset =>
+				v.start := '0';
+				v.state := idle;
+			when idle =>
+				if r.getframe = '1' then
+					v.state := adr;
+					v.start := '1';
+				else
+					v.adress := FRAMEBUFFER_BASE_ADR;
+				end if;
+			when adr =>
+				if dmao.ready = '1' then
+					v.state := data;
+				end if;
+				v.wdata := r.adress;
+			when data =>
+				if r.adress = FRAMEBUFFER_END_ADR then
+					v.state := done;
+					v.start := '0';
+				else					
+					v.adress := r.adress + 1;
+					v.state := adr;
+				end if;
+			when done =>
+				v.state := idle;
+				v.getframe := '0';
+		end case;
+		
+		-- Werte auf Interface zu Bus legen
+		dmai.wdata  <=  r.wdata;
+	    dmai.burst  <= '0';
+	    dmai.irq    <= '0';
+	    dmai.size   <= "10";
+	    dmai.write  <= '1';
+	    dmai.busy   <= '0';
+	    dmai.start    <= r.start;
+	    dmai.address  <= r.adress;
+		
 		r_next <= v;
     end process;
   
@@ -224,9 +199,9 @@ begin
 		if rising_edge(clk) then 
 			if rstint = RST_ACT then
 				r.ifacereg <= (others => (others => '0'));
+				r.state <= reset;
 			else
 				r <= r_next;
-				amba_r <= amba_r_next;
 			end if;
 		end if;
 	end process;

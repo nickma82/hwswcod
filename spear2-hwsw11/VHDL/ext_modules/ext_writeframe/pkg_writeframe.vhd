@@ -8,15 +8,19 @@
 library ieee;
 use ieee.std_logic_1164.all;
 
+use work.spear_pkg.all;
+
 library grlib;
 use grlib.amba.all;
 use grlib.devices.all;
 use grlib.stdlib.all;
+
 library techmap;
 use techmap.gencomp.all;
-library gaisler;
 
-use work.spear_pkg.all;
+library gaisler;
+use gaisler.misc.all;
+
 
 package pkg_writeframe is
 

@@ -13,7 +13,6 @@ SOURCES=src/main.c \
 	src/sdram.c \
 	src/svga.c \
 	src/writeframe.c \
-	src/aluext.c \
 	src/test.c 
 
 OBJECTS=$(SOURCES:.c=.o)
