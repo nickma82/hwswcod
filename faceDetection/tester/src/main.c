@@ -14,6 +14,7 @@
 #define CLKPERIOD 20
 #define PRESCALER 4
 static const char* counterNames[]={
+	"GetFrame",
 	"SkinFilter",
 	"Erode",
 	"Dilate", 

@@ -19,15 +19,10 @@ void skinFilter(image_t *inputImage, image_t *outputImage) {
 	
 	for (y = 0; y < inputImage->height; ++y) {
 		for (x = 0; x < inputImage->width; ++x) {
-			/*ycbcr_color_t ycbcr = convertToYCbCrColor(image_getPixelValue(inputImage, x, y));
-			if (ycbcr.y >= Y_LOW && ycbcr.y <= Y_HIGH
-				&& ycbcr.cb >= CB_LOW && ycbcr.cb <= CB_HIGH
-				&& ycbcr.cr >= CR_LOW && ycbcr.cr <= CR_HIGH) {
-				image_setPixelValue(outputImage, x, y, color_white); 
-			} else {
-				image_setPixelValue(outputImage, x, y, color_black);
-			}*/
-			ALUEXT_RGB = 0;//(uint32_t)image_getPixelValue(inputImage, x, y);
+
+			rgb_color_t tmp = image_getPixelValue(inputImage, x, y);
+
+			ALUEXT_RGB = (tmp.b << 16) | (tmp.g << 8) |  tmp.r;
 			if (ALUEXT_SKIN) {
 				image_setPixelValue(outputImage, x, y, color_white); 
 			} else {
@@ -69,7 +64,7 @@ uint8_t findInWindow(image_t *i, int x, int y, rgb_color_t compare) {
 	for (dy = -WINDOW_OFFSET; dy <= WINDOW_OFFSET; ++dy) {
 		wy = y+dy;
 		if (wy >= 0 && wy < i->height) {
-			for (dx = -WINDOW_OFFSET; dx <= WINDOW_OFFSET; ++dx) {
+			/*for (dx = -WINDOW_OFFSET; dx <= WINDOW_OFFSET; ++dx) {
 				wx = x+dx;
 				if (wx >= 0 && wx < i->width) {
 					c = image_getPixelValue(i, wx, wy);
@@ -78,11 +73,16 @@ uint8_t findInWindow(image_t *i, int x, int y, rgb_color_t compare) {
 						break;
 					}
 				}
+			}*/
+			c = image_getPixelValue(i, x, wy);
+			if (c.r == compare.r && c.g == compare.g && c.b == compare.b) {
+				foundMatch = 1;
+				break;
 			}
 		}
-		if (foundMatch) {
+		/*if (foundMatch) {
 			break;
-		}
+		}*/
 	}
 	return foundMatch;
 }
