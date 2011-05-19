@@ -32,5 +32,6 @@
 extern volatile uint32_t *screenData;
 void svga_init(void);
 void svga_outputImage(image_t *image);
+void svga_outputBwImage(bwimage_t *image);
 
 #endif // __SVGA_H__

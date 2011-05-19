@@ -29,21 +29,28 @@ typedef struct {
 	unsigned char *data;
 } image_t;
 
-#define BACKGROUND_COLOR_R   0
-#define BACKGROUND_COLOR_G   0
-#define BACKGROUND_COLOR_B   0
-#define FOREGROUND_COLOR_R   0xff
-#define FOREGROUND_COLOR_G   0xff
-#define FOREGROUND_COLOR_B   0xff
+typedef struct {
+	uint32_t width;
+	uint32_t height;
+	uint32_t dataLength;
+	uint32_t *data;
+} bwimage_t;
 
-extern const rgb_color_t color_white;
-extern const rgb_color_t color_black;
+#define BACKGROUND_COLOR 0
+#define FOREGROUND_COLOR 1
 
-void image_init(image_t *template, image_t *image);
-void image_free(image_t *image);
-void image_paintRectangle(image_t *image, rect_t rectangle);
+extern const uint8_t color_white;
+extern const uint8_t color_black;
+
 rgb_color_t image_getPixelValue(image_t *i, int x, int y);
 void image_setPixelValue(image_t *i, int x, int y, rgb_color_t cl);
+void image_paintRectangle(image_t *image, rect_t rectangle);
+
+void bwimage_init(image_t *template, bwimage_t *image);
+void bwimage_free(bwimage_t *image);
+uint8_t bwimage_getPixelValue(bwimage_t *i, int x, int y);
+void bwimage_setPixelValue(bwimage_t *i, int x, int y, uint8_t cl);
+
 ycbcr_color_t convertToYCbCrColor(rgb_color_t cl);
 
 #endif // _image_h_
