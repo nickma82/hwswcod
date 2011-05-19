@@ -1,4 +1,5 @@
 #include <string.h>
+#include <stdio.h>
 #include <machine/modules.h>
 #include <machine/interrupts.h>
 
@@ -42,5 +43,31 @@ void svga_outputImage(image_t *image) {
 			screenData[y*SCREEN_WIDTH+x] = (color.r << 16) | (color.g << 8) | color.b;
 		}
 	}
+}
+
+void svga_outputBwImage(bwimage_t *image) {
+	int x, y;
+	rgb_color_t color;
+	
+	// output image on touchscreen
+	for (y = 0; y < SCREEN_HEIGHT; y++) {
+		for (x = 0; x < SCREEN_WIDTH; x++) {
+			color.b = 0;
+			color.g = 0;
+			color.r = 0;
+			if (x < image->width && y < image->height && bwimage_getPixelValue(image, x, y) == color_white) {
+				color.b = 0xFF;
+				color.g = 0xFF;
+				color.r = 0xFF;
+			}
+			screenData[y*SCREEN_WIDTH+x] = (color.r << 16) | (color.g << 8) | color.b;
+		}
+	}
+	
+	//printf("\nImage %X, %d bytes:\n",(unsigned)image->data,(unsigned)image->dataLength);
+	/*for (y = 0; y < image->dataLength; y++) {
+		printf("%.8X",(unsigned)image->data[y]);
+	}
+	printf("\n"); */
 }
 

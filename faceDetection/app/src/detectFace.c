@@ -5,40 +5,42 @@
 #include "filters.h"
 #include "test.h"
 
+#include "svga.h"
+
 #define STEP_SIZE 10
 
 int getIndexBelowThreshold(int *hist, int histLen, int start, int step, int threshold);
-rect_t detectFace(image_t *faceMask, image_t *rawImage);
+rect_t detectFace(bwimage_t *faceMask);
 
 rect_t faceDetection(image_t* inputImage) {
-	image_t temp,temp2;
+	bwimage_t temp,temp2;
 	rect_t face;
 	
 	printf("Starting computation.\n");
 	
-	image_init(inputImage, &temp);
-	image_init(inputImage, &temp2);
+	bwimage_init(inputImage, &temp);
+	bwimage_init(inputImage, &temp2);
 	
 	// perform face detection
 	benchmark_messure(skinFilter(inputImage, &temp));
 	benchmark_messure(erodeDilateFilter(&temp, &temp2, FILTER_ERODE));
 	benchmark_messure(erodeDilateFilter(&temp2, &temp, FILTER_DILATE));
-	benchmark_messure(face = detectFace(&temp, inputImage));
+	benchmark_messure(face = detectFace(&temp));
 	
-	image_free(&temp);
-	image_free(&temp2);
+	bwimage_free(&temp);
+	bwimage_free(&temp2);
 	
 	printf("Computation completed.\n");
 
 	return face;
 }
 
-rect_t detectFace(image_t *faceMask, image_t *rawImage)
+rect_t detectFace(bwimage_t *faceMask)
 {
 	int *histX;
 	int *histY;
 	int x, y;
-	rgb_color_t c;
+	uint8_t c;
 	int i, j;
 	int width, height;
 	int maxHistX, maxHistY;
@@ -64,13 +66,11 @@ rect_t detectFace(image_t *faceMask, image_t *rawImage)
 	
 	for (y = 0; y < faceMask->height; y++) {
 		for (x = 0; x < faceMask->width; x++) {
-			c = image_getPixelValue(faceMask, x, y);			
-			if (c.r == FOREGROUND_COLOR_R && 
-				c.g == FOREGROUND_COLOR_G && 
-				c.b == FOREGROUND_COLOR_B) {
+			c = bwimage_getPixelValue(faceMask, x, y);			
+			if (c == color_white) {
 				histX[x]++;
 				histY[y]++;
-				}
+			}
 		}
 	}
 	

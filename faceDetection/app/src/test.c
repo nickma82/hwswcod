@@ -86,7 +86,7 @@ void test_sendImage(image_t *inputImage, const char *targetPath) {
 		fclose(f);
 	#endif
 	
-	image_free(inputImage);
+	free(inputImage->data);
 	#ifdef __SPEAR32__
 		sdramBytesAllocated -= inputImage->dataLength;
 	#endif
