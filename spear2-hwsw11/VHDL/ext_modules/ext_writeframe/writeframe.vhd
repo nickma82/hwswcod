@@ -164,13 +164,13 @@ begin
 				if dmao.ready = '1' then
 					v.state := data;
 				end if;
-				v.wdata := r.adress;
+				v.wdata := "00000000111111110000000000000000";
 			when data =>
 				if r.adress = FRAMEBUFFER_END_ADR then
 					v.state := done;
 					v.start := '0';
 				else					
-					v.adress := r.adress + 1;
+					v.adress := r.adress + 4;
 					v.state := adr;
 				end if;
 			when done =>

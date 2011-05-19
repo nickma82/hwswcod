@@ -31,15 +31,16 @@ int main(int argc, char **argv)
 			rect_t face;
 			
 			//dis7seg_hex(mult(10,20));
-			//getFrame();
+			benchmark_messure(getFrame());
 			test_receiveImage(&image, argv[1]);
 			face = faceDetection(&image);
 			image_paintRectangle(&image, face);
-			svga_outputImage(&image);
+			//svga_outputImage(&image);
 			test_sendImage(&image, argv[2]);
 		}
 	#else
 		while (1) {
+			getFrame();
 			// TODO:
 			// get picture from camera
 			//faceDetection();
