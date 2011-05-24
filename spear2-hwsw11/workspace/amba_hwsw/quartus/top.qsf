@@ -220,6 +220,8 @@ set_global_assignment -name VHDL_FILE ../../../VHDL/ext_modules/ext_writeframe/p
 set_global_assignment -name VHDL_FILE ../../../VHDL/ext_modules/ext_writeframe/writeframe.vhd
 set_global_assignment -name VHDL_FILE ../../../VHDL/ext_modules/ext_aluext/pkg_aluext.vhd
 set_global_assignment -name VHDL_FILE ../../../VHDL/ext_modules/ext_aluext/aluext.vhd
+set_global_assignment -name VHDL_FILE ../../../VHDL/ext_modules/ext_camconfig/pkg_camconfig.vhd
+set_global_assignment -name VHDL_FILE ../../../VHDL/ext_modules/ext_camconfig/camconfig.vhd
 set_global_assignment -name VHDL_FILE ../../../VHDL/amba_modules/grlib/stdlib/stdlib.vhd
 set_global_assignment -name VHDL_FILE ../../../VHDL/amba_modules/grlib/stdlib/stdio.vhd
 set_global_assignment -name VHDL_FILE ../../../VHDL/amba_modules/grlib/stdlib/version.vhd
