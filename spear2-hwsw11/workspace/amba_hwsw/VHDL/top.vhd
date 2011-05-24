@@ -8,6 +8,7 @@ use work.pkg_dis7seg.all;
 use work.pkg_counter.all;
 use work.pkg_writeframe.all;
 use work.pkg_aluext.all;
+use work.ext_cam_config.all;
 
 library grlib;
 use grlib.amba.all;
@@ -82,7 +83,11 @@ architecture behaviour of top is
   -- signals for aluext extension module
   signal aluext_segsel : std_logic;
   signal aluext_exto : module_out_type;
-  
+
+  -- signals for cam-config extension module
+  signal camconfig_segsel : std_logic;
+  signal camconfig_exto : module_out_type;
+
   -- signals for AHB slaves and APB slaves
   signal ahbmi            : ahb_master_in_type;
   signal spear_ahbmo      : ahb_master_out_type;
@@ -354,6 +359,16 @@ begin
 		exti      => exti,
 		exto      => aluext_exto
 	);
+	
+	camconfig_unit : ext_camconfig
+	port map(
+		clk       => clk,
+		extsel    => camconfig_segsel,
+		exti      => exti,
+		exto      => camconfig_exto,
+		sclk	  => CM_SCLK,
+		sdata	  => CM_SDATA
+	);
 
 	writeframe_unit: ext_writeframe
   	port map(
@@ -361,8 +376,8 @@ begin
 		extsel    => writeframe_segsel,
 		exti      => exti,
 		exto      => writeframe_exto,
-		ahbi 		=> grlib_ahbmi,
-		ahbo 		=> writeframe_ahbmo      
+		ahbi 	  => grlib_ahbmi,
+		ahbo 	  => writeframe_ahbmo      
 	);
       
   
@@ -415,6 +430,15 @@ begin
 			-- auf 0xFFFFFE80
 			when "1111110100" =>
 				aluext_segsel <= '1';
+			-- auf 0xFFFFFEA0
+			when "1111110101" =>
+				camconfig_segsel <= '1';
+			-- auf 0xFFFFFEC0
+			--when "1111110110" =>
+			--	camconfig <= '1';
+			-- auf 0xFFFFFEE0
+			--when "1111110111" =>
+			--	camconfig <= '1';
 		    when others =>
 		      null;
 		  end case;
@@ -422,7 +446,7 @@ begin
 		
 		extdata := (others => '0');
 		for i in extdata'left downto extdata'right loop
-		  extdata(i) := dis7segexto.data(i) or counter_exto.data(i) or writeframe_exto.data(i) or aluext_exto.data(i); 
+		  extdata(i) := dis7segexto.data(i) or counter_exto.data(i) or writeframe_exto.data(i) or aluext_exto.data(i) or camconfig_exto.data(i); 
 		end loop;
 		
 		speari.data <= (others => '0');
