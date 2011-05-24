@@ -28,7 +28,7 @@ architecture rtl of ext_camconfig is
 	subtype BYTE is std_logic_vector(7 downto 0);
 	type register_set is array (0 to 4) of BYTE;
 
-	type state_type is (idle, address, data, reset);
+	type state_type is (reset, idle, send_startbit, wait_until_low, pre_id, hold_id, pre_address, hold_address, pre_data, hold_data, done);
 	
 	type reg_type is record
   		ifacereg	: register_set;
@@ -39,6 +39,9 @@ architecture rtl of ext_camconfig is
 		state		: state_type;
 		i			: integer range 0 to 15;
 		clkgen		: integer range 0 to 125;
+		sclk		: std_logic;
+		sdata		: std_logic;
+		ret_state	: state_type;
   	end record;
 
 	signal r_next : reg_type;
@@ -50,8 +53,11 @@ architecture rtl of ext_camconfig is
 		cmd => (others => '0'),
 		ready => '0',
 		state => reset,
-		i => 0,
-		clkgen => 0
+		i => '0',
+		clkgen => '0',
+		sclk => '0',
+		sdata => '0',
+		ret_state => reset
 	);
 	
 	signal i_next : integer range 0 to 15;
@@ -150,60 +156,179 @@ begin
 		end if; 
 		exto.intreq <= r.ifacereg(STATUSREG)(STA_INT);
 
-		-- Takt für two wire generieren
-		if r.clkgen = 125 then
-			v.clkgen := 0;
-			sclk <= not sclk;
-			
-			------------------
-			--- Statemachine
-			------------------
-			case r.state is
-				when reset =>
-					v.addres := 0;
-					v.value := 0;
-					v.cmd := 0;
-					v.state := idle;
-					v.i := 0;
-				when idle =>
-					if r.cmd /= IDLE then
-						v.state := start;
-						v.ready := '0';
-					end if;
-				when start =>
-					v.state := address;
-					sdata <= '1';
-				when address =>
-					sdata <= r.address(r.i);
-					if r.i = 7 then
-						v.state := data;
-					end if;						
-				when data =>
-					if cmd = CMD_WRITE then
-						sdata <= r.value(r.i);
-					elsif cmd = CMD_READ then
-						v.value(r.i) := sdata;
-					end if;
-					if r.i = 15 then
-						v.ready := '1';
-						v.state := idle;
-					end if;			
-			end case;
-			
-			
-			
-			if r.cmd /= CMD_IDLE then
-				if (r.state = address and r.i = 7) or (r.state = data and r.i = 15) then
-					v.i := 0;
-				else
-					v.i := r.i + 1;
+
+		
+		------------------
+		--- Statemachine um Übertragung zu starten und aktionen unabhängig vom sclk durchzuführen
+		------------------
+		case r.state is
+			when reset =>
+				v.addres := (others => '0');
+				v.value := (others => '0');
+				v.cmd := CMD_IDLE;
+				v.state := idle;
+				v.i := 0;
+				v.clkgen := '0';
+				v.sdata := '1';
+				v.sclk := '1';		
+			when idle =>
+				-- sobald aktion ausgeführt werden soll Start Bit senden
+				if r.cmd /= IDLE then
+					v.state := start;
+					v.ready := '0';
 				end if;
+			when send_start_bit =>
+				-- start bit wird nur gesendet wenn sclock high ist
+				if r.sclk = '1' then
+					v.state := wait_until_low;
+					v.ret_state := pre_id;
+					v.sdata := '0';
+				end if;
+			when wait_until_low =>
+				-- warten bis takt low wird
+				if r.sclk = '0' then
+					v.state := r.ret_state;
+				end if;	
+			when wait_low_ack =>
+				if r.sclk = '0' then
+					v.state := wait_ack;					
+					v.sdata := 'Z';
+				end if;
+			when restore_read =>
+				v.sdata := 'Z';
+				v.state := read2;
+			when done =>
+				v.state := r.idle;
+				v.ready := '1';
+				v.sdata := '1';
+			when 
+				others => null;
+		end case;
+		
+		------------------
+		-- Takt für two wire generieren, nur wenn übertragung läuft sonst bus auf idle stellen
+		------------------
+		if r.cmd /= reset and r.cmd /= idle then
+			if r.clkgen = CLK_COUNT then
+				v.clkgen := 0;
+				v.sclk := not r.sclk;
+			else
+				v.clkgen := r.clkgen + 1;
 			end if;
 		else
-			v.clkgen := r.clkgen + 1;
+			v.sclk := '1';
+			v.sdata := '1';
 		end if;
 		
 		
+		------------------
+		-- Veränderungen immer zu halben taktflanken
+		------------------
+		if r.clkgen = CLK_HALF then
+			
+			-- bei low takt nächsten signale anlegen
+			if r.sclk = '0' then			
+				-- restlichen aktionen passieren getaktet mit langsamen takt immer zur hälfte der low phase
+				case r.state is
+					when pre_id =>
+						v.state := send_id;
+						v.sdata := id(r.i);
+					when send_id =>
+						-- 7 bit hinaus schicken
+						if r.i <= 7 then
+							v.state := pre_id;
+						-- dann auf ack bit warten
+						else
+							v.state := wait_low_ack;
+							v.ret_state := pre_address;
+						end if;
+					-- address bits der reihe nach hinaus schicken
+					when pre_address =>
+						v.state := hold_address;
+						v.sdata := r.address(r.i);
+					when hold_address =>
+						if r.i <= 7 then
+							v.state := pre_address;
+						else
+							v.state := wait_low_ack;
+							-- write mode
+							if r.id(7) = '0' then
+								v.ret_state := pre_write1;
+							else
+								v.ret_state := read1;
+							end if;
+							
+						end if;
+					
+					-- WRITE: daten nacheinander hinaus schicken, dazwischen ack bit abwarten			
+					when pre_write1 =>
+						v.state := hold_write1;
+						v.sdata := r.data1(r.i);
+					when pre_data2 =>
+						v.state := hold_data2;
+						v.sdata := r.data2(r.i);
+					when hold_data1 =>
+						if r.i <= 7 then
+							v.state := pre_write1;
+						else
+							v.state := wait_low_ack;
+							v.ret_state := pre_write2;
+						end if;
+					when hold_write2 =>
+						if r.i <= 7 then
+							v.state := pre_write2;
+						else
+							v.state := wait_low_ack;
+							v.ret_state := done;
+						end if;
+					when send_ack =>
+						v.sdata := '0';
+						v.state := wait_until_high;
+					when others => null;		
+				end case;
+			-- sampeln zur mitte des high takt
+			else				
+				case r.sate is
+					when wait_ack =>
+						-- weiter wenn das ack bit auf low gezogen wird
+						if sdata = '0' then
+							v.state := r.ret_state;
+						end if;
+					
+					-- READ: daten nacheinander lesen, jedes byte bestätigen
+					when read1 =>
+						v.data1(r.i) := sdata;
+						if r.i = 7 then
+							v.state := send_ack;
+						end if;
+					when read2 =>
+						v.data2(r.i) := sdata;
+						if r.i = 7 then						
+							--v.state := send_ack;
+							--v.ret_state := done;
+							v.state := done;
+						end if;
+					when wait_until_high =>
+						v.state := wait_until_low;
+						v.ret_state := restore_read;
+					when others => null;
+				end case;				
+			end if;
+		end if;	
+		
+		------------
+		--- i index immer vor nächsten auslesen/schreiben modifizieren
+		------------
+		if r.clkgen = (CLK_HALF-1) and r.sclk = '1' then
+			if r.i <= 8 then
+				v.i := r.i + 1;
+			else
+				v.i := 0;
+			end if;			
+		end if;
+		
+		sclk <= r.sclk;
+		sdata <= r.sdata;
 		r_next <= v;
     end process;	
 
