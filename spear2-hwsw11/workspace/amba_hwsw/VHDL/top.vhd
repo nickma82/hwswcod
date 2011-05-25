@@ -50,10 +50,21 @@ entity top is
     ltm_nclk    : out std_logic;
     ltm_den     : out std_logic;
     ltm_grest   : out std_logic;
-	 
-	 -- CAM
-	 cam_sclk	 : out std_logic;
-	 cam_sdata	 : inout std_logic
+    
+    -- Leds
+    led_red		: out std_logic_vector(17 downto 0);
+    
+    -- Cam
+    cm_d		: in std_logic_vector(11 downto 0); --pixel data
+    cm_lval 	: in std_logic; 	--Line valid
+    cm_fval 	: in std_logic; 	--Frame valid
+    cm_pixclk	: in std_logic; 	--pixel Clock
+    cm_xclkin	: out std_logic; 	--External input clock
+    cm_reset	: out std_logic;	--D5M reset
+    cm_trigger	: out std_logic;	--Snapshot trigger
+    cm_strobe	: in std_logic; 	--Snapshot strobe
+    cm_sdata	: inout std_logic; 	--Serial data
+    cm_sclk		: out std_logic		--Serial clk
   );
 end top;
 
@@ -71,7 +82,7 @@ architecture behaviour of top is
   signal sysrst      : std_ulogic;
 
   signal clk         : std_logic;
-
+  
   -- 7-segment display
   signal dis7segsel  : std_ulogic;
   signal dis7segexto : module_out_type;
@@ -116,6 +127,9 @@ architecture behaviour of top is
   
   -- signals for writeframe AMBA Master
   signal writeframe_ahbmo : ahb_mst_out_type;
+  
+  -- writeframe
+  signal scm_xclkin	: std_logic;
   
   component altera_pll IS
     PORT
@@ -351,6 +365,7 @@ begin
     ltm_nclk <= vga_clk_int;    
     ltm_den <= vgao.blank;
     ltm_grest <= '1';
+    
   
   -----------------------------------------------------------------------------
   -- Spear extension modules
@@ -364,14 +379,15 @@ begin
 		exto      => aluext_exto
 	);
 	
+
 	camconfig_unit : ext_camconfig
 	port map(
 		clk       => clk,
 		extsel    => camconfig_segsel,
 		exti      => exti,
 		exto      => camconfig_exto,
-		sclk	  => cam_sclk,--CM_SCLK,
-		sdata	  => cam_sdata--CM_SDATA
+		sclk	  => cm_sclk,--CM_SCLK,
+		sdata	  => cm_sdata--CM_SDATA
 	);
 
 	writeframe_unit: ext_writeframe
@@ -380,10 +396,21 @@ begin
 		extsel    => writeframe_segsel,
 		exti      => exti,
 		exto      => writeframe_exto,
-		ahbi 	  => grlib_ahbmi,
-		ahbo 	  => writeframe_ahbmo      
+
+		ahbi 		=> grlib_ahbmi,
+		ahbo 		=> writeframe_ahbmo,
+		
+		cm_d		=> cm_d,
+		cm_lval 	=> cm_lval,
+		cm_fval 	=> cm_fval,
+		cm_pixclk	=> cm_pixclk,
+		--cm_xclkin	=> 
+		cm_reset	=> cm_reset,
+		cm_trigger	=> cm_trigger,
+		cm_strobe	=> cm_strobe
 	);
-      
+    
+	--cm_xclkin <= clk; --ccd Clk assignment
   
 	dis7seg_unit: ext_dis7seg
 	  generic map (
@@ -399,7 +426,7 @@ begin
 	    PIN_select => open
 	  );
 	
-	
+	  
 	counter_unit: ext_counter
 	  port map(
 	    clk        => clk,
@@ -430,6 +457,7 @@ begin
 		      --Counter Module
 		      counter_segsel <= '1';
 		    when "1111110101" =>
+		    	--Writeframe Module
 		    	writeframe_segsel <= '1';
 			-- auf 0xFFFFFE80
 			when "1111110100" =>
@@ -474,5 +502,4 @@ begin
 			syncrst <= rst;
 		end if;
 	end process;
-
 end behaviour;

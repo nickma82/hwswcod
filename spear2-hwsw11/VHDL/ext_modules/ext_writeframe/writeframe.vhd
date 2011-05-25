@@ -29,7 +29,16 @@ entity ext_writeframe is
 		exti      : in  module_in_type;
 		exto      : out module_out_type;
 		ahbi      : in  ahb_mst_in_type;
-		ahbo      : out ahb_mst_out_type
+		ahbo      : out ahb_mst_out_type;
+		
+		cm_d		: in std_logic_vector(11 downto 0); --pixel data
+		cm_lval 	: in std_logic; 	--Line valid
+		cm_fval 	: in std_logic; 	--Frame valid
+		cm_pixclk	: in std_logic; 	--pixel Clock
+		--cm_xclkin	: out std_logic;
+		cm_reset	: out std_logic;	--D5M reset
+		cm_trigger	: out std_logic;	--Snapshot trigger
+		cm_strobe	: in std_logic 	--Snapshot strobe
     );
 end ;
 
@@ -65,10 +74,31 @@ architecture rtl of ext_writeframe is
 	
 	signal rstint : std_ulogic;
   
+	--ccd Handle Signals
+	type state_ccd_type is (idle, lineread, linenext, finisher, reset);
+	--type state_ccd is record
+		
+	--end record;
+	
 begin
 	ahb_master : ahbmst generic map (2, 0, VENDOR_WIR, WIR_WRITEFRAME, 0, 3, 1)
 	port map (rstint, clk, dmai, dmao, ahbi, ahbo);
-  
+	
+	------------------------
+	---	CCD Handler
+	------------------------
+    reg : process(cm_lval, cm_fval)
+	begin
+		if ((cm_lval = '1') and (cm_fval = '1')) then 
+			--if rstint = RST_ACT then
+			--	r.ifacereg <= (others => (others => '0'));
+			--	r.state <= reset;
+			--else
+			--	r <= r_next;
+			--end if;
+		end if;
+	end process;
+	
 	------------------------
 	---	ASync Core Ext Interface Daten übernehmen und schreiben
 	------------------------
@@ -123,12 +153,12 @@ begin
     	
     	--berechnen der neuen status flags
 		v.ifacereg(STATUSREG)(STA_LOOR) := r.ifacereg(CONFIGREG)(CONF_LOOW);
-		v.ifacereg(STATUSREG)(STA_FSS) := '0';		-- failsafe
+		v.ifacereg(STATUSREG)(STA_FSS)	:= '0';		-- failsafe
 		v.ifacereg(STATUSREG)(STA_RESH) := '0';		-- ?
 		v.ifacereg(STATUSREG)(STA_RESL) := '0';		-- ?
 		v.ifacereg(STATUSREG)(STA_BUSY) := '0';		-- busy
-		v.ifacereg(STATUSREG)(STA_ERR) := '0';		-- fehler
-		v.ifacereg(STATUSREG)(STA_RDY) := '1';		-- immer bereit
+		v.ifacereg(STATUSREG)(STA_ERR)	:= '0';		-- fehler
+		v.ifacereg(STATUSREG)(STA_RDY)	:= '1';		-- immer bereit
 		
 		-- Output soll Defaultmassig auf eingeschalten sein
 		v.ifacereg(CONFIGREG)(CONF_OUTD) := '1';
@@ -190,7 +220,10 @@ begin
 		
 		r_next <= v;
     end process;
-  
+    
+    
+    
+    
     ------------------------
 	---	Sync Daten übernehmen
 	------------------------
@@ -205,5 +238,7 @@ begin
 			end if;
 		end if;
 	end process;
+	
+	
 end ;
 
