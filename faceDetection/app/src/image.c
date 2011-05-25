@@ -48,11 +48,11 @@ ycbcr_color_t convertToYCbCrColor(rgb_color_t cl) {
 	int32_t rf = (1000 * cl.r) >> 8;
 	int32_t gf = (1000 * cl.g) >> 8;
 	int32_t bf = (1000 * cl.b) >> 8;
-	
+
 	result.y = 299000 * rf + 587000 * gf + 114000 * bf;
 	result.cb = -168736 * rf + -331264 * gf + 500000 * bf;
 	result.cr = 500000 * rf + -418688 * gf + -81312 * bf;
-	
+
 	return result;
 }
 

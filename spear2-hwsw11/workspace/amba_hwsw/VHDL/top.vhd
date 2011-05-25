@@ -7,7 +7,7 @@ use work.spear_amba_pkg.all;
 use work.pkg_dis7seg.all;
 use work.pkg_counter.all;
 use work.pkg_writeframe.all;
-
+use work.pkg_aluext.all;
 
 library grlib;
 use grlib.amba.all;
@@ -81,6 +81,10 @@ architecture behaviour of top is
   -- signals for writeframe extension module
   signal writeframe_segsel : std_logic;
   signal writeframe_exto : module_out_type;
+
+  -- signals for aluext extension module
+  signal aluext_segsel : std_logic;
+  signal aluext_exto : module_out_type;
   
   -- signals for AHB slaves and APB slaves
   signal ahbmi            : ahb_master_in_type;
@@ -167,7 +171,7 @@ begin
     generic map(
       defmast => 0,                  -- default master
       split   => 0,                  -- split support
-      nahbm   => 2,                  -- number of masters
+      nahbm   => 3,                  -- number of masters
       nahbs   => AHB_SLAVE_COUNT,    -- number of slaves
       fixbrst => 1                   -- support fix-length bursts
       )
@@ -349,39 +353,47 @@ begin
   -- Spear extension modules
   -----------------------------------------------------------------------------
   
-  writeframe_unit: ext_writeframe
+	aluext_unit : ext_aluext
+	port map(
+		clk       => clk,
+		extsel    => aluext_segsel,
+		exti      => exti,
+		exto      => aluext_exto
+	);
+
+	writeframe_unit: ext_writeframe
   	port map(
-      clk       => clk,
-      extsel    => writeframe_segsel,
-      exti      => exti,
-      exto      => writeframe_exto,
-      ahbi 		=> grlib_ahbmi,
-      ahbo 		=> writeframe_ahbmo      
-      );
+		clk       => clk,
+		extsel    => writeframe_segsel,
+		exti      => exti,
+		exto      => writeframe_exto,
+		ahbi 		=> grlib_ahbmi,
+		ahbo 		=> writeframe_ahbmo      
+	);
       
   
-  dis7seg_unit: ext_dis7seg
-    generic map (
-      DIGIT_COUNT => 8,
-      MULTIPLEXED => 0)
-    port map(
-      clk        => clk,
-      extsel     => dis7segsel,
-      exti       => exti,
-      exto       => dis7segexto,
-      digits     => digits,
-      DisEna     => open,
-      PIN_select => open
-      );
-
-
-  counter_unit: ext_counter
-    port map(
-      clk        => clk,
-      extsel     => counter_segsel,
-      exti       => exti,
-      exto       => counter_exto
-      );
+	dis7seg_unit: ext_dis7seg
+	  generic map (
+	    DIGIT_COUNT => 8,
+	    MULTIPLEXED => 0)
+	  port map(
+	    clk        => clk,
+	    extsel     => dis7segsel,
+	    exti       => exti,
+	    exto       => dis7segexto,
+	    digits     => digits,
+	    DisEna     => open,
+	    PIN_select => open
+	  );
+	
+	
+	counter_unit: ext_counter
+	  port map(
+	    clk        => clk,
+	    extsel     => counter_segsel,
+	    exti       => exti,
+	    exto       => counter_exto
+	  );
   
   led_red <= "01";
       
