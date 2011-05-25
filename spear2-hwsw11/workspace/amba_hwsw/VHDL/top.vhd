@@ -123,10 +123,8 @@ architecture behaviour of top is
   -- signals for writeframe AMBA Master
   signal writeframe_ahbmo : ahb_mst_out_type;
   
-  -- Leds
-  --signal sig_led_red	: std_logic_vector(2 downto 0);
-  
-  
+  -- writeframe
+  signal scm_xclkin	: std_logic;
   
   component altera_pll IS
     PORT
@@ -396,7 +394,7 @@ begin
 		cm_strobe	=> cm_strobe
 	);
     
-	--cm_xclkin <= clk; --Clk assignment
+	--cm_xclkin <= clk; --ccd Clk assignment
   
 	dis7seg_unit: ext_dis7seg
 	  generic map (
