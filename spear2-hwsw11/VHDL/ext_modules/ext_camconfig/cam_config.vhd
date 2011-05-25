@@ -28,7 +28,7 @@ architecture rtl of ext_camconfig is
 	subtype BYTE is std_logic_vector(7 downto 0);
 	type register_set is array (0 to 4) of BYTE;
 
-	type state_type is (reset, idle, send_start_bit, wait_until_low, restore_read, done, send_id, send_address, write1, write2, read1, read2, send_ack, wait_ack, wait_until_high);
+	type state_type is (reset, idle, send_start_bit, wait_until_low, restore_read, done, send_id, send_address, write1, write2, read1, read2, send_ack, wait_ack, wait_until_high, error_state);
 	
 	type reg_type is record
   		ifacereg	: register_set;
@@ -163,7 +163,7 @@ begin
 		------------------
 		-- Takt für two wire generieren, nur wenn übertragung läuft sonst bus auf idle stellen
 		------------------
-		if r.cmd /= reset and r.cmd /= idle then
+		if r.state /= reset and r.state /= idle then
 			if r.clkgen = CLK_COUNT then
 				v.clkgen := 0;
 				v.sclk := not r.sclk;
@@ -181,12 +181,13 @@ begin
 		------------------
 		case r.state is
 			when reset =>
-				v.addres := (others => '0');
-				v.value := (others => '0');
-				v.cmd := CMD_IDLE;
+				v.id := (others => '0');
+				v.address := (others => '0');
+				v.data1 := (others => '0');
+				v.data2 := (others => '0');
 				v.state := idle;
 				v.i := 0;
-				v.clkgen := '0';
+				v.clkgen := 0;
 				v.sdata := '1';
 				v.sclk := '1';		
 			when idle =>
@@ -216,9 +217,11 @@ begin
 				v.sdata := 'Z';
 				v.state := read2;
 			when done =>
-				v.state := r.idle;
+				v.state := idle;
 				v.ready := '1';
 				v.sdata := '1';
+			when error_state =>
+				v.state := idle;
 			when 
 				others => null;
 		end case;		
@@ -285,7 +288,7 @@ begin
 				end case;
 			-- sampeln zur mitte des high takt
 			else				
-				case r.sate is
+				case r.state is
 					when wait_ack =>
 						-- weiter wenn das ack bit auf low gezogen wird
 						if sdata = '0' then
@@ -332,7 +335,7 @@ begin
 	------------------------
 	---	Sync Daten übernehmen
 	------------------------
-    reg : process(clk,sclk)
+    reg : process(clk)
 	begin
 		if rising_edge(clk) then 
 			if rstint = RST_ACT then

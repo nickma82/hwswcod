@@ -8,7 +8,7 @@ use work.pkg_dis7seg.all;
 use work.pkg_counter.all;
 use work.pkg_writeframe.all;
 use work.pkg_aluext.all;
-use work.ext_cam_config.all;
+use work.pkg_camconfig.all;
 
 library grlib;
 use grlib.amba.all;
@@ -49,7 +49,11 @@ entity top is
     ltm_b       : out std_logic_vector(7 downto 0);
     ltm_nclk    : out std_logic;
     ltm_den     : out std_logic;
-    ltm_grest   : out std_logic
+    ltm_grest   : out std_logic;
+	 
+	 -- CAM
+	 cam_sclk	 : out std_logic;
+	 cam_sdata	 : inout std_logic
   );
 end top;
 
@@ -366,8 +370,8 @@ begin
 		extsel    => camconfig_segsel,
 		exti      => exti,
 		exto      => camconfig_exto,
-		sclk	  => CM_SCLK,
-		sdata	  => CM_SDATA
+		sclk	  => cam_sclk,--CM_SCLK,
+		sdata	  => cam_sdata--CM_SDATA
 	);
 
 	writeframe_unit: ext_writeframe
@@ -430,8 +434,8 @@ begin
 			-- auf 0xFFFFFE80
 			when "1111110100" =>
 				aluext_segsel <= '1';
-			-- auf 0xFFFFFEA0
-			when "1111110101" =>
+			-- auf 0xFFFFFE60
+			when "1111110011" =>
 				camconfig_segsel <= '1';
 			-- auf 0xFFFFFEC0
 			--when "1111110110" =>
