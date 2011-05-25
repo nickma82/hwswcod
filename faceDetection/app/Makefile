@@ -13,6 +13,7 @@ SOURCES=src/main.c \
 	src/sdram.c \
 	src/svga.c \
 	src/writeframe.c \
+	src/camconfig.c \
 	src/test.c 
 
 OBJECTS=$(SOURCES:.c=.o)

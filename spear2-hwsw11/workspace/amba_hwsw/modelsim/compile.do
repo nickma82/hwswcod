@@ -48,7 +48,8 @@ vcom  -work work ../../../VHDL/ext_modules/ext_counter/ext_counter.vhd
 
 vcom  -work work ../../../VHDL/ext_modules/ext_aluext/pkg_aluext.vhd
 vcom  -work work ../../../VHDL/ext_modules/ext_aluext/aluext.vhd
-
+vcom  -work work ../../../VHDL/ext_modules/ext_camconfig/pkg_camconfig.vhd
+vcom  -work work ../../../VHDL/ext_modules/ext_camconfig/camconfig.vhd
 
 vcom  -work grlib ../../../VHDL/amba_modules/grlib/stdlib/version.vhd
 vcom  -work grlib ../../../VHDL/amba_modules/grlib/stdlib/stdlib.vhd

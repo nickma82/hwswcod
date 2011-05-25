@@ -25,7 +25,8 @@ component ext_camconfig
 		exti    : in  	module_in_type;
 		exto    : out 	module_out_type;
 		sclk	: out	std_logic;
-		sdata	: inout	std_logic
+		sdata	: inout	std_logic;
+		led_red	: out std_logic_vector(17 downto 0)
 	);
 end component;
   

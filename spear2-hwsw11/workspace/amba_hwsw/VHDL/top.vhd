@@ -387,7 +387,8 @@ begin
 		exti      => exti,
 		exto      => camconfig_exto,
 		sclk	  => cm_sclk,--CM_SCLK,
-		sdata	  => cm_sdata--CM_SDATA
+		sdata	  => cm_sdata, --CM_SDATA
+		led_red	  => led_red
 	);
 
 	writeframe_unit: ext_writeframe
@@ -435,7 +436,7 @@ begin
 	    exto       => counter_exto
 	  );
   
-	comb : process(spearo, debugo_if, D_RxD, dis7segexto, counter_exto, writeframe_exto,aluext_exto)  --extend!
+	comb : process(spearo, debugo_if, D_RxD, dis7segexto, counter_exto, writeframe_exto,aluext_exto,camconfig_exto)  --extend!
 	  variable extdata : std_logic_vector(31 downto 0);
 	begin   
 		exti.reset    <= spearo.reset;
@@ -448,6 +449,7 @@ begin
 		counter_segsel <= '0';
 		writeframe_segsel <= '0';
 		aluext_segsel <= '0';
+		camconfig_segsel <= '0';
 		if spearo.extsel = '1' then
 		  case spearo.addr(14 downto 5) is
 		    when "1111110111" => -- (-288)

@@ -13,6 +13,7 @@
 	#include "dis7seg.h"
 	#include "aluext.h"
 	#include "writeframe.h"
+	#include "camconfig.h"
 #endif // __SPEAR32__
 
 int main(int argc, char **argv)
@@ -39,8 +40,13 @@ int main(int argc, char **argv)
 			test_sendImage(&image, argv[2]);
 		}
 	#else
+		dis7seg_hex(0x00);
+		read_cam(0x00);
+		dis7seg_hex(0x01);
+		getFrame();
 		while (1) {
-			getFrame();
+			
+			//getFrame();
 			// TODO:
 			// get picture from camera
 			//faceDetection();
