@@ -51,7 +51,7 @@ entity top is
     ltm_grest   : out std_logic;
     
     -- Leds
-    led_red		: out std_logic_vector(1 downto 0)
+    led_red		: out std_logic_vector(17 downto 0)
   );
 end top;
 
@@ -112,7 +112,7 @@ architecture behaviour of top is
   signal writeframe_ahbmo : ahb_mst_out_type;
   
   -- Leds
-  signal sig_led_red	: std_logic_vector(1 downto 0);
+  signal sig_led_red	: std_logic_vector(2 downto 0);
   
   component altera_pll IS
     PORT
@@ -348,6 +348,7 @@ begin
     ltm_nclk <= vga_clk_int;    
     ltm_den <= vgao.blank;
     ltm_grest <= '1';
+    
   
   -----------------------------------------------------------------------------
   -- Spear extension modules
@@ -360,7 +361,8 @@ begin
 		exti      => exti,
 		exto      => aluext_exto
 	);
-
+	
+	
 	writeframe_unit: ext_writeframe
   	port map(
 		clk       => clk,
@@ -395,7 +397,7 @@ begin
 	    exto       => counter_exto
 	  );
   
-  led_red <= "01";
+  led_red <= (7 => '1', 6 => '1', 0 => '1', OTHERS => '0');
       
   comb : process(spearo, debugo_if, D_RxD, dis7segexto, counter_exto, writeframe_exto)  --extend!
     variable extdata : std_logic_vector(31 downto 0);
