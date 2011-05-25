@@ -48,7 +48,10 @@ entity top is
     ltm_b       : out std_logic_vector(7 downto 0);
     ltm_nclk    : out std_logic;
     ltm_den     : out std_logic;
-    ltm_grest   : out std_logic
+    ltm_grest   : out std_logic;
+    
+    -- Leds
+    led_red		: out std_logic_vector(1 downto 0)
   );
 end top;
 
@@ -103,6 +106,9 @@ architecture behaviour of top is
   
   -- signals for writeframe AMBA Master
   signal writeframe_ahbmo : ahb_mst_out_type;
+  
+  -- Leds
+  signal sig_led_red	: std_logic_vector(1 downto 0);
   
   component altera_pll IS
     PORT
@@ -377,6 +383,8 @@ begin
       exto       => counter_exto
       );
   
+  led_red <= "01";
+      
   comb : process(spearo, debugo_if, D_RxD, dis7segexto, counter_exto, writeframe_exto)  --extend!
     variable extdata : std_logic_vector(31 downto 0);
   begin   
