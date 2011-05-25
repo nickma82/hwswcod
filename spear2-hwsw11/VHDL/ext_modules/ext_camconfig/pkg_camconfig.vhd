@@ -11,12 +11,13 @@ use work.spear_pkg.all;
 
 package pkg_camconfig is
 
-constant IDLE_CMD  : std_logic_vector(7 downto 0) := "00000000";
-constant READ_CMD  : std_logic_vector(7 downto 0) := "00000001";
-constant WRITE_CMD : std_logic_vector(7 downto 0) := "00000010";
+--constant IDLE_CMD  : std_logic_vector(7 downto 0) := "00000000";
+--constant READ_CMD  : std_logic_vector(7 downto 0) := "00000001";
+--constant WRITE_CMD : std_logic_vector(7 downto 0) := "00000010";
 
 constant CLK_COUNT : integer := 100;
 constant CLK_HALF  : integer := CLK_COUNT/2;
+
 component ext_camconfig
 	port (
 		clk     : in  	std_logic;
