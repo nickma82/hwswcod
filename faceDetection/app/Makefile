@@ -12,7 +12,8 @@ SOURCES=src/main.c \
 	src/image.c \
 	src/sdram.c \
 	src/svga.c \
-	src/test.c
+	src/writeframe.c \
+	src/test.c 
 
 OBJECTS=$(SOURCES:.c=.o)
 PROGRAM=main

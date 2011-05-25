@@ -1,42 +1,34 @@
-------------------------------------------------------------------------------
---  This file is a part of the GRLIB VHDL IP LIBRARY
---  Copyright (C) 2003, Gaisler Research
---
---  This program is free software; you can redistribute it and/or modify
---  it under the terms of the GNU General Public License as published by
---  the Free Software Foundation; either version 2 of the License, or
---  (at your option) any later version.
---
---  This program is distributed in the hope that it will be useful,
---  but WITHOUT ANY WARRANTY; without even the implied warranty of
---  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
---  GNU General Public License for more details.
---
---  You should have received a copy of the GNU General Public License
---  along with this program; if not, write to the Free Software
---  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA 
 -----------------------------------------------------------------------------
--- Package: 	misc
--- File:	misc.vhd
--- Author:	Jiri Gaisler - Gaisler Research
--- Description:	Misc models
-------------------------------------------------------------------------------
+-- Entity:      writeframe
+-- Author:      Johannes Kasberger
+-- Description: Ein Bild in Framebuffer übertragen
+-- Date:		15.05.2011
+-----------------------------------------------------------------------------
 
 library ieee;
 use ieee.std_logic_1164.all;
+
+use work.spear_pkg.all;
 
 library grlib;
 use grlib.amba.all;
 use grlib.devices.all;
 use grlib.stdlib.all;
+
 library techmap;
 use techmap.gencomp.all;
-library gaisler;
 
-use work.spear_pkg.all;
+library gaisler;
+use gaisler.misc.all;
+
 
 package pkg_writeframe is
 
+constant SCREEN_W					: integer := 800;
+constant SCREEN_H					: integer := 480;
+constant PIXEL_COUNT				: integer := SCREEN_W*SCREEN_H;
+constant FRAMEBUFFER_BASE_ADR : std_logic_vector(31 downto 0) := "11100000000000000000000000000000";
+constant FRAMEBUFFER_END_ADR	: std_logic_vector(31 downto 0) := FRAMEBUFFER_BASE_ADR+(PIXEL_COUNT*4);
 
 component ext_writeframe
   port (

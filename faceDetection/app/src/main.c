@@ -6,10 +6,13 @@
 #include "detectFace.h"
 #include "test.h"
 
+
 #ifdef __SPEAR32__
 	#include "sdram.h"
 	#include "svga.h"
 	#include "dis7seg.h"
+	#include "aluext.h"
+	#include "writeframe.h"
 #endif // __SPEAR32__
 
 int main(int argc, char **argv)
@@ -27,14 +30,17 @@ int main(int argc, char **argv)
 			image_t image;
 			rect_t face;
 			
+			//dis7seg_hex(mult(10,20));
+			benchmark_messure(getFrame());
 			test_receiveImage(&image, argv[1]);
 			face = faceDetection(&image);
 			image_paintRectangle(&image, face);
-			svga_outputImage(&image);
+			//svga_outputImage(&image);
 			test_sendImage(&image, argv[2]);
 		}
 	#else
 		while (1) {
+			getFrame();
 			// TODO:
 			// get picture from camera
 			//faceDetection();

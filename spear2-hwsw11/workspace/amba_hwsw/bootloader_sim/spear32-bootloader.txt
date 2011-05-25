@@ -1,0 +1,236 @@
+
+spear32-bootloader:     file format elf32-spear32
+spear32-bootloader
+architecture: spear32, flags 0x00000102:
+EXEC_P, D_PAGED
+start address 0x40000000
+
+Program Header:
+    LOAD off    0x00000054 vaddr 0x40000000 paddr 0xc0000000 align 2**0
+         filesz 0x0000017a memsz 0x0000017a flags r-x
+
+Sections:
+Idx Name          Size      VMA       LMA       File off  Algn  Flags
+  0 .text         0000017a  40000000  c0000000  00000054  2**0  CONTENTS, ALLOC, LOAD, READONLY, CODE
+SYMBOL TABLE:
+no symbols
+
+
+Contents of section .text:
+ 40000000 05100520 85a10520 85a10520 06100620  ... ... ... ... 
+ 40000010 86a10620 86a10620 65b0069c 070057f5  ... ... e.....W.
+ 40000020 45a865b1 fd9f800e 0d100d20 8da10d20  E.e........ ... 
+ 40000030 8da10d20 0df5c00e 0d100d20 8da10d20  ... ....... ... 
+ 40000040 8da10d20 0df5000f 0d100d20 8da10d20  ... ....... ... 
+ 40000050 8da10d20 0df5400f 0d100d20 8da10d20  ... ..@.... ... 
+ 40000060 8da10d20 0df50010 002080a1 002080a1  ... ..... ... ..
+ 40000070 00200110 012081a1 012081a1 01200210  . ... ... ... ..
+ 40000080 022082a1 022082a1 02200310 032083a1  . ... ... ... ..
+ 40000090 032083a1 03200410 042084a1 042084a1  . ... ... ... ..
+ 400000a0 04200510 052085a1 052085a1 05200610  . ... ... ... ..
+ 400000b0 062086a1 062086a1 06200710 072087a1  . ... ... ... ..
+ 400000c0 072087a1 07200810 082088a1 082088a1  . ... ... ... ..
+ 400000d0 08200910 092089a1 092089a1 09200a10  . ... ... ... ..
+ 400000e0 0a208aa1 0a208aa1 0a200b10 0b208ba1  . ... ... ... ..
+ 400000f0 0b208ba1 0b200c10 0c208ca1 0c208ca1  . ... ... ... ..
+ 40000100 0c200d10 0d208da1 0d208da1 0d200e10  . ... ... ... ..
+ 40000110 0e208ea1 0e208ea1 0e200f10 0f208fa1  . ... ... ... ..
+ 40000120 0f208fa1 0f200d10 2d208da1 0d208da1  . ... ..- ... ..
+ 40000130 0d20070f 7df5470f 7df50d12 0d208da1  . ..}.G.}.... ..
+ 40000140 0d208da1 cd2a0dee 01e00d12 0d208da1  . ...*....... ..
+ 40000150 0d208da1 bd2b0dee 400ae01f 120002f7  . ...+..@.......
+ 40000160 00f400b8 079c00fe 400ae01f 00f400b8  ........@.......
+ 40000170 fb8f0000 0ef800fe ffaf               ..........      
+
+Disassembly of section .text:
+
+40000000 <.text>:
+40000000:	05 10       	ldhi r5,0
+40000002:	05 20       	ldliu r5,0x0
+40000004:	85 a1       	sli r5,0x8
+40000006:	05 20       	ldliu r5,0x0
+40000008:	85 a1       	sli r5,0x8
+4000000a:	05 20       	ldliu r5,0x0
+4000000c:	06 10       	ldhi r6,0
+4000000e:	06 20       	ldliu r6,0x0
+40000010:	86 a1       	sli r6,0x8
+40000012:	06 20       	ldliu r6,0x0
+40000014:	86 a1       	sli r6,0x8
+40000016:	06 20       	ldliu r6,0x0
+40000018:	65 b0       	cmp_eq r5,r6
+4000001a:	06 9c       	jmpi_ct 6
+4000001c:	07 00       	ldli r7,0
+4000001e:	57 f5       	stw r7,r5
+40000020:	45 a8       	addi r5,4
+40000022:	65 b1       	cmp_lt r5,r6
+40000024:	fd 9f       	jmpi_ct -3
+40000026:	80 0e       	ldli r0,-24
+40000028:	0d 10       	ldhi r13,0
+4000002a:	0d 20       	ldliu r13,0x0
+4000002c:	8d a1       	sli r13,0x8
+4000002e:	0d 20       	ldliu r13,0x0
+40000030:	8d a1       	sli r13,0x8
+40000032:	0d 20       	ldliu r13,0x0
+40000034:	0d f5       	stw r13,r0
+40000036:	c0 0e       	ldli r0,-20
+40000038:	0d 10       	ldhi r13,0
+4000003a:	0d 20       	ldliu r13,0x0
+4000003c:	8d a1       	sli r13,0x8
+4000003e:	0d 20       	ldliu r13,0x0
+40000040:	8d a1       	sli r13,0x8
+40000042:	0d 20       	ldliu r13,0x0
+40000044:	0d f5       	stw r13,r0
+40000046:	00 0f       	ldli r0,-16
+40000048:	0d 10       	ldhi r13,0
+4000004a:	0d 20       	ldliu r13,0x0
+4000004c:	8d a1       	sli r13,0x8
+4000004e:	0d 20       	ldliu r13,0x0
+40000050:	8d a1       	sli r13,0x8
+40000052:	0d 20       	ldliu r13,0x0
+40000054:	0d f5       	stw r13,r0
+40000056:	40 0f       	ldli r0,-12
+40000058:	0d 10       	ldhi r13,0
+4000005a:	0d 20       	ldliu r13,0x0
+4000005c:	8d a1       	sli r13,0x8
+4000005e:	0d 20       	ldliu r13,0x0
+40000060:	8d a1       	sli r13,0x8
+40000062:	0d 20       	ldliu r13,0x0
+40000064:	0d f5       	stw r13,r0
+40000066:	00 10       	ldhi r0,0
+40000068:	00 20       	ldliu r0,0x0
+4000006a:	80 a1       	sli r0,0x8
+4000006c:	00 20       	ldliu r0,0x0
+4000006e:	80 a1       	sli r0,0x8
+40000070:	00 20       	ldliu r0,0x0
+40000072:	01 10       	ldhi r1,0
+40000074:	01 20       	ldliu r1,0x0
+40000076:	81 a1       	sli r1,0x8
+40000078:	01 20       	ldliu r1,0x0
+4000007a:	81 a1       	sli r1,0x8
+4000007c:	01 20       	ldliu r1,0x0
+4000007e:	02 10       	ldhi r2,0
+40000080:	02 20       	ldliu r2,0x0
+40000082:	82 a1       	sli r2,0x8
+40000084:	02 20       	ldliu r2,0x0
+40000086:	82 a1       	sli r2,0x8
+40000088:	02 20       	ldliu r2,0x0
+4000008a:	03 10       	ldhi r3,0
+4000008c:	03 20       	ldliu r3,0x0
+4000008e:	83 a1       	sli r3,0x8
+40000090:	03 20       	ldliu r3,0x0
+40000092:	83 a1       	sli r3,0x8
+40000094:	03 20       	ldliu r3,0x0
+40000096:	04 10       	ldhi r4,0
+40000098:	04 20       	ldliu r4,0x0
+4000009a:	84 a1       	sli r4,0x8
+4000009c:	04 20       	ldliu r4,0x0
+4000009e:	84 a1       	sli r4,0x8
+400000a0:	04 20       	ldliu r4,0x0
+400000a2:	05 10       	ldhi r5,0
+400000a4:	05 20       	ldliu r5,0x0
+400000a6:	85 a1       	sli r5,0x8
+400000a8:	05 20       	ldliu r5,0x0
+400000aa:	85 a1       	sli r5,0x8
+400000ac:	05 20       	ldliu r5,0x0
+400000ae:	06 10       	ldhi r6,0
+400000b0:	06 20       	ldliu r6,0x0
+400000b2:	86 a1       	sli r6,0x8
+400000b4:	06 20       	ldliu r6,0x0
+400000b6:	86 a1       	sli r6,0x8
+400000b8:	06 20       	ldliu r6,0x0
+400000ba:	07 10       	ldhi r7,0
+400000bc:	07 20       	ldliu r7,0x0
+400000be:	87 a1       	sli r7,0x8
+400000c0:	07 20       	ldliu r7,0x0
+400000c2:	87 a1       	sli r7,0x8
+400000c4:	07 20       	ldliu r7,0x0
+400000c6:	08 10       	ldhi r8,0
+400000c8:	08 20       	ldliu r8,0x0
+400000ca:	88 a1       	sli r8,0x8
+400000cc:	08 20       	ldliu r8,0x0
+400000ce:	88 a1       	sli r8,0x8
+400000d0:	08 20       	ldliu r8,0x0
+400000d2:	09 10       	ldhi r9,0
+400000d4:	09 20       	ldliu r9,0x0
+400000d6:	89 a1       	sli r9,0x8
+400000d8:	09 20       	ldliu r9,0x0
+400000da:	89 a1       	sli r9,0x8
+400000dc:	09 20       	ldliu r9,0x0
+400000de:	0a 10       	ldhi r10,0
+400000e0:	0a 20       	ldliu r10,0x0
+400000e2:	8a a1       	sli r10,0x8
+400000e4:	0a 20       	ldliu r10,0x0
+400000e6:	8a a1       	sli r10,0x8
+400000e8:	0a 20       	ldliu r10,0x0
+400000ea:	0b 10       	ldhi r11,0
+400000ec:	0b 20       	ldliu r11,0x0
+400000ee:	8b a1       	sli r11,0x8
+400000f0:	0b 20       	ldliu r11,0x0
+400000f2:	8b a1       	sli r11,0x8
+400000f4:	0b 20       	ldliu r11,0x0
+400000f6:	0c 10       	ldhi r12,0
+400000f8:	0c 20       	ldliu r12,0x0
+400000fa:	8c a1       	sli r12,0x8
+400000fc:	0c 20       	ldliu r12,0x0
+400000fe:	8c a1       	sli r12,0x8
+40000100:	0c 20       	ldliu r12,0x0
+40000102:	0d 10       	ldhi r13,0
+40000104:	0d 20       	ldliu r13,0x0
+40000106:	8d a1       	sli r13,0x8
+40000108:	0d 20       	ldliu r13,0x0
+4000010a:	8d a1       	sli r13,0x8
+4000010c:	0d 20       	ldliu r13,0x0
+4000010e:	0e 10       	ldhi r14,0
+40000110:	0e 20       	ldliu r14,0x0
+40000112:	8e a1       	sli r14,0x8
+40000114:	0e 20       	ldliu r14,0x0
+40000116:	8e a1       	sli r14,0x8
+40000118:	0e 20       	ldliu r14,0x0
+4000011a:	0f 10       	ldhi r15,0
+4000011c:	0f 20       	ldliu r15,0x0
+4000011e:	8f a1       	sli r15,0x8
+40000120:	0f 20       	ldliu r15,0x0
+40000122:	8f a1       	sli r15,0x8
+40000124:	0f 20       	ldliu r15,0x0
+40000126:	0d 10       	ldhi r13,0
+40000128:	2d 20       	ldliu r13,0x2
+4000012a:	8d a1       	sli r13,0x8
+4000012c:	0d 20       	ldliu r13,0x0
+4000012e:	8d a1       	sli r13,0x8
+40000130:	0d 20       	ldliu r13,0x0
+40000132:	07 0f       	ldli r7,-16
+40000134:	7d f5       	stw r13,r7
+40000136:	47 0f       	ldli r7,-12
+40000138:	7d f5       	stw r13,r7
+4000013a:	0d 12       	ldhi r13,32
+4000013c:	0d 20       	ldliu r13,0x0
+4000013e:	8d a1       	sli r13,0x8
+40000140:	0d 20       	ldliu r13,0x0
+40000142:	8d a1       	sli r13,0x8
+40000144:	cd 2a       	ldliu r13,0xac
+40000146:	0d ee       	jsr r13
+40000148:	01 e0       	mov r1,r0
+4000014a:	0d 12       	ldhi r13,32
+4000014c:	0d 20       	ldliu r13,0x0
+4000014e:	8d a1       	sli r13,0x8
+40000150:	0d 20       	ldliu r13,0x0
+40000152:	8d a1       	sli r13,0x8
+40000154:	bd 2b       	ldliu r13,0xbb
+40000156:	0d ee       	jsr r13
+40000158:	40 0a       	ldli r0,-92
+4000015a:	e0 1f       	ldhi r0,-2
+4000015c:	12 00       	ldli r2,1
+4000015e:	02 f7       	stb r2,r0
+40000160:	00 f4       	ldbu r0,r0
+40000162:	00 b8       	cmpi_eq r0,0
+40000164:	07 9c       	jmpi_ct 7
+40000166:	00 fe       	nop
+40000168:	40 0a       	ldli r0,-92
+4000016a:	e0 1f       	ldhi r0,-2
+4000016c:	00 f4       	ldbu r0,r0
+4000016e:	00 b8       	cmpi_eq r0,0
+40000170:	fb 8f       	jmpi_cf -5
+40000172:	00 00       	ldli r0,0
+40000174:	0e f8       	rts
+40000176:	00 fe       	nop
+40000178:	ff af       	jmpi -1
