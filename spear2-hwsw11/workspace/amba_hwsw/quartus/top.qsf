@@ -186,6 +186,7 @@ set_global_assignment -name OPTIMIZE_HOLD_TIMING "ALL PATHS"
 set_global_assignment -name FITTER_EFFORT "AUTO FIT"
 set_global_assignment -name OPTIMIZE_MULTI_CORNER_TIMING OFF
 
+
 #THDB-HTG J2.1, HSMC_CLKINn2
 #set_location_assignment PIN_Y28 -to LTM_ADC_PENIRQ_n
 #set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to LTM_ADC_PENIRQ_n
@@ -307,29 +308,83 @@ set_global_assignment -name OUTPUT_IO_TIMING_FAR_END_VMEAS "HALF SIGNAL SWING" -
 
 ##### Cam
 #set_location_assignment PIN_ -to CM_
-set_location_assignment PIN_J28 -to PIXCLK
-set_location_assignment PIN_T22 -to CM_D[11]
-set_location_assignment PIN_V24 -to CM_XCLKIN
-#line Valid
-set_location_assignment PIN_L22 -to CM_LVAL
-set_location_assignment PIN_N26 -to CM_RESET
-set_location_assignment PIN_P26 -to CM_D[0]
-set_location_assignment PIN_R21 -to CM_D[4]
-set_location_assignment PIN_R23 -to CM_D[8]
-set_location_assignment PIN_L21 -to CM_SDATA
-set_location_assignment PIN_N25 -to CM_TRIGGER
-set_location_assignment PIN_P21 -to CM_D[2]
-set_location_assignment PIN_R22 -to CM_D[6]
-set_location_assignment PIN_T21 -to CM_D[10]
-set_location_assignment PIN_V26 -to CM_SCLK
-set_location_assignment PIN_R28 -to CM_STROBE
-set_location_assignment PIN_U28 -to CM_D[1]
-set_location_assignment PIN_V28 -to CM_D[5]
-set_location_assignment PIN_V22 -to CM_D[9]
-set_location_assignment PIN_R27 -to CM_FVAL
-set_location_assignment PIN_V27 -to CM_D[3]
-set_location_assignment PIN_U22 -to CM_D[7]
-set_global_assignment -name VHDL_FILE ../../../VHDL/ext_modules/ext_camconfig/cam_config.vhd
+set_location_assignment PIN_J28 -to CM_PIXCLK
+set_location_assignment PIN_M26 -to CM_D[11]
+set_location_assignment PIN_G24 -to CM_XCLKIN
+set_location_assignment PIN_E26 -to CM_LVAL
+set_location_assignment PIN_G26 -to CM_RESET
+set_location_assignment PIN_H26 -to CM_D[0]
+set_location_assignment PIN_K26 -to CM_D[4]
+set_location_assignment PIN_L24 -to CM_D[8]
+set_location_assignment PIN_F26 -to CM_SDATA
+set_location_assignment PIN_G25 -to CM_TRIGGER
+set_location_assignment PIN_K25 -to CM_D[2]
+set_location_assignment PIN_L23 -to CM_D[6]
+set_location_assignment PIN_M25 -to CM_D[10]
+set_location_assignment PIN_G28 -to CM_SCLK
+set_location_assignment PIN_K28 -to CM_STROBE
+set_location_assignment PIN_M28 -to CM_D[1]
+set_location_assignment PIN_K22 -to CM_D[5]
+set_location_assignment PIN_H24 -to CM_D[9]
+set_location_assignment PIN_K27 -to CM_FVAL
+set_location_assignment PIN_K21 -to CM_D[3]
+set_location_assignment PIN_H23 -to CM_D[7]
+#Leds
+set_location_assignment PIN_G19 -to LED_RED[0]
+set_location_assignment PIN_F19 -to LED_RED[1]
+set_location_assignment PIN_E19 -to LED_RED[2]
+set_location_assignment PIN_F21 -to LED_RED[3]
+set_location_assignment PIN_F18 -to LED_RED[4]
+set_location_assignment PIN_E18 -to LED_RED[5]
+set_location_assignment PIN_J19 -to LED_RED[6]
+set_location_assignment PIN_H19 -to LED_RED[7]
+set_location_assignment PIN_J17 -to LED_RED[8]
+set_location_assignment PIN_G17 -to LED_RED[9]
+set_location_assignment PIN_J15 -to LED_RED[10]
+set_location_assignment PIN_H16 -to LED_RED[11]
+set_location_assignment PIN_J16 -to LED_RED[12]
+set_location_assignment PIN_H17 -to LED_RED[13]
+set_location_assignment PIN_F15 -to LED_RED[14]
+set_location_assignment PIN_G15 -to LED_RED[15]
+set_location_assignment PIN_G16 -to LED_RED[16]
+set_location_assignment PIN_H15 -to LED_RED[17]
+set_location_assignment PIN_E21 -to LED_GREEN[0]
+set_location_assignment PIN_E22 -to LED_GREEN[1]
+set_location_assignment PIN_E25 -to LED_GREEN[2]
+set_location_assignment PIN_E24 -to LED_GREEN[3]
+set_location_assignment PIN_H21 -to LED_GREEN[4]
+set_location_assignment PIN_G20 -to LED_GREEN[5]
+set_location_assignment PIN_G22 -to LED_GREEN[6]
+set_location_assignment PIN_G21 -to LED_GREEN[7]
+set_location_assignment PIN_F17 -to LED_GREEN[8]
+set_instance_assignment -name IO_STANDARD "2.5 V" -to LED_RED[0]
+set_instance_assignment -name IO_STANDARD "2.5 V" -to LED_RED[1]
+set_instance_assignment -name IO_STANDARD "2.5 V" -to LED_RED[2]
+set_instance_assignment -name IO_STANDARD "2.5 V" -to LED_RED[3]
+set_instance_assignment -name IO_STANDARD "2.5 V" -to LED_RED[4]
+set_instance_assignment -name IO_STANDARD "2.5 V" -to LED_RED[5]
+set_instance_assignment -name IO_STANDARD "2.5 V" -to LED_RED[6]
+set_instance_assignment -name IO_STANDARD "2.5 V" -to LED_RED[7]
+set_instance_assignment -name IO_STANDARD "2.5 V" -to LED_RED[8]
+set_instance_assignment -name IO_STANDARD "2.5 V" -to LED_RED[9]
+set_instance_assignment -name IO_STANDARD "2.5 V" -to LED_RED[10]
+set_instance_assignment -name IO_STANDARD "2.5 V" -to LED_RED[11]
+set_instance_assignment -name IO_STANDARD "2.5 V" -to LED_RED[12]
+set_instance_assignment -name IO_STANDARD "2.5 V" -to LED_RED[13]
+set_instance_assignment -name IO_STANDARD "2.5 V" -to LED_RED[14]
+set_instance_assignment -name IO_STANDARD "2.5 V" -to LED_RED[15]
+set_instance_assignment -name IO_STANDARD "2.5 V" -to LED_RED[16]
+set_instance_assignment -name IO_STANDARD "2.5 V" -to LED_RED[17]
+set_instance_assignment -name IO_STANDARD "2.5 V" -to LED_GREEN[0]
+set_instance_assignment -name IO_STANDARD "2.5 V" -to LED_GREEN[1]
+set_instance_assignment -name IO_STANDARD "2.5 V" -to LED_GREEN[2]
+set_instance_assignment -name IO_STANDARD "2.5 V" -to LED_GREEN[3]
+set_instance_assignment -name IO_STANDARD "2.5 V" -to LED_GREEN[4]
+set_instance_assignment -name IO_STANDARD "2.5 V" -to LED_GREEN[5]
+set_instance_assignment -name IO_STANDARD "2.5 V" -to LED_GREEN[6]
+set_instance_assignment -name IO_STANDARD "2.5 V" -to LED_GREEN[7]
+set_instance_assignment -name IO_STANDARD "2.5 V" -to LED_GREEN[8]
+
 set_global_assignment -name VHDL_FILE ../../../VHDL/amba_modules/gaisler/misc/ahbmst.vhd
 set_global_assignment -name VHDL_FILE ../../../VHDL/amba_modules/gaisler/misc/svgactrl.vhd
 set_global_assignment -name VHDL_FILE ../../../VHDL/common/spear_amba_pkg.vhd
@@ -366,6 +421,7 @@ set_global_assignment -name VHDL_FILE ../../../VHDL/ext_modules/ext_writeframe/w
 set_global_assignment -name VHDL_FILE ../../../VHDL/ext_modules/ext_aluext/pkg_aluext.vhd
 set_global_assignment -name VHDL_FILE ../../../VHDL/ext_modules/ext_aluext/aluext.vhd
 set_global_assignment -name VHDL_FILE ../../../VHDL/ext_modules/ext_camconfig/pkg_camconfig.vhd
+set_global_assignment -name VHDL_FILE ../../../VHDL/ext_modules/ext_camconfig/camconfig.vhd
 set_global_assignment -name VHDL_FILE ../../../VHDL/amba_modules/grlib/stdlib/stdlib.vhd
 set_global_assignment -name VHDL_FILE ../../../VHDL/amba_modules/grlib/stdlib/stdio.vhd
 set_global_assignment -name VHDL_FILE ../../../VHDL/amba_modules/grlib/stdlib/version.vhd
@@ -393,4 +449,11 @@ set_global_assignment -name VHDL_FILE ../VHDL/top_pkg.vhd
 set_global_assignment -name VHDL_FILE ../VHDL/top.vhd
 set_global_assignment -name SDC_FILE top.sdc
 set_global_assignment -name QIP_FILE ../VHDL/altera_pll.qip
+set_global_assignment -name IP_TOOL_NAME ALTPLL -qip ../VHDL/altera_pll.qip
+set_global_assignment -name IP_TOOL_VERSION 10.1 -qip ../VHDL/altera_pll.qip
+set_global_assignment -name VHDL_FILE ../VHDL/altera_pll.vhd -qip ../VHDL/altera_pll.qip
+set_global_assignment -name MISC_FILE ../VHDL/altera_pll.ppf -qip ../VHDL/altera_pll.qip
+set_global_assignment -name MISC_FILE "/homes/c0726179/hw-sw/hwswcod/spear2-hwsw11/workspace/amba_hwsw/quartus/top.dpf"
+
+
 set_instance_assignment -name PARTITION_HIERARCHY root_partition -to | -section_id Top
