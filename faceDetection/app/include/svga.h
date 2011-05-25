@@ -1,6 +1,11 @@
 #ifndef __SVGA_H__
 #define __SVGA_H__
 
+#include "image.h"
+
+#define SCREEN_WIDTH  800
+#define SCREEN_HEIGHT 480
+
 #define SVGA_BASE (0xF0000100)
 #define SVGA_STATUS (*(volatile int *const) (SVGA_BASE))
 #define SVGA_VIDEO_LENGTH (*(volatile int *const) (SVGA_BASE+4))
@@ -24,5 +29,9 @@
 #define SVGA_VLINELEN(x)	(x<<16)
 #define SVGA_HLINELEN(x)	(x)
 
+extern volatile uint32_t *screenData;
+void svga_init(void);
+void svga_outputImage(image_t *image);
+void svga_outputBwImage(bwimage_t *image);
 
 #endif // __SVGA_H__
