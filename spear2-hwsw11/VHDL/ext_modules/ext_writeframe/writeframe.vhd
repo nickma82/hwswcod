@@ -77,8 +77,9 @@ architecture rtl of ext_writeframe is
 	--ccd Handle Signals
 	type state_ccd_type is (idle, lineread, linenext, finisher, reset);
 	--type state_ccd is record
-		
+
 	--end record;
+	signal state_ccd, state_ccd_next : state_ccd_type;
 	
 begin
 	ahb_master : ahbmst generic map (2, 0, VENDOR_WIR, WIR_WRITEFRAME, 0, 3, 1)
@@ -87,22 +88,43 @@ begin
 	------------------------
 	---	CCD Handler
 	------------------------
-    reg : process(cm_lval, cm_fval)
-	begin
-		if ((cm_lval = '1') and (cm_fval = '1')) then 
-			--if rstint = RST_ACT then
-			--	r.ifacereg <= (others => (others => '0'));
-			--	r.state <= reset;
-			--else
-			--	r <= r_next;
-			--end if;
-		end if;
-	end process;
+    --ccdhand : process(cm_lval, cm_fval, cm_pixclk, state_ccd)
+	--begin
+	--	------------------
+	--	--- Statemachine
+	--	------------------
+	--	case state_ccd is
+	--		when reset =>
+	--			state_ccd_next <= idle;
+	--		when others =>
+	--			state_ccd_next <= idle;
+	--	end case;
+	--	--if ((cm_lval = '1') and (cm_fval = '1') and  (not cm_pixclk) ) then 
+	--		--For each PIXCLK cycle, one 12-bit pixel datum outputs on the DOUT pins. 
+	--		--  When both FRAME_VALID and LINE_VALID are asserted, the pixel is valid
+	--		
+	--	--end if;
+	--end process;
+    --
+    --------------------------
+	-----	Sync Daten übernehmen
+	--------------------------
+    --stateccdhandler : process(clk)
+	--begin
+	--	if rising_edge(clk) then 
+	--		if rstint = RST_ACT then
+	--			state_ccd <= reset;
+	--		else
+	--			state_ccd <= state_ccd_next;
+	--		end if;
+	--	end if;
+	--end process;
+
 	
 	------------------------
 	---	ASync Core Ext Interface Daten übernehmen und schreiben
 	------------------------
-	comb : process(r, exti, extsel)
+	comb : process(r, exti, extsel,dmao)
 	variable v : reg_type;
 	begin
     	v := r;
