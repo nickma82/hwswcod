@@ -51,7 +51,19 @@ entity top is
     ltm_grest   : out std_logic;
     
     -- Leds
-    led_red		: out std_logic_vector(17 downto 0)
+    led_red		: out std_logic_vector(17 downto 0);
+    
+    -- Cam
+    cm_d		: in std_logic_vector(11 downto 0); --pixel data
+    cm_lval 	: in std_logic; 	--Line valid
+    cm_fval 	: in std_logic; 	--Frame valid
+    cm_pixclk	: in std_logic; 	--pixel Clock
+    cm_xclkin	: out std_logic; 	--External input clock
+    cm_reset	: out std_logic;	--D5M reset
+    cm_trigger	: out std_logic;	--Snapshot trigger
+    cm_strobe	: in std_logic; 	--Snapshot strobe
+    cm_sdata	: inout std_logic; 	--Serial data
+    cm_sclk		: out std_logic		--Serial clk
   );
 end top;
 
@@ -112,7 +124,10 @@ architecture behaviour of top is
   signal writeframe_ahbmo : ahb_mst_out_type;
   
   -- Leds
-  signal sig_led_red	: std_logic_vector(2 downto 0);
+  --signal sig_led_red	: std_logic_vector(2 downto 0);
+  
+  -- Cam
+  
   
   component altera_pll IS
     PORT
