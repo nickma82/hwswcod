@@ -309,13 +309,13 @@ set_global_assignment -name OUTPUT_IO_TIMING_FAR_END_VMEAS "HALF SIGNAL SWING" -
 
 ##### Cam
 #set_location_assignment PIN_ -to CM_
-set_location_assignment PIN_J28 -to PIXCLK
+set_location_assignment PIN_J28 -to CM_PIXCLK
 set_location_assignment PIN_M26 -to CM_D[11]
 set_location_assignment PIN_G24 -to CM_XCLKIN
 set_location_assignment PIN_E26 -to CM_LVAL
 set_location_assignment PIN_G26 -to CM_RESET
 set_location_assignment PIN_H26 -to CM_D[0]
-set_location_assignment PIN_K21 -to CM_D[4]
+set_location_assignment PIN_K26 -to CM_D[4]
 set_location_assignment PIN_L24 -to CM_D[8]
 set_location_assignment PIN_F26 -to CM_SDATA
 set_location_assignment PIN_G25 -to CM_TRIGGER

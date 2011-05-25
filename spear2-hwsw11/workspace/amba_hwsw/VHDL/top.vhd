@@ -81,7 +81,7 @@ architecture behaviour of top is
   signal sysrst      : std_ulogic;
 
   signal clk         : std_logic;
-
+  
   -- 7-segment display
   signal dis7segsel  : std_ulogic;
   signal dis7segexto : module_out_type;
@@ -126,7 +126,6 @@ architecture behaviour of top is
   -- Leds
   --signal sig_led_red	: std_logic_vector(2 downto 0);
   
-  -- Cam
   
   
   component altera_pll IS
@@ -385,9 +384,19 @@ begin
 		exti      => exti,
 		exto      => writeframe_exto,
 		ahbi 		=> grlib_ahbmi,
-		ahbo 		=> writeframe_ahbmo      
+		ahbo 		=> writeframe_ahbmo,
+		
+		cm_d		=> cm_d,
+		cm_lval 	=> cm_lval,
+		cm_fval 	=> cm_fval,
+		cm_pixclk	=> cm_pixclk,
+		--cm_xclkin	=> 
+		cm_reset	=> cm_reset,
+		cm_trigger	=> cm_trigger,
+		cm_strobe	=> cm_strobe
 	);
-      
+    
+	--cm_xclkin <= clk; --Clk assignment
   
 	dis7seg_unit: ext_dis7seg
 	  generic map (
@@ -403,7 +412,7 @@ begin
 	    PIN_select => open
 	  );
 	
-	
+	  
 	counter_unit: ext_counter
 	  port map(
 	    clk        => clk,
@@ -430,12 +439,13 @@ begin
     if spearo.extsel = '1' then
       case spearo.addr(14 downto 5) is
         when "1111110111" => -- (-288)
-          --DIS7SEG Module
-          dis7segsel <= '1';
+			--DIS7SEG Module
+			dis7segsel <= '1';
         when "1111110110" => -- (-320)              
-          --Counter Module
-          counter_segsel <= '1';
+			--Counter Module
+			counter_segsel <= '1';
         when "1111110101" =>
+        	--Writeframe Module
         	writeframe_segsel <= '1';
         when others =>
           null;
