@@ -18,3 +18,4 @@ faceDetection/app/main.txt
 .DS_Store
 spear2-hwsw11/workspace/amba_hwsw/modelsim/**/*
 *.dpf
+faceDetection/app/transcript
