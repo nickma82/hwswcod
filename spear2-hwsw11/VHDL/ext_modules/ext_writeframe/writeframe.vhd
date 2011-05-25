@@ -74,10 +74,31 @@ architecture rtl of ext_writeframe is
 	
 	signal rstint : std_ulogic;
   
+	--ccd Handle Signals
+	type state_ccd_type is (idle, lineread, linenext, finisher, reset);
+	type state_ccd is record
+		
+	end record;
+	
 begin
 	ahb_master : ahbmst generic map (2, 0, VENDOR_WIR, WIR_WRITEFRAME, 0, 3, 1)
 	port map (rstint, clk, dmai, dmao, ahbi, ahbo);
-  
+	
+	------------------------
+	---	CCD Handler
+	------------------------
+    reg : process(cm_lval, cm_fval)
+	begin
+		if ((cm_lval = '1') and (cm_fval = '1')) then 
+			--if rstint = RST_ACT then
+			--	r.ifacereg <= (others => (others => '0'));
+			--	r.state <= reset;
+			--else
+			--	r <= r_next;
+			--end if;
+		end if;
+	end process;
+	
 	------------------------
 	---	ASync Core Ext Interface Daten übernehmen und schreiben
 	------------------------
@@ -200,6 +221,9 @@ begin
 		r_next <= v;
     end process;
     
+    
+    
+    
     ------------------------
 	---	Sync Daten übernehmen
 	------------------------
@@ -214,9 +238,6 @@ begin
 			end if;
 		end if;
 	end process;
-	
-	
-	
 	
 	
 end ;
