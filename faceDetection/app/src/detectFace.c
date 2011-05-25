@@ -25,7 +25,9 @@ rect_t faceDetection(image_t* inputImage) {
 	benchmark_messure(skinFilter(inputImage, &temp));
 		svga_outputBwImage(&temp);
 	benchmark_messure(erodeDilateFilter(&temp, &temp2, FILTER_ERODE));
+		svga_outputBwImage(&temp2);
 	benchmark_messure(erodeDilateFilter(&temp2, &temp, FILTER_DILATE));
+		svga_outputBwImage(&temp);
 	benchmark_messure(face = detectFace(&temp));
 	
 	bwimage_free(&temp);

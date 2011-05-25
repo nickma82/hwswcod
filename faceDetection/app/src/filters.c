@@ -1,3 +1,7 @@
+#include <stdlib.h>
+#include <stdio.h>
+#include <string.h>
+
 #include "filters.h"
 #include "dis7seg.h"
 
@@ -13,6 +17,7 @@
 #define CR_HIGH  200000000
 
 uint8_t findInWindow(bwimage_t *i, int x, int y, uint8_t compare);
+void fillWindow(bwimage_t *i, bwimage_t *flags, int x, int y, uint8_t color);
 
 void skinFilter(image_t *inputImage, bwimage_t *outputImage) {
 	int x, y;
@@ -23,7 +28,7 @@ void skinFilter(image_t *inputImage, bwimage_t *outputImage) {
 			if (ycbcr.y >= Y_LOW && ycbcr.y <= Y_HIGH
 				&& ycbcr.cb >= CB_LOW && ycbcr.cb <= CB_HIGH
 				&& ycbcr.cr >= CR_LOW && ycbcr.cr <= CR_HIGH) {
-				bwimage_setPixelValue(outputImage, x, y, color_white); 
+				bwimage_setPixelValue(outputImage, x, y, color_white);
 			} else {
 				bwimage_setPixelValue(outputImage, x, y, color_black);
 			}
@@ -36,17 +41,44 @@ void erodeDilateFilter(bwimage_t *inputImage, bwimage_t *outputImage, uint8_t op
 	uint8_t c;
 	uint8_t c1 = op == FILTER_ERODE ? color_black : color_white;
 	uint8_t c2 = op == FILTER_ERODE ? color_white : color_black;
+	uint32_t thres = (inputImage->width*inputImage->height) >> 1;
 	
-	for (y = 0; y < inputImage->height; ++y) {
-		for (x = 0; x < inputImage->width; ++x) {
-			// erode: look for neighbor pixels in background color
-			c = c1;
-			if (bwimage_getPixelValue(inputImage, x, y) == c2) {
-				if (!findInWindow(inputImage, x, y, c1))
-					c = c2;
+	if ((op == FILTER_ERODE && inputImage->fg_color_cnt < thres) || (op == FILTER_DILATE && inputImage->fg_color_cnt > thres)) {
+		// erode: look for neighbor pixels in background color
+		// dilate: look for neighbor pixels in foreground color
+		for (y = 0; y < inputImage->height; ++y) {
+			for (x = 0; x < inputImage->width; ++x) {
+				c = c1;
+				if (bwimage_getPixelValue(inputImage, x, y) == c2) {
+					if (!findInWindow(inputImage, x, y, c1))
+						c = c2;
+				}
+				bwimage_setPixelValue(outputImage, x, y, c);
 			}
-			bwimage_setPixelValue(outputImage, x, y, c);
 		}
+	} else {
+		bwimage_t flags;
+		flags.width = inputImage->width;
+		flags.height = inputImage->height;
+		flags.fg_color_cnt = 0;
+		flags.dataLength = inputImage->dataLength;
+		flags.data = (typeof(flags.data))malloc(flags.dataLength);
+		memset((void *)flags.data, 0, flags.dataLength);
+		
+		for (y = 0; y < inputImage->height; ++y) {
+			for (x = 0; x < inputImage->width; ++x) {
+				if (bwimage_getPixelValue(&flags, x, y) == color_white)
+					continue;
+				
+				if (bwimage_getPixelValue(inputImage, x, y) == c2) {
+					bwimage_setPixelValue(outputImage, x, y, c2);
+					bwimage_setPixelValue(&flags, x, y, color_white);
+				} else {
+					fillWindow(outputImage, &flags, x, y, c1);
+				}				
+			}
+		}
+		bwimage_free(&flags);
 	}
 }
 
@@ -74,4 +106,21 @@ uint8_t findInWindow(bwimage_t *i, int x, int y, uint8_t compare) {
 		}
 	}
 	return foundMatch;
+}
+
+void fillWindow(bwimage_t *i, bwimage_t *flags, int x, int y, uint8_t color) {
+	int dx, dy, wx, wy;
+	
+	for (dy = 1-WINDOW_LENGTH; dy <= WINDOW_LENGTH-1; ++dy) {
+		wy = y+dy;
+		if (wy >= 0 && wy < i->height) {
+			for (dx = 1-WINDOW_LENGTH; dx <= WINDOW_LENGTH-1; ++dx) {
+				wx = x+dx;
+				if (wx >= 0 && wx < i->width) {
+					bwimage_setPixelValue(i, wx, wy, color);
+					bwimage_setPixelValue(flags, wx, wy, color_white);
+				}
+			}
+		}
+	}
 }
