@@ -48,7 +48,10 @@ entity top is
     ltm_b       : out std_logic_vector(7 downto 0);
     ltm_nclk    : out std_logic;
     ltm_den     : out std_logic;
-    ltm_grest   : out std_logic
+    ltm_grest   : out std_logic;
+    
+    -- Leds
+    led_red		: out std_logic_vector(1 downto 0)
   );
 end top;
 
@@ -107,6 +110,9 @@ architecture behaviour of top is
   
   -- signals for writeframe AMBA Master
   signal writeframe_ahbmo : ahb_mst_out_type;
+  
+  -- Leds
+  signal sig_led_red	: std_logic_vector(1 downto 0);
   
   component altera_pll IS
     PORT
@@ -389,62 +395,61 @@ begin
 	    exto       => counter_exto
 	  );
   
-	comb : process(spearo, debugo_if, D_RxD, dis7segexto, counter_exto, writeframe_exto,aluext_exto)  --extend!
-	  variable extdata : std_logic_vector(31 downto 0);
-	begin   
-		exti.reset    <= spearo.reset;
-		exti.write_en <= spearo.write_en;
-		exti.data     <= spearo.data;
-		exti.addr     <= spearo.addr;
-		exti.byte_en  <= spearo.byte_en;
-		
-		dis7segsel <= '0';
-		counter_segsel <= '0';
-		writeframe_segsel <= '0';
-		aluext_segsel <= '0';
-		if spearo.extsel = '1' then
-		  case spearo.addr(14 downto 5) is
-		    when "1111110111" => -- (-288)
-		      --DIS7SEG Module
-		      dis7segsel <= '1';
-		    when "1111110110" => -- (-320)              
-		      --Counter Module
-		      counter_segsel <= '1';
-		    when "1111110101" =>
-		    	writeframe_segsel <= '1';
-			-- auf 0xFFFFFE80
-			when "1111110100" =>
-				aluext_segsel <= '1';
-		    when others =>
-		      null;
-		  end case;
-		end if;
-		
-		extdata := (others => '0');
-		for i in extdata'left downto extdata'right loop
-		  extdata(i) := dis7segexto.data(i) or counter_exto.data(i) or writeframe_exto.data(i) or aluext_exto.data(i); 
-		end loop;
-		
-		speari.data <= (others => '0');
-		speari.data <= extdata;
-		speari.hold <= '0';
-		speari.interruptin <= (others => '0');
-		
-		
-		--Debug interface
-		D_TxD             <= debugo_if.D_TxD;
-		debugi_if.D_RxD   <= D_RxD;
-	end process;
+  led_red <= "01";
+      
+  comb : process(spearo, debugo_if, D_RxD, dis7segexto, counter_exto, writeframe_exto)  --extend!
+    variable extdata : std_logic_vector(31 downto 0);
+  begin   
+    exti.reset    <= spearo.reset;
+    exti.write_en <= spearo.write_en;
+    exti.data     <= spearo.data;
+    exti.addr     <= spearo.addr;
+    exti.byte_en  <= spearo.byte_en;
+
+    dis7segsel <= '0';
+    counter_segsel <= '0';
+    writeframe_segsel <= '0';
+    
+    if spearo.extsel = '1' then
+      case spearo.addr(14 downto 5) is
+        when "1111110111" => -- (-288)
+          --DIS7SEG Module
+          dis7segsel <= '1';
+        when "1111110110" => -- (-320)              
+          --Counter Module
+          counter_segsel <= '1';
+        when "1111110101" =>
+        	writeframe_segsel <= '1';
+        when others =>
+          null;
+      end case;
+    end if;
+    
+    extdata := (others => '0');
+    for i in extdata'left downto extdata'right loop
+      extdata(i) := dis7segexto.data(i) or counter_exto.data(i) or writeframe_exto.data(i); 
+    end loop;
+
+    speari.data <= (others => '0');
+    speari.data <= extdata;
+    speari.hold <= '0';
+    speari.interruptin <= (others => '0');
+    
+
+    --Debug interface
+    D_TxD             <= debugo_if.D_TxD;
+    debugi_if.D_RxD   <= D_RxD;
+  end process;
 
 
-	reg : process(clk)
-	begin
-		if rising_edge(clk) then
-			--
-			-- input flip-flops
-			--
-			syncrst <= rst;
-		end if;
-	end process;
+  reg : process(clk)
+  begin
+    if rising_edge(clk) then
+      --
+      -- input flip-flops
+      --
+      syncrst <= rst;
+    end if;
+  end process;
 
 end behaviour;
