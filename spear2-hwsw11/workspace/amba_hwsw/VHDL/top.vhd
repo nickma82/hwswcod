@@ -1,6 +1,6 @@
 library ieee;
 use ieee.std_logic_1164.all;
-
+use ieee.std_logic_arith.all;
 use work.top_pkg.all;
 use work.spear_pkg.all;
 use work.spear_amba_pkg.all;
@@ -64,7 +64,10 @@ entity top is
     cm_trigger	: out std_logic;	--Snapshot trigger
     cm_strobe	: in std_logic; 	--Snapshot strobe
     cm_sdata	: inout std_logic; 	--Serial data
-    cm_sclk		: out std_logic		--Serial clk
+    cm_sclk		: out std_logic;	--Serial clk
+    
+    --DE2-115 JP5 GPIO
+    gpio		: out std_logic_vector(28 downto 0)
   );
 end top;
 
@@ -102,7 +105,13 @@ architecture behaviour of top is
   -- signals for cam-config extension module
   signal camconfig_segsel : std_logic;
   signal camconfig_exto : module_out_type;
-
+  
+  -- for sim
+  signal cam_state : cam_state_type;
+  signal cam_i	: integer range -1 to 7;
+  signal cam_sclk : std_logic;
+  signal cam_sdata : std_logic;
+  
   -- signals for AHB slaves and APB slaves
   signal ahbmi            : ahb_master_in_type;
   signal spear_ahbmo      : ahb_master_out_type;
@@ -386,10 +395,20 @@ begin
 		extsel    => camconfig_segsel,
 		exti      => exti,
 		exto      => camconfig_exto,
-		sclk	  => cm_sclk,--CM_SCLK,
-		sdata	  => cm_sdata, --CM_SDATA
-		led_red	  => led_red
+		sclk	  => cam_sclk,--CM_SCLK,
+		sdata	  => cam_sdata, --CM_SDATA
+		led_red	  => led_red,
+		cam_state => cam_state,
+		cam_i	  => cam_i
 	);
+	
+	cm_sclk <= cam_sclk;
+	cm_sdata <= cam_sdata;
+	gpio(0) <= clk;
+	gpio(1) <= cam_sclk;
+	gpio(2) <= cam_sdata;
+	gpio(7 downto 4) <= conv_std_logic_vector(cam_i,4);
+	
 
 	writeframe_unit: ext_writeframe
   	port map(
@@ -411,8 +430,10 @@ begin
 		cm_strobe	=> cm_strobe
 	);
     
-	--cm_xclkin <= clk; --ccd Clk assignment
-  
+	cm_xclkin <= clk; --ccd Clk assignment
+	gpio(3) <= cm_pixclk;
+	
+	
 	dis7seg_unit: ext_dis7seg
 	  generic map (
 	    DIGIT_COUNT => 8,

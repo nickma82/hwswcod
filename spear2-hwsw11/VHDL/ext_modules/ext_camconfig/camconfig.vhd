@@ -20,7 +20,9 @@ entity ext_camconfig is
 		exto    : out 	module_out_type;
 		sclk	: out	std_logic;
 		sdata	: inout	std_logic;
-		led_red	: out std_logic_vector(17 downto 0)
+		led_red	: out std_logic_vector(17 downto 0);
+		cam_state: out cam_state_type;
+		cam_i	: out integer range -1 to 7
     );
 end ;
 
@@ -29,7 +31,6 @@ architecture rtl of ext_camconfig is
 	subtype BYTE is std_logic_vector(7 downto 0);
 	type register_set is array (0 to 4) of BYTE;
 
-	type state_type is (reset, idle, send_start_bit, wait_until_low, restore_read, done, send_id, send_address, write1, write2, read1, read2, send_ack, wait_ack, wait_until_high, error_state);
 	
 	type reg_type is record
   		ifacereg	: register_set;
@@ -39,10 +40,10 @@ architecture rtl of ext_camconfig is
 		data2		: BYTE;
 		
 		ready		: std_logic;
-		state		: state_type;
-		ret_state	: state_type;
+		state		: cam_state_type;
+		ret_state	: cam_state_type;
 		
-		i			: integer range 0 to 8;
+		i			: integer range -1 to 7;
 		clkgen		: integer range 0 to CLK_COUNT;
 		
 		sclk		: std_logic;
@@ -193,14 +194,15 @@ begin
 				v.i := 0;
 				v.clkgen := 0;
 				v.sdata := '1';
-				v.sclk := '1';		
+				v.sclk := '1';
+				v.ready := '1';
+				v.leds := (others => '1');
 			when idle =>
 				-- sobald aktion ausgeführt wird => start bit senden
 				if r.ready = '0' then
 					v.state := send_start_bit;
-					v.i := 0;
 				end if;
-				v.leds := (others=>'1');
+				v.leds(3) := '0';
 			when send_start_bit =>
 				-- start bit wird nur gesendet wenn sclock high ist
 				if r.sclk = '1' then
@@ -231,6 +233,8 @@ begin
 				v.leds(7) := '0';
 			when error_state =>
 				v.state := idle;
+				v.ready := '1';
+				v.leds(17) := '0';
 			when 
 				others => null;
 		end case;		
@@ -244,9 +248,9 @@ begin
 			if r.sclk = '0' then			
 				-- restlichen aktionen passieren getaktet mit langsamen takt immer zur hälfte der low phase
 				case r.state is
-					when send_id =>		
-						if r.i <= 7 then
-							-- 8 bit hinaus schicken
+					when send_id =>	
+						-- 8 bit hinaus schicken
+						if r.i >= 0 then
 							v.sdata := r.id(r.i);
 						else
 							-- nach 8. bit auf ack bit warten
@@ -257,8 +261,8 @@ begin
 						v.leds(8) := '0';
 					-- address bits der reihe nach hinaus schicken
 					when send_address =>
-						if r.i <= 7 then
-							-- 8 bit hinaus schicken
+						-- 8 bit hinaus schicken
+						if r.i >= 0 then
 							v.sdata := r.address(r.i);
 						else
 							v.state := wait_ack;
@@ -272,8 +276,8 @@ begin
 						end if;
 						v.leds(9) := '0';
 					-- WRITE: daten nacheinander hinaus schicken, dazwischen ack bit abwarten			
-					when write1 =>			
-						if r.i <= 7 then
+					when write1 =>	
+						if r.i >= 0 then
 							v.sdata := r.data1(r.i);
 						else
 							v.state := wait_ack;
@@ -282,7 +286,7 @@ begin
 						end if;	
 						v.leds(10) := '0';
 					when write2 =>
-						if r.i <= 7 then
+						if r.i >= 0 then
 							v.sdata := r.data2(r.i);
 						else
 							v.state := wait_ack;
@@ -310,14 +314,16 @@ begin
 						v.leds(13) := '0';
 					-- READ: daten nacheinander lesen, jedes byte bestätigen
 					when read1 =>
-						v.data1(r.i) := sdata;
-						if r.i = 7 then
+						if r.i >= 0 then
+							v.data1(r.i) := sdata;
+						else
 							v.state := send_ack;
 						end if;
 						v.leds(14) := '0';
 					when read2 =>
-						v.data2(r.i) := sdata;
-						if r.i = 7 then
+						if r.i >= 0 then
+							v.data2(r.i) := sdata;
+						else
 							v.state := done;
 						end if;
 						v.leds(15) := '0';
@@ -331,21 +337,24 @@ begin
 		end if;	
 		
 		------------
-		--- i index immer nach auslesen/schreiben modifizieren
+		--- i index immer nach auslesen/schreiben modifizieren aber nur wenn in states in denen daten gelesen/geschrieben werden
 		------------
 		if r.clkgen = (CLK_HALF+1) and r.sclk = '1' then
-			if r.i < 8 then
-				v.i := r.i + 1;
+			if r.i >= 0  and (r.state = send_id or r.state = send_address or r.state = read1 or r.state = read2 or r.state = write1 or r.state = write2 ) then
+				v.i := r.i - 1;
 			else
-				v.i := 0;
-			end if;			
+				v.i := 7;
+			end if;
 		end if;
 		
 		sclk <= r.sclk;
 		sdata <= r.sdata;
 		led_red(0) <= r.sclk;
 		led_red(1) <= r.sdata;
-		led_red(17 downto 2) <= r.leds(17 downto 2);
+		led_red(2) <= rstint;
+		led_red(17 downto 3) <= r.leds(17 downto 3);
+		cam_state <= r.state;
+		cam_i <= r.i;
 		r_next <= v;
     end process;	
 

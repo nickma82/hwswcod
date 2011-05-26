@@ -45,6 +45,20 @@ architecture behaviour of top_tb is
   signal ltm_den     : std_logic;
   signal ltm_grest   : std_logic;
   
+ 
+  signal led_red	: std_logic_vector(17 downto 0);
+  
+  signal cm_d		: std_logic_vector(11 downto 0); --pixel data
+  signal cm_lval 	: std_logic; 	--Line valid
+  signal cm_fval 	: std_logic; 	--Frame valid
+  signal cm_pixclk	: std_logic; 	--pixel Clock
+  signal cm_xclkin	: std_logic; 	--External input clock
+  signal cm_reset	: std_logic;	--D5M reset
+  signal cm_trigger	: std_logic;	--Snapshot trigger
+  signal cm_strobe	: std_logic; 	--Snapshot strobe
+  signal cm_sdata	: std_logic; 	--Serial data
+  signal cm_sclk	: std_logic;		--Serial clk
+  
   file appFile : text  open read_mode is "app.srec";
 
   component top
@@ -73,7 +87,22 @@ architecture behaviour of top_tb is
       ltm_b       : out std_logic_vector(7 downto 0);
       ltm_nclk    : out std_logic;
       ltm_den     : out std_logic;
-      ltm_grest   : out std_logic
+      ltm_grest   : out std_logic;
+      
+      -- Leds
+	  led_red		: out std_logic_vector(17 downto 0);
+	  
+	  -- Cam
+	  cm_d		: in std_logic_vector(11 downto 0); --pixel data
+	  cm_lval 	: in std_logic; 	--Line valid
+	  cm_fval 	: in std_logic; 	--Frame valid
+	  cm_pixclk	: in std_logic; 	--pixel Clock
+	  cm_xclkin	: out std_logic; 	--External input clock
+	  cm_reset	: out std_logic;	--D5M reset
+	  cm_trigger	: out std_logic;	--Snapshot trigger
+	  cm_strobe	: in std_logic; 	--Snapshot strobe
+	  cm_sdata	: inout std_logic; 	--Serial data
+	  cm_sclk		: out std_logic		--Serial clk
       );    
   end component;
   
@@ -82,28 +111,39 @@ begin
 
   top_1: top
     port map (
-      db_clk         => clk,
-      rst            => rst,
-      D_RxD          => D_RxD,
-      D_TxD          => D_TxD,
-      digits         => digits,
-      sdcke          => sdcke,
-      sdcsn          => sdcsn,
-      sdwen          => sdwen,
-      sdrasn         => sdrasn,
-      sdcasn         => sdcasn,
-      sddqm          => sddqm,
-      sdclk          => sdclk,
-      sa             => sa,
-      sd             => sd,
-      ltm_hd         => ltm_hd,
-      ltm_vd         => ltm_vd,
-      ltm_r          => ltm_r,
-      ltm_g          => ltm_g,
-      ltm_b          => ltm_b,
-      ltm_nclk       => ltm_nclk,
-      ltm_den        => ltm_den,
-      ltm_grest      => ltm_grest
+		db_clk         => clk,
+		rst            => rst,
+		D_RxD          => D_RxD,
+		D_TxD          => D_TxD,
+		digits         => digits,
+		sdcke          => sdcke,
+		sdcsn          => sdcsn,
+		sdwen          => sdwen,
+		sdrasn         => sdrasn,
+		sdcasn         => sdcasn,
+		sddqm          => sddqm,
+		sdclk          => sdclk,
+		sa             => sa,
+		sd             => sd,
+		ltm_hd         => ltm_hd,
+		ltm_vd         => ltm_vd,
+		ltm_r          => ltm_r,
+		ltm_g          => ltm_g,
+		ltm_b          => ltm_b,
+		ltm_nclk       => ltm_nclk,
+		ltm_den        => ltm_den,
+		ltm_grest      => ltm_grest,
+		led_red		=> led_red,
+      	cm_d		=> cm_d,
+		cm_lval 	=> cm_lval,
+		cm_fval 	=> cm_fval,
+		cm_pixclk	=> cm_pixclk,	
+		cm_xclkin	=> cm_xclkin,	
+		cm_reset	=> cm_reset,
+		cm_trigger	=> cm_trigger,
+		cm_strobe	=> cm_strobe,	
+		cm_sdata	=> cm_sdata,
+		cm_sclk	    => cm_sclk
       );
 
   clkgen : process
@@ -127,6 +167,7 @@ begin
     procedure ser_send(send: Natural; parity: parity_type) is
       variable parityBit : std_logic;
     begin
+      --cm_sdata <= 'L';
       parityBit := '0';
       D_RxD <= '0';-- startbit(0)
       icwait(bittime);  

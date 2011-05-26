@@ -41,11 +41,11 @@ int main(int argc, char **argv)
 		}
 	#else
 		dis7seg_hex(0x00);
-		read_cam(0x00);
-		dis7seg_hex(0x01);
-		getFrame();
+		dis7seg_hex(read_cam(0x00));
+		
+		
 		while (1) {
-			
+			getFrame();
 			//getFrame();
 			// TODO:
 			// get picture from camera
