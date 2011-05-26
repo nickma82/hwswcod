@@ -18,6 +18,8 @@ package pkg_camconfig is
 constant CLK_COUNT : integer := 100;
 constant CLK_HALF  : integer := CLK_COUNT/2;
 
+type cam_state_type is (reset, idle, send_start_bit, wait_until_low, restore_read, done, send_id, send_address, write1, write2, read1, read2, send_ack, wait_ack, wait_until_high, error_state);
+	
 component ext_camconfig
 	port (
 		clk     : in  	std_logic;
@@ -26,7 +28,9 @@ component ext_camconfig
 		exto    : out 	module_out_type;
 		sclk	: out	std_logic;
 		sdata	: inout	std_logic;
-		led_red	: out std_logic_vector(17 downto 0)
+		led_red	: out std_logic_vector(17 downto 0);
+		cam_state : out cam_state_type;
+		cam_i	: out integer range -1 to 7
 	);
 end component;
   

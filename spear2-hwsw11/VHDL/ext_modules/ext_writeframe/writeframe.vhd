@@ -216,9 +216,9 @@ begin
 				if dmao.ready = '1' then
 					v.state := data;
 				end if;
-				v.wdata := "00000000111111110000000000000000";
+				v.wdata := r.address; --"00000000111111110000000000000000";
 			when data =>
-				if r.address = FRAMEBUFFER_END_ADR then
+				if r.address >= FRAMEBUFFER_END_ADR then
 					v.state := done;
 					v.start := '0';
 				else					
@@ -240,6 +240,8 @@ begin
 	    dmai.start    <= r.start;
 	    dmai.address  <= r.address;
 		
+	    cm_reset <= rstint;
+	    
 		r_next <= v;
     end process;
     
