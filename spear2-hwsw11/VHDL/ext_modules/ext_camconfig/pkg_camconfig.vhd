@@ -22,15 +22,17 @@ type cam_state_type is (reset, idle, send_start_bit, wait_until_low, restore_rea
 	
 component ext_camconfig
 	port (
-		clk     : in  	std_logic;
-		extsel  : in  	std_ulogic;
-		exti    : in  	module_in_type;
-		exto    : out 	module_out_type;
-		sclk	: out	std_logic;
-		sdata	: inout	std_logic;
-		led_red	: out std_logic_vector(17 downto 0);
-		cam_state : out cam_state_type;
-		cam_i	: out integer range -1 to 7
+		clk     		: in  	std_logic;
+		extsel  		: in  	std_ulogic;
+		exti    		: in  	module_in_type;
+		exto    		: out 	module_out_type;
+		sclk			: out	std_logic;
+		sdata_in		: in	std_logic;
+		sdata_out		: out	std_logic;
+		sdata_out_en 	: out 	std_logic;
+		led_red			: out 	std_logic_vector(17 downto 0);
+		cam_state 		: out 	cam_state_type;
+		cam_i			: out 	integer range -1 to 7
 	);
 end component;
   

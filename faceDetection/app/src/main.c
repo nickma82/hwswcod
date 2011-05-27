@@ -18,6 +18,8 @@
 
 int main(int argc, char **argv)
 {	
+	int i,y;
+	uint32_t color = 0;
 	#ifdef __SPEAR32__
 		// initialize HW modules
 		dis7seg_init();
@@ -41,11 +43,21 @@ int main(int argc, char **argv)
 		}
 	#else
 		dis7seg_hex(0x00);
-		dis7seg_hex(read_cam(0x00));
+		dis7seg_hex(read_cam(0x06));
 		
 		
 		while (1) {
-			getFrame();
+			getFrame(color);
+			//dis7seg_hex(color);
+			color+=500;
+			
+			if (color >= 0x00FFFFFF)
+				color = 0;
+			//for (i=0; i < 100; i++) {
+			//for (y=0; y < 60000; y++) {
+			//	asm("nop");
+			//}
+			//}
 			//getFrame();
 			// TODO:
 			// get picture from camera
