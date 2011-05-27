@@ -308,7 +308,8 @@ begin
 						if sdata_in = '0' then
 							v.state := wait_until_low;
 						else
-							v.state := error_state;
+							--v.state := error_state;
+							v.state := wait_until_low;
 						end if;
 						v.leds(13) := '0';
 					-- READ: daten nacheinander lesen, jedes byte bestätigen
