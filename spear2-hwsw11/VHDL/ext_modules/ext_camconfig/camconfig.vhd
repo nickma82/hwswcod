@@ -195,21 +195,23 @@ begin
 				v.sclk := '1';
 				v.sdata_out := '1';
 				v.clkgen := 0;
+				sdata_out_en <= '0';
 			when idle =>
+				v.sdata_out := '1';
 				-- sobald aktion ausgeführt wird => start bit senden
 				if r.ready = '0' then
 					v.state := send_start_bit;
 				end if;
-				v.sdata_out := '1';
 				v.leds(3) := '0';
 			when send_start_bit =>
+				sdata_out_en <= '1';
+				--@TODO folgende if Abfrage ev in die Taktgesteuerte logik übersiedeln
 				-- start bit wird nur gesendet wenn sclock high ist
-				if r.sclk = '1' then
+				if (r.sclk = '1' and r.sdata_out = '0') then
 					v.state := wait_until_low;
 					v.ret_state := send_id;
-					v.sdata_out := '0';
+					v.leds(4) := '0';
 				end if;
-				v.leds(4) := '0';
 			when wait_until_low =>
 				-- warten bis takt low wird hängt hier
 				if r.sclk = '0' then
@@ -230,6 +232,10 @@ begin
 			when 
 				others => null;
 		end case;		
+		
+		if r.state = wait_ack or r.state = read1 or r.state = read2 or r.state = wait_until_high or r.state = restore_read then
+			sdata_out_en <= '0';
+		end if;
 		
 		------------------
 		-- Veränderungen immer zu halben taktflanken
@@ -252,6 +258,7 @@ begin
 						v.leds(8) := '0';
 					-- address bits der reihe nach hinaus schicken
 					when send_address =>
+						sdata_out_en <= '1';
 						-- 8 bit hinaus schicken
 						if r.i >= 0 then
 							v.sdata_out := r.address(r.i);
@@ -267,6 +274,7 @@ begin
 						v.leds(9) := '0';
 					-- WRITE: daten nacheinander hinaus schicken, dazwischen ack bit abwarten			
 					when write1 =>	
+						sdata_out_en <= '1';
 						if r.i >= 0 then
 							v.sdata_out := r.data1(r.i);
 						else
@@ -275,6 +283,7 @@ begin
 						end if;	
 						v.leds(10) := '0';
 					when write2 =>
+						sdata_out_en <= '1';
 						if r.i >= 0 then
 							v.sdata_out := r.data2(r.i);
 						else
@@ -292,6 +301,8 @@ begin
 			-- sampeln zur mitte des high takt
 			else				
 				case r.state is
+					when send_start_bit =>
+						v.sdata_out := '0';
 					when wait_ack =>
 						-- weiter wenn das ack bit auf low gezogen wird
 						if sdata_in = '0' then
@@ -337,11 +348,7 @@ begin
 		
 		sclk <= r.sclk;
 		sdata_out <= r.sdata_out;
-		sdata_out_en <= '1';
-		
-		if r.state = wait_ack or r.state = read1 or r.state = read2 or r.state = wait_until_high or r.state = restore_read then
-			sdata_out_en <= '0';
-		end if;
+
 		
 		led_red(0) <= r.sclk;
 		led_red(1) <= r.sdata_out;

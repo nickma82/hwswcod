@@ -1,6 +1,7 @@
 library ieee;
 use ieee.std_logic_1164.all;
-use ieee.std_logic_arith.all;
+--Paket Infos: http://www.eda.org/rassp/vhdl/guidelines/1164qrc.pdf
+--use ieee.std_logic_arith.all; --KEINE Standardisierte Library, nicht verwenden lt. Polzer
 use work.top_pkg.all;
 use work.spear_pkg.all;
 use work.spear_amba_pkg.all;
@@ -67,7 +68,7 @@ entity top is
     cm_sclk		: out std_logic;	--Serial clk
     
     --DE2-115 JP5 GPIO
-    gpio		: out std_logic_vector(28 downto 0)
+    gpio		: inout std_logic_vector(28 downto 0)
   );
 end top;
 
@@ -406,13 +407,14 @@ begin
 	);
 	
 	cm_sclk <= cam_sclk;
+	--sdata_out_en 0=input 1=output
 	cm_sdata <= cam_sdata_out when cam_sdata_out_en = '1' else 'Z';
 	
 	gpio(0) <= clk;	
 	gpio(1) <= cam_sclk;
 	gpio(2) <= cam_sdata_out;
 	gpio(3) <= cm_sdata;
-	gpio(7 downto 4) <= conv_std_logic_vector(cam_i,4);
+	gpio(7 downto 4) <= (others => '0'); --STD_LOGIC_VECTOR(TO_SIGNED(cam_i,4));
 	gpio(8) <= cam_sdata_out_en;
 
 	writeframe_unit: ext_writeframe
