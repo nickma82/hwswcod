@@ -18,7 +18,7 @@ package pkg_camconfig is
 constant CLK_COUNT : integer := 100;
 constant CLK_HALF  : integer := CLK_COUNT/2;
 
-type cam_state_type is (reset, idle, send_start_bit, wait_until_low, restore_read, done, send_id, send_address, write1, write2, read1, read2, send_ack, wait_ack, wait_until_high, error_state);
+type cam_state_type is (reset, idle, send_start_bit, wait_until_low, restore_read, done, send_w_id, send_r_id, send_address, write1, write2, read1, read2, send_ack, wait_ack, wait_until_high, error_state);
 	
 component ext_camconfig
 	port (
