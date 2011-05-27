@@ -59,6 +59,7 @@ architecture rtl of ext_writeframe is
 		wdata		: std_logic_vector(31 downto 0);
 		state		: state_type;
 		start		: std_logic;
+		color		: std_logic_vector(31 downto 0);
   	end record;
 
 	signal r_next : reg_type;
@@ -69,7 +70,8 @@ architecture rtl of ext_writeframe is
 		address 	=> (others => '0'),
 		wdata  	=> (others => '0'),
 		state	=> reset,
-		start	=> '0'
+		start	=> '0',
+		color   => (others => '0')
 	);
 	
 	signal rstint : std_ulogic;
@@ -82,7 +84,7 @@ architecture rtl of ext_writeframe is
 	signal state_ccd, state_ccd_next : state_ccd_type;
 	
 begin
-	ahb_master : ahbmst generic map (2, 0, VENDOR_WIR, WIR_WRITEFRAME, 0, 3, 1)
+	ahb_master : ahbmst generic map (1, 0, VENDOR_WIR, WIR_WRITEFRAME, 0, 3, 1)
 	port map (rstint, clk, dmai, dmao, ahbi, ahbo);
 	
 	------------------------
@@ -124,7 +126,7 @@ begin
 	------------------------
 	---	ASync Core Ext Interface Daten übernehmen und schreiben
 	------------------------
-	comb : process(r, exti, extsel,dmao)
+	comb : process(r, exti, extsel,dmao,rstint)
 	variable v : reg_type;
 	begin
     	v := r;
@@ -150,9 +152,11 @@ begin
     				end if;
 				-- commando word => bit 0 übernehmen
     			when "001" =>
-    				if ((exti.byte_en(0) = '1') and (exti.data(0) = '1')) then
+    				if ((exti.byte_en(0) = '1')) then
     					v.getframe := '1';
     				end if;
+    			when "010" =>
+    				v.color(31 downto 0) := exti.data(31 downto 0);
    				when others =>
 					null;
 			end case;
@@ -216,7 +220,7 @@ begin
 				if dmao.ready = '1' then
 					v.state := data;
 				end if;
-				v.wdata := r.address; --"00000000111111110000000000000000";
+				v.wdata := r.color; --r.address; --"00000000111111110000000000000000";
 			when data =>
 				if r.address >= FRAMEBUFFER_END_ADR then
 					v.state := done;

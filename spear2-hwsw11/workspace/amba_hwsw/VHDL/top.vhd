@@ -106,11 +106,10 @@ architecture behaviour of top is
   signal camconfig_segsel : std_logic;
   signal camconfig_exto : module_out_type;
   
-  -- for sim
   signal cam_state : cam_state_type;
   signal cam_i	: integer range -1 to 7;
   signal cam_sclk : std_logic;
-  signal cam_sdata : std_logic;
+  signal cam_sdata_out_en, cam_sdata_out : std_logic;
   
   -- signals for AHB slaves and APB slaves
   signal ahbmi            : ahb_master_in_type;
@@ -219,7 +218,7 @@ begin
     ahbmi.hrdata  <=  grlib_ahbmi.hrdata;
     ahbmi.hirq    <=  grlib_ahbmi.hirq(MAX_AHB_IRQ-1 downto 0);
 
-    for i in 2 to grlib_ahbmo'length - 1 loop
+    for i in 3 to grlib_ahbmo'length - 1 loop
       grlib_ahbmo(i) <= ahbm_none;
     end loop;
 
@@ -235,10 +234,12 @@ begin
     grlib_ahbmo(0).hirq     <=  (others => '0');
     grlib_ahbmo(0).hconfig  <=  AMBA_MASTER_CONFIG;
     grlib_ahbmo(0).hindex   <=  0;
-
-    grlib_ahbmo(1)          <=  svga_ahbmo;
     
-    grlib_ahbmo(2)			<=  writeframe_ahbmo;
+    grlib_ahbmo(1)			<=  writeframe_ahbmo;
+    
+    grlib_ahbmo(2)          <=  svga_ahbmo;
+    
+    
   end process;
 
 
@@ -349,7 +350,7 @@ begin
       pindex => 0,
       paddr => 16#001#,
       pmask => 16#fff#,
-      hindex => 1,
+      hindex => 2,
       memtech => 7
     )
     port map
@@ -395,20 +396,24 @@ begin
 		extsel    => camconfig_segsel,
 		exti      => exti,
 		exto      => camconfig_exto,
-		sclk	  => cam_sclk,--CM_SCLK,
-		sdata	  => cam_sdata, --CM_SDATA
+		sclk	  => cam_sclk,
+		sdata_in  => cm_sdata,
+		sdata_out => cam_sdata_out,
+		sdata_out_en => cam_sdata_out_en,
 		led_red	  => led_red,
 		cam_state => cam_state,
 		cam_i	  => cam_i
 	);
 	
 	cm_sclk <= cam_sclk;
-	cm_sdata <= cam_sdata;
-	gpio(0) <= clk;
-	gpio(1) <= cam_sclk;
-	gpio(2) <= cam_sdata;
-	gpio(7 downto 4) <= conv_std_logic_vector(cam_i,4);
+	cm_sdata <= cam_sdata_out when cam_sdata_out_en = '1' else 'Z';
 	
+	gpio(0) <= clk;	
+	gpio(1) <= cam_sclk;
+	gpio(2) <= cam_sdata_out;
+	gpio(3) <= cm_sdata;
+	gpio(7 downto 4) <= conv_std_logic_vector(cam_i,4);
+	gpio(8) <= cam_sdata_out_en;
 
 	writeframe_unit: ext_writeframe
   	port map(
@@ -431,7 +436,7 @@ begin
 	);
     
 	cm_xclkin <= clk; --ccd Clk assignment
-	gpio(3) <= cm_pixclk;
+	
 	
 	
 	dis7seg_unit: ext_dis7seg

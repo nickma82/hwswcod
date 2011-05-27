@@ -14,15 +14,17 @@ use work.pkg_camconfig.all;
 
 entity ext_camconfig is
 	port (
-		clk     : in  	std_logic;
-		extsel  : in  	std_ulogic;
-		exti    : in  	module_in_type;
-		exto    : out 	module_out_type;
-		sclk	: out	std_logic;
-		sdata	: inout	std_logic;
-		led_red	: out std_logic_vector(17 downto 0);
-		cam_state: out cam_state_type;
-		cam_i	: out integer range -1 to 7
+		clk     		: in  	std_logic;
+		extsel  		: in  	std_ulogic;
+		exti    		: in  	module_in_type;
+		exto    		: out 	module_out_type;
+		sclk			: out	std_logic;
+		sdata_in		: in	std_logic;
+		sdata_out		: out	std_logic;
+		sdata_out_en 	: out 	std_logic;
+		led_red			: out 	std_logic_vector(17 downto 0);
+		cam_state		: out 	cam_state_type;
+		cam_i			: out 	integer range -1 to 7
     );
 end ;
 
@@ -47,8 +49,7 @@ architecture rtl of ext_camconfig is
 		clkgen		: integer range 0 to CLK_COUNT;
 		
 		sclk		: std_logic;
-		sdata		: std_logic;
-		
+		sdata_out	: std_logic;
 		leds		: std_logic_vector(17 downto 0);
   	end record;
 
@@ -66,7 +67,7 @@ architecture rtl of ext_camconfig is
 		i => 0,
 		clkgen => 0,
 		sclk => '1',
-		sdata => '1',
+		sdata_out => '1',
 		leds => (others=>'1')
 	);
 	
@@ -76,7 +77,7 @@ begin
 	------------------------
 	---	ASync Core Ext Interface Daten übernehmen und schreiben
 	------------------------
-	comb : process(r, exti, extsel,sdata)
+	comb : process(r, exti, extsel,sdata_in,rstint)
 	variable v : reg_type;
 	begin
     	v := r;
@@ -168,17 +169,13 @@ begin
 		------------------
 		-- Takt für two wire generieren, nur wenn übertragung läuft sonst bus auf idle stellen
 		------------------
-		if r.state /= reset and r.state /= idle then
+		if r.state /= reset  then --and r.state /= idle
 			if r.clkgen = CLK_COUNT then
 				v.clkgen := 0;
 				v.sclk := not r.sclk;
 			else
 				v.clkgen := r.clkgen + 1;
-			end if;
-		else
-			v.sclk := '1';
-			v.sdata := '1';
-			v.clkgen := 0;
+			end if;		
 		end if;
 		
 		------------------
@@ -192,23 +189,25 @@ begin
 				v.data2 := (others => '0');
 				v.state := idle;
 				v.i := 0;
-				v.clkgen := 0;
-				v.sdata := '1';
-				v.sclk := '1';
+				v.clkgen := 0;				
 				v.ready := '1';
 				v.leds := (others => '1');
+				v.sclk := '1';
+				v.sdata_out := '1';
+				v.clkgen := 0;
 			when idle =>
 				-- sobald aktion ausgeführt wird => start bit senden
 				if r.ready = '0' then
 					v.state := send_start_bit;
 				end if;
+				v.sdata_out := '1';
 				v.leds(3) := '0';
 			when send_start_bit =>
 				-- start bit wird nur gesendet wenn sclock high ist
 				if r.sclk = '1' then
 					v.state := wait_until_low;
 					v.ret_state := send_id;
-					v.sdata := '0';
+					v.sdata_out := '0';
 				end if;
 				v.leds(4) := '0';
 			when wait_until_low =>
@@ -217,19 +216,12 @@ begin
 					v.state := r.ret_state;
 				end if;
 				v.leds(5) := '0';
-		   --when wait_low_ack =>
-		   --	if r.sclk = '0' then
-		   --		v.state := wait_ack;					
-		   --		v.sdata := 'Z';
-		   --	end if;
 			when restore_read =>
-				v.sdata := 'Z';
 				v.state := read2;
 				v.leds(6) := '0';
 			when done =>
 				v.state := idle;
 				v.ready := '1';
-				v.sdata := '1';
 				v.leds(7) := '0';
 			when error_state =>
 				v.state := idle;
@@ -251,19 +243,18 @@ begin
 					when send_id =>	
 						-- 8 bit hinaus schicken
 						if r.i >= 0 then
-							v.sdata := r.id(r.i);
+							v.sdata_out := r.id(r.i);
 						else
 							-- nach 8. bit auf ack bit warten
 							v.state := wait_ack;
 							v.ret_state := send_address;
-							v.sdata := 'Z';
 						end if;
 						v.leds(8) := '0';
 					-- address bits der reihe nach hinaus schicken
 					when send_address =>
 						-- 8 bit hinaus schicken
 						if r.i >= 0 then
-							v.sdata := r.address(r.i);
+							v.sdata_out := r.address(r.i);
 						else
 							v.state := wait_ack;
 							-- write mode
@@ -272,31 +263,28 @@ begin
 							else
 								v.ret_state := read1;
 							end if;
-							v.sdata := 'Z';
 						end if;
 						v.leds(9) := '0';
 					-- WRITE: daten nacheinander hinaus schicken, dazwischen ack bit abwarten			
 					when write1 =>	
 						if r.i >= 0 then
-							v.sdata := r.data1(r.i);
+							v.sdata_out := r.data1(r.i);
 						else
 							v.state := wait_ack;
-							v.sdata := 'Z';
 							v.ret_state := write2;
 						end if;	
 						v.leds(10) := '0';
 					when write2 =>
 						if r.i >= 0 then
-							v.sdata := r.data2(r.i);
+							v.sdata_out := r.data2(r.i);
 						else
 							v.state := wait_ack;
-							v.sdata := 'Z';
 							v.ret_state := done;
 						end if;
 						v.leds(11) := '0';
 					-- ack bit anlegen
 					when send_ack =>
-						v.sdata := '0';
+						v.sdata_out := '0';
 						v.state := wait_until_high;
 						v.leds(12) := '0';
 					when others => null;		
@@ -306,8 +294,8 @@ begin
 				case r.state is
 					when wait_ack =>
 						-- weiter wenn das ack bit auf low gezogen wird
-						if sdata = '0' then
-							v.state := r.ret_state;
+						if sdata_in = '0' then
+							v.state := wait_until_low;
 						else
 							v.state := error_state;
 						end if;
@@ -315,14 +303,14 @@ begin
 					-- READ: daten nacheinander lesen, jedes byte bestätigen
 					when read1 =>
 						if r.i >= 0 then
-							v.data1(r.i) := sdata;
+							v.data1(r.i) := sdata_in;
 						else
 							v.state := send_ack;
 						end if;
 						v.leds(14) := '0';
 					when read2 =>
 						if r.i >= 0 then
-							v.data2(r.i) := sdata;
+							v.data2(r.i) := sdata_in;
 						else
 							v.state := done;
 						end if;
@@ -348,9 +336,15 @@ begin
 		end if;
 		
 		sclk <= r.sclk;
-		sdata <= r.sdata;
+		sdata_out <= r.sdata_out;
+		sdata_out_en <= '1';
+		
+		if r.state = wait_ack or r.state = read1 or r.state = read2 or r.state = wait_until_high or r.state = restore_read then
+			sdata_out_en <= '0';
+		end if;
+		
 		led_red(0) <= r.sclk;
-		led_red(1) <= r.sdata;
+		led_red(1) <= r.sdata_out;
 		led_red(2) <= rstint;
 		led_red(17 downto 3) <= r.leds(17 downto 3);
 		cam_state <= r.state;

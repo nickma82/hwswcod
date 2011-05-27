@@ -134,34 +134,37 @@ begin
 		exto.intreq <= r.ifacereg(STATUSREG)(STA_INT);
 
 		
-		tmp_rf := unsigned(r.r)*to_unsigned(1000,11);
-		tmp_gf := unsigned(r.g)*to_unsigned(1000,11);
-		tmp_bf := unsigned(r.b)*to_unsigned(1000,11);
+		--tmp_rf := unsigned(r.r)*to_unsigned(1000,11);
+		--tmp_gf := unsigned(r.g)*to_unsigned(1000,11);
+		--tmp_bf := unsigned(r.b)*to_unsigned(1000,11);
+		--
+		--
+		--rf := "0000000000000" & To_StdLogicVector(to_bitvector(std_logic_vector(tmp_rf)) sra 8);
+		--gf := "0000000000000" & To_StdLogicVector(to_bitvector(std_logic_vector(tmp_gf)) sra 8);
+		--bf := "0000000000000" & To_StdLogicVector(to_bitvector(std_logic_vector(tmp_bf)) sra 8);
+		--
+		--a1 := signed(rf)*signed(gf);
+		--a1 := to_signed(299000,32) *signed(rf);
+		--a2 := to_signed(587000,32) *signed(gf);
+		--a3 := to_signed(114000,32) *signed(bf);
+		--a4  :=  a1 + a2;
+		--tmp_y := a4 + a3;
+		--
+		--b1 := to_signed(168736,32) *signed(rf);
+		--b2 := to_signed(331264,32) *signed(gf);
+		--b3 := to_signed(500000,32)  *signed(bf);
+		--b4 := b3 - b1;
+		--tmp_cb := b4 - b2;
+		--
+		--c1 := to_signed(500000,32) *signed(rf);
+		--c2 := to_signed(418688,32)*signed(gf);
+		--c3 := to_signed(81312,32) *signed(bf);
+		--c4 :=  c1 - c2;
+		--tmp_cr := c4 - c3;
 		
-		
-		rf := "0000000000000" & To_StdLogicVector(to_bitvector(std_logic_vector(tmp_rf)) sra 8);
-		gf := "0000000000000" & To_StdLogicVector(to_bitvector(std_logic_vector(tmp_gf)) sra 8);
-		bf := "0000000000000" & To_StdLogicVector(to_bitvector(std_logic_vector(tmp_bf)) sra 8);
-		
-		a1 := signed(rf)*signed(gf);
-		a1 := to_signed(299000,32) *signed(rf);
-		a2 := to_signed(587000,32) *signed(gf);
-		a3 := to_signed(114000,32) *signed(bf);
-		a4  :=  a1 + a2;
-		tmp_y := a4 + a3;
-		
-		b1 := to_signed(168736,32) *signed(rf);
-		b2 := to_signed(331264,32) *signed(gf);
-		b3 := to_signed(500000,32)  *signed(bf);
-		b4 := b3 - b1;
-		tmp_cb := b4 - b2;
-		
-		c1 := to_signed(500000,32) *signed(rf);
-		c2 := to_signed(418688,32)*signed(gf);
-		c3 := to_signed(81312,32) *signed(bf);
-		c4 :=  c1 - c2;
-		tmp_cr := c4 - c3;
-		
+		tmp_y := to_signed(0,64);
+		tmp_cb := to_signed(0,64);
+		tmp_cr := to_signed(0,64);
 		
 		if 	tmp_y >= Y_LOW and tmp_y <= Y_HIGH and 
 			tmp_cb >= CB_LOW and tmp_cb <= CB_HIGH and 
