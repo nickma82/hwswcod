@@ -2,6 +2,7 @@ library ieee;
 use ieee.std_logic_1164.all;
 --Paket Infos: http://www.eda.org/rassp/vhdl/guidelines/1164qrc.pdf
 --use ieee.std_logic_arith.all; --KEINE Standardisierte Library, nicht verwenden lt. Polzer
+use ieee.numeric_std.all;
 use work.top_pkg.all;
 use work.spear_pkg.all;
 use work.spear_amba_pkg.all;
@@ -414,7 +415,7 @@ begin
 	gpio(1) <= cam_sclk;
 	gpio(2) <= cam_sdata_out;
 	gpio(3) <= cm_sdata;
-	gpio(7 downto 4) <= (others => '0'); --STD_LOGIC_VECTOR(TO_SIGNED(cam_i,4));
+	gpio(7 downto 4) <= STD_LOGIC_VECTOR(TO_SIGNED(cam_i,4));
 	gpio(8) <= cam_sdata_out_en;
 
 	writeframe_unit: ext_writeframe

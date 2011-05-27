@@ -6,8 +6,10 @@
 #define CAMCONFIG_BASE 		(0xFFFFFE60)
 
 
-#define CAMCONFIG_CMD		(*(volatile uint32_t *const)(CAMCONFIG_BASE+4))
-#define CAMCONFIG_RESULT	(*(volatile uint8_t *const)(CAMCONFIG_BASE+8))
+#define CAMCONFIG_WRITE		(*(volatile uint32_t *const)(CAMCONFIG_BASE+4))
+#define CAMCONFIG_READ		(*(volatile uint32_t *const)(CAMCONFIG_BASE+8))
+#define CAMCONFIG_RESULT	(*(volatile uint32_t *const)(CAMCONFIG_BASE+12))
+#define CAMCONFIG_STATUS	(*(volatile uint8_t *const)(CAMCONFIG_BASE+16))
 
 #define CAM_ID_READ		(0xBB000000)
 //#define CAM_ID_READ		(0xAB000000)
