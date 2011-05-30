@@ -12,20 +12,23 @@
 
 #define CAMCONFIG_BASE 		(0xFFFFFE60)
 
-#define CAMCONFIG_CMD		(*(volatile uint32_t *const)(CAMCONFIG_BASE+4))
-#define CAMCONFIG_RESULT	(*(volatile uint8_t *const)(CAMCONFIG_BASE+8))
 
-#define CAM_ID_READ		(0xBB000000)
-#define CAM_ID_WRITE 	(0xBA000000)
+#define CAMCONFIG_WRITE		(*(volatile uint32_t *const)(CAMCONFIG_BASE+4))
+#define CAMCONFIG_READ		(*(volatile uint32_t *const)(CAMCONFIG_BASE+8))
+#define CAMCONFIG_RESULT	(*(volatile uint32_t *const)(CAMCONFIG_BASE+12))
+#define CAMCONFIG_STATUS	(*(volatile uint8_t *const)(CAMCONFIG_BASE+16))
+
+#define CAM_ID_READ		(0xBB)
+//#define CAM_ID_READ		(0xAB000000)
+#define CAM_ID_WRITE 	(0xBA)
 
 int main (int argc, char *argv[])
 {
-	CAMCONFIG_CMD = CAM_ID_READ | (0x06 << 16);
+	CAMCONFIG_READ = (CAM_ID_WRITE << 24) | (CAM_ID_READ<<16) | (0x06 << 8);
 	
-	while (!CAMCONFIG_RESULT){
+	while (!CAMCONFIG_STATUS){
 		asm("nop");
-	}	
-	
-	return 0;
+	}
+	return CAMCONFIG_RESULT;
 }
 

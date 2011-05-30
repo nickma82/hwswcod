@@ -164,10 +164,13 @@ begin
 					exto.data <= r.w_id & r.r_id & r.address & "00000000";
 				-- empfangene/gesendete daten auslesen
 				when "011" => 
-					exto.data <= (15 downto 8 => r.data1, 7 downto 0 => r.data2, others => '0');
+					--exto.data <= (15 downto 8 => r.data1, 7 downto 0 => r.data2, others => '0');
+					exto.data <= (others => '0');
+					exto.data(15 downto 8) <= r.data1;
+					exto.data(7 downto 0) <= r.data2;
 				-- ob fertig auslesen
 				when "100" =>
-						exto.data <= (0 => r.ready, others=>'0');
+					exto.data <= (0 => r.ready, others=>'0');
 				when others =>
 					null;
 			end case;
@@ -238,8 +241,9 @@ begin
 				v.leds(3) := '0';
 			when send_start_bit =>
 				-- start bit wird nur gesendet wenn sclock high ist
-				if (r.sclk = '1') then
+				if (r.sclk = '1' and r.clkgen < 20) then
 					v.state := wait_until_low;
+					v.sdata_out := '0';
 					-- wenn write id noch nicht gesendet das tun
 					if r.w_sent = '0' then
 						v.ret_state := send_w_id;
@@ -248,6 +252,12 @@ begin
 						v.ret_state := send_r_id;
 					end if;
 					v.leds(4) := '0';
+				end if;
+			when send_stop_bit =>
+				if r.sclk = '1' then
+					v.sdata_out := '1';
+					v.state := wait_until_low;
+					v.ret_state := send_start_bit;
 				end if;
 			when wait_until_low =>
 				-- warten bis takt low wird hängt hier
@@ -297,13 +307,12 @@ begin
 							v.sdata_out := r.r_id(r.i);
 						else
 							-- nach 8. bit auf ack bit warten
-							v.state := wait_until_low;
+							v.state := wait_ack;
 							v.ret_state := read1;
 						end if;
 						v.leds(5) := '0';
 					-- address bits der reihe nach hinaus schicken
 					when send_address =>
-						sdata_out_en <= '1';
 						-- 8 bit hinaus schicken
 						if r.i >= 0 then
 							v.sdata_out := r.address(r.i);
@@ -313,7 +322,7 @@ begin
 							if r.r_en = '0' then
 								v.ret_state := write1;
 							else
-								v.ret_state := send_start_bit;
+								v.ret_state := send_stop_bit;
 							end if;
 						end if;
 						v.leds(9) := '0';
@@ -343,32 +352,32 @@ begin
 						v.leds(12) := '0';
 					when others => null;		
 				end case;
-			-- sampeln zur mitte des high takt
-			else				
+			else
+				-- sampeln zur mitte des high takt
 				case r.state is
-					when send_start_bit =>
-						v.sdata_out := '0';
 					when wait_ack =>
 						-- weiter wenn das ack bit auf low gezogen wird
 						if sdata_in = '0' then
 							v.state := wait_until_low;
 						else
-							--v.state := error_state;
-							v.state := wait_until_low;
+							v.state := error_state;
+							--v.state := wait_until_low;
 						end if;
 						v.leds(13) := '0';
 					-- READ: daten nacheinander lesen, jedes byte bestätigen
 					when read1 =>
 						if r.i >= 0 then
 							v.data1(r.i) := sdata_in;
-						else
+						end if;
+						if r.i = 0 then
 							v.state := send_ack;
 						end if;
 						v.leds(14) := '0';
 					when read2 =>
 						if r.i >= 0 then
 							v.data2(r.i) := sdata_in;
-						else
+						end if;
+						if r.i = 0 then
 							v.state := done;
 						end if;
 						v.leds(15) := '0';
