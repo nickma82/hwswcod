@@ -205,7 +205,7 @@ begin
 		------------------
 		-- Takt für two wire generieren, nur wenn übertragung läuft sonst bus auf idle stellen
 		------------------
-		if r.state /= reset  then --and r.state /= idle
+		if r.state /= reset then --and r.state /= idle
 			if r.clkgen = CLK_COUNT then
 				v.clkgen := 0;
 				v.sclk := not r.sclk;

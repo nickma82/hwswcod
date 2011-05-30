@@ -10,25 +10,16 @@
   #error "Unsupported target machine type"
 #endif
 
-#define CAMCONFIG_BASE 		(0xFFFFFE60)
-
-
-#define CAMCONFIG_WRITE		(*(volatile uint32_t *const)(CAMCONFIG_BASE+4))
-#define CAMCONFIG_READ		(*(volatile uint32_t *const)(CAMCONFIG_BASE+8))
-#define CAMCONFIG_RESULT	(*(volatile uint32_t *const)(CAMCONFIG_BASE+12))
-#define CAMCONFIG_STATUS	(*(volatile uint8_t *const)(CAMCONFIG_BASE+16))
-
-#define CAM_ID_READ		(0xBB)
-//#define CAM_ID_READ		(0xAB000000)
-#define CAM_ID_WRITE 	(0xBA)
-
+#define WRITEFRAME_BASE 	(0xFFFFFEA0)
+#define WRITEFRAME_CMD		(*(volatile uint8_t *const)(WRITEFRAME_BASE+4))
+#define WRITEFRAME_COLOR	(*(volatile uint32_t *const)(WRITEFRAME_BASE+8))
 int main (int argc, char *argv[])
 {
-	CAMCONFIG_READ = (CAM_ID_WRITE << 24) | (CAM_ID_READ<<16) | (0x06 << 8);
+	WRITEFRAME_CMD = 1;
 	
-	while (!CAMCONFIG_STATUS){
+	while (WRITEFRAME_CMD) {
 		asm("nop");
 	}
-	return CAMCONFIG_RESULT;
+	return WRITEFRAME_CMD;
 }
 

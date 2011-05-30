@@ -43,22 +43,16 @@ int main(int argc, char **argv)
 		}
 	#else
 		dis7seg_hex(0x00);
-		dis7seg_hex(read_cam(0x00));
+		write_cam(0x04, 2559);
+		write_cam(0x03, 1919);
+		write_cam(0x09, 470);
+		write_cam(0x22, 3);
+		write_cam(0x23, 3);
+		dis7seg_hex(read_cam(0x04));
 		
 		
 		while (1) {
 			getFrame(color);
-			//dis7seg_hex(color);
-			color+=500;
-			
-			if (color >= 0x00FFFFFF)
-				color = 0;
-			//for (i=0; i < 100; i++) {
-			//for (y=0; y < 60000; y++) {
-			//	asm("nop");
-			//}
-			//}
-			//getFrame();
 			// TODO:
 			// get picture from camera
 			//faceDetection();

@@ -50,7 +50,10 @@ architecture rtl of ext_writeframe is
 	-- Core Ext Signale
 	subtype BYTE is std_logic_vector(7 downto 0);
 	type register_set is array (0 to 4) of BYTE;
-	type state_type is (idle, adr, data, done, reset);
+	type state_type is (idle, adr, data, done, reset, wait_px);
+	type state_cam_type is (reset, wait_frame_valid, read_line, next_line, wait_frame_invalid, wait_getframe);
+
+	
 	
 	type reg_type is record
   		ifacereg	: register_set;
@@ -58,9 +61,15 @@ architecture rtl of ext_writeframe is
 		address		: std_logic_vector(31 downto 0);
 		wdata		: std_logic_vector(31 downto 0);
 		state		: state_type;
+		cam_state	: state_cam_type;
 		start		: std_logic;
 		color		: std_logic_vector(31 downto 0);
-  	end record;
+		p_r			: integer range 0 to CAM_H-1;
+		p_c			: integer range 0 to CAM_W-1;
+		toggle_r	: std_logic;
+		toggle_c	: std_logic;
+		send_px		: std_logic;
+	end record;
 
 	signal r_next : reg_type;
 	signal r : reg_type := 
@@ -70,63 +79,28 @@ architecture rtl of ext_writeframe is
 		address 	=> (others => '0'),
 		wdata  	=> (others => '0'),
 		state	=> reset,
+		cam_state => reset,
 		start	=> '0',
-		color   => (others => '0')
+		color   => (others => '0'),
+		p_r => 0,
+		p_c => 0,
+		toggle_r => '0',
+		toggle_c => '0',
+		send_px => '0'
 	);
 	
 	signal rstint : std_ulogic;
   
-	--ccd Handle Signals
-	type state_ccd_type is (idle, lineread, linenext, finisher, reset);
-	--type state_ccd is record
-
-	--end record;
-	signal state_ccd, state_ccd_next : state_ccd_type;
 	
 begin
 	ahb_master : ahbmst generic map (1, 0, VENDOR_WIR, WIR_WRITEFRAME, 0, 3, 1)
 	port map (rstint, clk, dmai, dmao, ahbi, ahbo);
 	
-	------------------------
-	---	CCD Handler
-	------------------------
-    --ccdhand : process(cm_lval, cm_fval, cm_pixclk, state_ccd)
-	--begin
-	--	------------------
-	--	--- Statemachine
-	--	------------------
-	--	case state_ccd is
-	--		when reset =>
-	--			state_ccd_next <= idle;
-	--		when others =>
-	--			state_ccd_next <= idle;
-	--	end case;
-	--	--if ((cm_lval = '1') and (cm_fval = '1') and  (not cm_pixclk) ) then 
-	--		--For each PIXCLK cycle, one 12-bit pixel datum outputs on the DOUT pins. 
-	--		--  When both FRAME_VALID and LINE_VALID are asserted, the pixel is valid
-	--		
-	--	--end if;
-	--end process;
-    --
-    --------------------------
-	-----	Sync Daten übernehmen
-	--------------------------
-    --stateccdhandler : process(clk)
-	--begin
-	--	if rising_edge(clk) then 
-	--		if rstint = RST_ACT then
-	--			state_ccd <= reset;
-	--		else
-	--			state_ccd <= state_ccd_next;
-	--		end if;
-	--	end if;
-	--end process;
-
 	
 	------------------------
 	---	ASync Core Ext Interface Daten übernehmen und schreiben
 	------------------------
-	comb : process(r, exti, extsel,dmao,rstint)
+	comb : process(r, exti, extsel,dmao, rstint, cm_lval, cm_fval,cm_d)
 	variable v : reg_type;
 	begin
     	v := r;
@@ -155,8 +129,8 @@ begin
     				if ((exti.byte_en(0) = '1')) then
     					v.getframe := '1';
     				end if;
-    			when "010" =>
-    				v.color(31 downto 0) := exti.data(31 downto 0);
+    			--when "010" =>
+    				--v.color(31 downto 0) := exti.data(31 downto 0);
    				when others =>
 					null;
 			end case;
@@ -210,29 +184,81 @@ begin
 				v.start := '0';
 				v.state := idle;
 			when idle =>
-				if r.getframe = '1' then
+				v.address := FRAMEBUFFER_BASE_ADR;
+				v.state := wait_px;
+			when wait_px =>
+				if r.send_px = '1' then
 					v.state := adr;
 					v.start := '1';
-				else
-					v.address := FRAMEBUFFER_BASE_ADR;
 				end if;
 			when adr =>
 				if dmao.ready = '1' then
 					v.state := data;
 				end if;
-				v.wdata := r.color; --r.address; --"00000000111111110000000000000000";
+				v.wdata := r.color;
 			when data =>
 				if r.address >= FRAMEBUFFER_END_ADR then
 					v.state := done;
-					v.start := '0';
-				else					
+				else
 					v.address := r.address + 4;
-					v.state := adr;
+					v.state := wait_px;
 				end if;
+				v.start := '0';
+				v.send_px := '0';
 			when done =>
 				v.state := idle;
-				v.getframe := '0';
 		end case;
+		
+		------------------------
+		---	CCD Handler
+		------------------------
+		case r.cam_state is
+			when reset =>
+				v.cam_state := wait_getframe;
+			when wait_getframe =>
+				if r.getframe = '1' then
+					v.cam_state := wait_frame_invalid;
+				end if;
+			when wait_frame_valid =>
+				if cm_fval = '1' then
+					v.toggle_r	:= '1';
+					v.toggle_c	:= '0';
+					v.cam_state := read_line;
+					v.p_r := 0;
+				end if;
+			when read_line =>
+				if cm_lval = '1' r.toggle_r = '1' and r.send_px = '0' then 
+					v.color := (others => '0');
+					if r.toggle_r = '1' then
+						v.color(23 downto 16) := (others => '1');
+					else
+						v.color(15 downto 8) := (others => '1');
+					end if;
+					v.send_px := '1';
+				end if;
+				if r.p_c > 0 and cm_lval = '0' then
+					v.cam_state := next_line;
+				end if;
+			when next_line =>
+				if r.p_r < CAM_H then	
+					v.p_r := r.p_r + 1;
+					v.cam_state := read_line;
+					v.toggle_r := not r.toggle_r;
+				else
+					v.cam_state := wait_frame_invalid;
+				end if;
+			when wait_frame_invalid =>
+				if cm_lval = '0' and cm_fval = '0' then
+					v.cam_state := wait_frame_valid;
+				end if;
+		end case;
+		
+		if r.cam_state = read_line and cm_lval = '1' and r.p_c < CAM_W-1 then
+			v.p_c := r.p_c + 1;
+			v.toggle_c := not r.toggle_c;
+		else
+			v.p_c := 0;
+		end if;
 		
 		-- Werte auf Interface zu Bus legen
 		dmai.wdata  <=  r.wdata;
@@ -261,6 +287,7 @@ begin
 			if rstint = RST_ACT then
 				r.ifacereg <= (others => (others => '0'));
 				r.state <= reset;
+				r.cam_state <= reset;
 			else
 				r <= r_next;
 			end if;

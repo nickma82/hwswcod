@@ -60,7 +60,7 @@ uint8_t findInWindow(bwimage_t *i, int x, int y, uint8_t compare) {
 	for (dy = -WINDOW_OFFSET; dy <= WINDOW_OFFSET; ++dy) {
 		wy = y+dy;
 		if (wy >= 0 && wy < i->height) {
-			/*for (dx = -WINDOW_OFFSET; dx <= WINDOW_OFFSET; ++dx) {
+			for (dx = -WINDOW_OFFSET; dx <= WINDOW_OFFSET; ++dx) {
 				wx = x+dx;
 				if (wx >= 0 && wx < i->width) {
 					c = bwimage_getPixelValue(i, wx, wy);
@@ -69,16 +69,11 @@ uint8_t findInWindow(bwimage_t *i, int x, int y, uint8_t compare) {
 						break;
 					}
 				}
-			}*/
-			c = bwimage_getPixelValue(i, x, wy);
-			if (c == compare) {
-				foundMatch = 1;
-				break;
 			}
 		}
-		/*if (foundMatch) {
+		if (foundMatch) {
 			break;
-		}*/
+		}
 	}
 	return foundMatch;
 }
