@@ -154,6 +154,32 @@ begin
     wait for cc/2;
   end process clkgen;
   
+  camgen : process
+  	variable col_cnt : integer;
+  	variable row_cnt : integer;
+  begin
+  	col_cnt := 0;
+  	row_cnt := 0;
+  	
+  	
+  	cm_lval <= '0';
+  	cm_fval <= '0';
+  	
+  	wait for 50*cc;
+  	
+  	cm_fval <= '1';
+	
+  	for row_cnt in 1 to 480 loop
+  		cm_lval <= '1';
+  		for col_cnt in 1 to 640 loop
+  			cm_d <= "111111111111";
+  			wait for cc;
+  		end loop;
+  		cm_lval <= '0';
+  		wait for 5*cc;
+  	end loop;
+  	cm_fval <= '0';
+  end process camgen;
   
   test: process
     

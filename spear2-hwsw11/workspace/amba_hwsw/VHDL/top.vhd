@@ -138,8 +138,6 @@ architecture behaviour of top is
   -- signals for writeframe AMBA Master
   signal writeframe_ahbmo : ahb_mst_out_type;
   
-  -- writeframe
-  signal scm_xclkin	: std_logic;
   
   component altera_pll IS
     PORT
@@ -148,6 +146,7 @@ architecture behaviour of top is
         inclk0		: IN STD_LOGIC  := '0';
         c0		: OUT STD_LOGIC ;
         c1		: OUT STD_LOGIC;
+        c2		: OUT STD_LOGIC;
         locked		: OUT STD_LOGIC 
         );
    END component;
@@ -159,6 +158,7 @@ begin
     inclk0	 => db_clk,
     c0	         => clk,
     c1	         => vga_clk_int,
+    c2			 => cm_xclkin,
     locked	 => open
     );
 
@@ -413,10 +413,8 @@ begin
 	
 	gpio(0) <= clk;	
 	gpio(1) <= cam_sclk;
-	gpio(2) <= cam_sdata_out;
-	gpio(3) <= cm_sdata;
-	gpio(7 downto 4) <= STD_LOGIC_VECTOR(TO_SIGNED(cam_i,4));
-	gpio(8) <= cam_sdata_out_en;
+	gpio(2) <= cm_sdata;
+	
 
 	writeframe_unit: ext_writeframe
   	port map(
@@ -438,8 +436,10 @@ begin
 		cm_strobe	=> cm_strobe
 	);
     
-	cm_xclkin <= clk; --ccd Clk assignment
-	
+	gpio(4) <= cm_lval;
+	gpio(3) <= cm_fval;
+	gpio(5) <= cm_pixclk;
+	gpio(17 downto 6) <= cm_d;
 	
 	
 	dis7seg_unit: ext_dis7seg
