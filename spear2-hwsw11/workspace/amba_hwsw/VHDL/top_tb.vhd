@@ -149,8 +149,10 @@ begin
   clkgen : process
   begin
     clk <= '1';
+    cm_pixclk <= '0';
     wait for cc/2;
     clk <= '0'; 
+    cm_pixclk <= '1';
     wait for cc/2;
   end process clkgen;
   
@@ -165,9 +167,10 @@ begin
   	cm_lval <= '0';
   	cm_fval <= '0';
   	
-  	wait for 50*cc;
+  	wait for 300*cc;
   	
   	cm_fval <= '1';
+	wait for 20*cc;
 	
   	for row_cnt in 1 to 480 loop
   		cm_lval <= '1';

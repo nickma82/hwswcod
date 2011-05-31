@@ -51,9 +51,18 @@ architecture rtl of ext_writeframe is
 	subtype BYTE is std_logic_vector(7 downto 0);
 	type register_set is array (0 to 4) of BYTE;
 	type state_type is (idle, adr, data, done, reset, wait_px);
-	type state_cam_type is (reset, wait_frame_valid, read_line, next_line, wait_frame_invalid, wait_getframe);
-
+	type state_cam_type is (reset, wait_frame_valid, read_line, next_line, wait_frame_invalid);
 	
+	-- Cam Async Signals
+	type state_pixsync_cam_type is (reset, wait_getframe, wait_frame_valid, read_dot_r, read_dot_g1, read_dot_g2, read_dot_b, next_line, wait_frame_invalid);
+	 
+	type pixsync_type is record
+		state	: state_pixsync_cam_type;
+		next_dot: state_pixsync_cam_type;
+		toggle_r	: std_logic;
+		toggle_c	: std_logic;
+	end record;
+
 	
 	type reg_type is record
   		ifacereg	: register_set;
@@ -66,11 +75,18 @@ architecture rtl of ext_writeframe is
 		color		: std_logic_vector(31 downto 0);
 		p_r			: integer range 0 to CAM_H-1;
 		p_c			: integer range 0 to CAM_W-1;
-		toggle_r	: std_logic;
-		toggle_c	: std_logic;
 		send_px		: std_logic;
 	end record;
 
+	signal pix_next : pixsync_type;
+	signal pix : pixsync_type := 
+	(
+		state	 => reset,
+		next_dot => reset,
+		toggle_r => '0',
+		toggle_c => '0'
+	);
+	
 	signal r_next : reg_type;
 	signal r : reg_type := 
 	(
@@ -84,8 +100,6 @@ architecture rtl of ext_writeframe is
 		color   => (others => '0'),
 		p_r => 0,
 		p_c => 0,
-		toggle_r => '0',
-		toggle_c => '0',
 		send_px => '0'
 	);
 	
@@ -100,10 +114,12 @@ begin
 	------------------------
 	---	ASync Core Ext Interface Daten übernehmen und schreiben
 	------------------------
-	comb : process(r, exti, extsel,dmao, rstint, cm_lval, cm_fval,cm_d)
-	variable v : reg_type;
+	comb : process(r, pix, exti, extsel,dmao, rstint, cm_lval, cm_fval, cm_d)
+	variable v 		: reg_type;
+	variable vpix	: pixsync_type;
 	begin
     	v := r;
+    	vpix:= pix;
     	   	
     	--schreiben
     	if ((extsel = '1') and (exti.write_en = '1')) then
@@ -184,7 +200,7 @@ begin
 				v.start := '0';
 				v.state := idle;
 			when idle =>
-				v.address := FRAMEBUFFER_BASE_ADR;
+				--v.address := FRAMEBUFFER_BASE_ADR;
 				v.state := wait_px;
 			when wait_px =>
 				if r.send_px = '1' then
@@ -200,7 +216,7 @@ begin
 				if r.address >= FRAMEBUFFER_END_ADR then
 					v.state := done;
 				else
-					v.address := r.address + 4;
+				--	v.address := r.address + 4;
 					v.state := wait_px;
 				end if;
 				v.start := '0';
@@ -209,55 +225,85 @@ begin
 				v.state := idle;
 		end case;
 		
+		
 		------------------------
-		---	CCD Handler
+		---	CCD Handler - FALLING EDGE PIXCLK sensitiv
+		--- state_pixsync_cam_type
+		-- reset, wait_frame_valid, wait_getframe, read_dot_r, read_dot_g1, read_dot_g2, read_dot_b, next_line, wait_frame_invalid
 		------------------------
-		case r.cam_state is
+	-- @TODO: p_r und p_c in pix VERSCHIEBEN!!!!!!
+		case pix.state is
 			when reset =>
-				v.cam_state := wait_getframe;
+				vpix.state := wait_getframe;
+				--@TODO ev. schon zu syncen beginnen
 			when wait_getframe =>
 				if r.getframe = '1' then
-					v.cam_state := wait_frame_invalid;
+					vpix.state := wait_frame_invalid;
+					vpix.toggle_r	:= '0';
 				end if;
 			when wait_frame_valid =>
 				if cm_fval = '1' then
-					v.toggle_r	:= '1';
-					v.toggle_c	:= '0';
-					v.cam_state := read_line;
+					vpix.toggle_c	:= '0';
 					v.p_r := 0;
-				end if;
-			when read_line =>
-				if cm_lval = '1' r.toggle_r = '1' and r.send_px = '0' then 
-					v.color := (others => '0');
-					if r.toggle_r = '1' then
-						v.color(23 downto 16) := (others => '1');
-					else
-						v.color(15 downto 8) := (others => '1');
+					if cm_lval = '1' then
+						vpix.state := pix.next_dot;
 					end if;
-					v.send_px := '1';
 				end if;
-				if r.p_c > 0 and cm_lval = '0' then
-					v.cam_state := next_line;
-				end if;
+			when read_dot_r =>
+				-- r logic
+				v.color := (others => '0');
+				v.color(23 downto 16) := (others => '1');
+				v.send_px := '1';
+				vpix.state := pix.next_dot;
+			when read_dot_g1 =>
+				-- g1 logic
+				v.color := (others => '0');
+				v.color(15 downto 8) := (others => '1');
+				v.send_px := '1';
+			when read_dot_g2 =>
+				-- g2 logic
+				vpix.state := pix.next_dot;
+			when read_dot_b =>
+				-- b logic
+				vpix.state := pix.next_dot;
 			when next_line =>
-				if r.p_r < CAM_H then	
+				if r.p_r < CAM_H-1 then	
+	-- @TODO: Wann ist das Bild fertig übertragen?? (letzte Zeile)
+	-- Wenn Fertig, in wait getfram springen??
 					v.p_r := r.p_r + 1;
-					v.cam_state := read_line;
-					v.toggle_r := not r.toggle_r;
+					vpix.state := wait_frame_valid;
+					vpix.toggle_r := not pix.toggle_r;
 				else
-					v.cam_state := wait_frame_invalid;
+					vpix.state := wait_frame_invalid;
 				end if;
 			when wait_frame_invalid =>
 				if cm_lval = '0' and cm_fval = '0' then
-					v.cam_state := wait_frame_valid;
+					vpix.state := wait_frame_valid;
 				end if;
 		end case;
 		
+		---Next dot descision logic
+		case pix.state is
+			when others => 
+				if r.p_c > 0 and cm_lval = '0' then
+					vpix.next_dot := next_line;
+				end if;
+				vpix.next_dot := read_dot_r;
+		end case;
+		
+		
+		---das folgende gehört in den CCD Handler rein
 		if r.cam_state = read_line and cm_lval = '1' and r.p_c < CAM_W-1 then
 			v.p_c := r.p_c + 1;
-			v.toggle_c := not r.toggle_c;
+			vpix.toggle_c := not pix.toggle_c;
+			if r.address <= FRAMEBUFFER_END_ADR and falling_edge(cm_pixclk) then
+				v.address := r.address + 4;
+			else
+				v.address := FRAMEBUFFER_BASE_ADR;
+			end if;
 		else
 			v.p_c := 0;
+			v.address := FRAMEBUFFER_BASE_ADR;
 		end if;
 		
 		-- Werte auf Interface zu Bus legen
@@ -272,6 +318,7 @@ begin
 		
 	    cm_reset <= rstint;
 	    
+	    pix_next <= vpix;
 		r_next <= v;
     end process;
     
@@ -283,7 +330,7 @@ begin
 	------------------------
     reg : process(clk)
 	begin
-		if rising_edge(clk) then 
+		if rising_edge(clk) then
 			if rstint = RST_ACT then
 				r.ifacereg <= (others => (others => '0'));
 				r.state <= reset;
@@ -294,6 +341,17 @@ begin
 		end if;
 	end process;
 	
+	
+	cam_states : process(cm_pixclk)
+	begin
+		if falling_edge(cm_pixclk) then
+			if rstint = RST_ACT then
+				pix.state <= reset;
+			else
+				pix <= pix_next;
+			end if;
+		end if;
+	end process;
 	
 end ;
 
