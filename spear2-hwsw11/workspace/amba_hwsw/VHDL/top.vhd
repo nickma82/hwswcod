@@ -399,8 +399,7 @@ begin
 		sclk	  => cam_sclk,
 		sdata_in  => cm_sdata,
 		sdata_out => cam_sdata_out,
-		sdata_out_en => cam_sdata_out_en,
-		led_red	  => led_red
+		sdata_out_en => cam_sdata_out_en
 	);
 	
 	cm_sclk <= cam_sclk;
@@ -408,8 +407,8 @@ begin
 	cm_sdata <= cam_sdata_out when cam_sdata_out_en = '1' else 'Z';
 	
 	gpio(0) <= clk;	
-	gpio(1) <= cam_sclk;
-	gpio(2) <= cm_sdata;
+	--gpio(1) <= cam_sclk;
+	--gpio(2) <= cm_sdata;
 	
 
 	writeframe_unit: ext_writeframe
@@ -429,7 +428,8 @@ begin
 		cm_clk		=> cam_clk,
 		cm_reset	=> cm_reset,
 		cm_trigger	=> cm_trigger,
-		cm_strobe	=> cm_strobe
+		cm_strobe	=> cm_strobe,
+		led_red	  => led_red
 	);
     
 	cm_xclkin <= cam_clk;
