@@ -15,6 +15,8 @@
 #define PRESCALER 4
 static const char* counterNames[]={
 	"GetFrame",
+	"multsw",
+	"multlh",	
 	"SkinFilter",
 	"Erode",
 	"Dilate", 

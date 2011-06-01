@@ -3,7 +3,7 @@
 
 #ifdef __SPEAR32__
 	#include <drivers/counter.h>
-	#define COUNTER_COUNT 5
+	#define COUNTER_COUNT 10
 
 	uint32_t counterValues[COUNTER_COUNT];
 	module_handle_t counterHandle;

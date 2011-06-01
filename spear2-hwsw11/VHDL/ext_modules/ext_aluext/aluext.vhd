@@ -28,12 +28,16 @@ architecture rtl of ext_aluext is
 
 	type reg_type is record
   		ifacereg	: register_set;
-		r		: std_logic_vector(7 downto 0);
-		g		: std_logic_vector(7 downto 0);
-		b		: std_logic_vector(7 downto 0);
+		r		: std_logic_vector(8 downto 0);
+		g		: std_logic_vector(8 downto 0);
+		b		: std_logic_vector(8 downto 0);
 		rf		: signed(31 downto 0);
 		gf		: signed(31 downto 0);
 		bf 		: signed(31 downto 0);
+		--op_a	: unsigned(31 downto 0);
+		--op_b	: unsigned(31 downto 0);
+		--mult	: unsigned(31 downto 0);
+		--div		: unsigned(31 downto 0);
   	end record;
 
 	signal r_next : reg_type;
@@ -46,6 +50,10 @@ architecture rtl of ext_aluext is
 		rf => (others => '0'),
 		gf => (others => '0'),
 		bf => (others => '0')
+		--op_a => (others => '0'),
+		--op_b => (others => '0'),
+		--mult => (others => '0'),
+		--div => (others => '0')
 	);
 	
 	signal rstint : std_ulogic;
@@ -84,14 +92,18 @@ begin
 				-- op_a übernehmen
     			when "001" =>
     				if ((exti.byte_en(0) = '1')) then
-			    		v.r(7 downto 0) := exti.data(7 downto 0);
+			    		v.r(8 downto 0) := "0" & exti.data(7 downto 0);
 			    	end if;
 			    	if ((exti.byte_en(1) = '1')) then
-			    		v.g(7 downto 0) := exti.data(15 downto 8);
+			    		v.g(8 downto 0) := "0" & exti.data(15 downto 8);
 			    	end if;
 			    	if ((exti.byte_en(2) = '1')) then
-			    		v.b(7 downto 0) := exti.data(23 downto 16);
+			    		v.b(8 downto 0) := "0" & exti.data(23 downto 16);
 			    	end if;
+			    --when "011" =>
+			    --	v.op_a(31 downto 0) := UNSIGNED(exti.data(31 downto 0));
+			    --when "100" =>
+			    --	v.op_b(31 downto 0) := UNSIGNED(exti.data(31 downto 0));
    				when others =>
 					null;
 			end case;
@@ -107,6 +119,10 @@ begin
 				-- ergebnis auslesen
 				when "010" =>
 					exto.data(0) <= result;
+				--when "101" =>
+				--	exto.data(31 downto 0) <= STD_LOGIC_VECTOR(r.mult);
+				--when "111" =>
+				--	exto.data(31 downto 0) <= STD_LOGIC_VECTOR(r.div);
 				when others =>
 					null;
 			end case;
@@ -136,7 +152,9 @@ begin
 		  v.ifacereg(STATUSREG)(STA_INT) := '0';
 		end if; 
 		exto.intreq <= r.ifacereg(STATUSREG)(STA_INT);
-
+		
+		--v.mult := RESIZE(r.op_a * r.op_b,32);
+		--v.div  := RESIZE(r.op_a / r.op_b,32);
 		
 		tmp_rf := RESIZE(signed(r.r)*to_signed(1000,16),32);
 		tmp_gf := RESIZE(signed(r.g)*to_signed(1000,16),32);

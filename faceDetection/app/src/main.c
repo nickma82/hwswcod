@@ -33,11 +33,26 @@ int main(int argc, char **argv)
 			rect_t face;
 			
 			//dis7seg_hex(mult(10,20));
+			
+			uint32_t y,c;
+			
+						
 			benchmark_messure(getFrame(color));
+			
 			test_receiveImage(&image, argv[1]);
+			
+
+			y = 300;
+			
+			benchmark_messure(c = image.width * y;);
+			
+			benchmark_messure(ALUEXT_OPA = image.width;
+							ALUEXT_OPB = y;
+							c = ALUEXT_RESMULT);
+			
 			face = faceDetection(&image);
 			image_paintRectangle(&image, face);
-			//svga_outputImage(&image);
+			svga_outputImage(&image);
 			test_sendImage(&image, argv[2]);
 		}
 	#else
