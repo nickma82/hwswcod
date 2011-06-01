@@ -65,6 +65,8 @@ architecture rtl of ext_writeframe is
 		state		: state_type;
 		color		: std_logic_vector(31 downto 0);
 		send_px		: std_logic;
+		col      : integer range 0 to CAM_W-1;
+		tog      : std_logic;
 	end record;
 
 	
@@ -73,12 +75,13 @@ architecture rtl of ext_writeframe is
 	(
 		ifacereg 	=> (others => (others => '0')),
 		getframe 	=> '0',
+		cam_enable 	=> '1',
+		start		=> '0',
 		address 	=> (others => '0'),
 		wdata  		=> (others => '0'),
 		state		=> reset,
 		color   	=> (others => '0'),
-		cam_enable 	=> '0',
-		start		=> '0',
+		send_px => '0',
 		col			=> 0,
 		tog			=> '0'
 	);
@@ -86,7 +89,14 @@ architecture rtl of ext_writeframe is
 	signal rstint : std_ulogic;
 	signal cam_frame_ready : std_logic;
 	signal cam_enable : std_logic;
-
+	
+	--signal data_sig			: STD_LOGIC_VECTOR (7 DOWNTO 0);
+	--signal rdaddress_sig	: STD_LOGIC_VECTOR (10 DOWNTO 0);
+	--signal rdclock_sig		: STD_LOGIC ;
+	--signal wraddress_sig	: STD_LOGIC_VECTOR (10 DOWNTO 0);
+	--signal wrclock_sig		: STD_LOGIC  := '0';
+	--signal wren_sig			: STD_LOGIC  := '0';
+	--signal q_sig			: STD_LOGIC_VECTOR (7 DOWNTO 0);
 begin
 	
 	------------------------
@@ -95,21 +105,41 @@ begin
 	ahb_master : ahbmst generic map (1, 0, VENDOR_WIR, WIR_WRITEFRAME, 0, 3, 1)
 	port map (rstint, clk, dmai, dmao, ahbi, ahbo);
 	
+	
+	------------------------
+	---	RAM Instance
+	------------------------
+	--ram_inst : ram PORT MAP (
+	--	data	 	=> data_sig, 		--write port
+	--	rdaddress	=> rdaddress_sig,
+	--	rdclock	 	=> rdclock_sig,
+	--	wraddress	=> wraddress_sig,
+	--	wrclock	=> wrclock_sig,
+	--	wren	=> wren_sig, 
+	--	q		=> q_sig --out
+	--);
+	
 	------------------------
 	---	Lesen von Bildern Einheit anlegen
 	------------------------
 	read_cam_unit : read_cam
       port map (
-        clk	=> cm_clk,	
-        rst => rstint,
+		clk	=> cm_clk,	
+		rst => rstint,
 		enable	=> cam_enable,
 		frame_ready => cam_frame_ready,
 		cm_d => cm_d,
 		cm_lval => cm_lval,
 		cm_fval => cm_fval,
+		cm_pixclk => cm_pixclk,
 		cm_reset => cm_reset,
 		cm_trigger => cm_trigger,
 		cm_strobe => cm_strobe
+		
+		--data		=> data_sig,
+		--wraddress	=> wraddress_sig,
+		--wrclock		=> wrclock_sig,
+		--wren		=> wren_sig
     );
 	
 	------------------------

@@ -412,8 +412,6 @@ begin
 		led_red(1) <= r.sdata_out;
 		led_red(2) <= rstint;
 		led_red(17 downto 3) <= r.leds(17 downto 3);
-		cam_state <= r.state;
-		cam_i <= r.i;
 		r_next <= v;
     end process;	
 

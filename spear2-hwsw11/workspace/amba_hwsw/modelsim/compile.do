@@ -78,6 +78,8 @@ vcom  -work gaisler ../../../VHDL/amba_modules/gaisler/memctrl/memctrl.vhd
 vcom  -work gaisler ../../../VHDL/amba_modules/gaisler/memctrl/sdctrl.vhd
 
 vcom  -work work ../../../VHDL/ext_modules/ext_writeframe/pkg_writeframe.vhd
+vcom  -work work ../../../VHDL/ext_modules/ext_writeframe/ram.vhd
+vcom  -work work ../../../VHDL/ext_modules/ext_writeframe/read_cam.vhd
 vcom  -work work ../../../VHDL/ext_modules/ext_writeframe/writeframe.vhd
 
 vcom  -work work ../VHDL/top_pkg.vhd
