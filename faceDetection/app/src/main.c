@@ -18,7 +18,6 @@
 
 int main(int argc, char **argv)
 {	
-	uint32_t color = 0x000000FF;
 	#ifdef __SPEAR32__
 		// initialize HW modules
 		dis7seg_init();
@@ -32,24 +31,8 @@ int main(int argc, char **argv)
 			image_t image;
 			rect_t face;
 			
-			//dis7seg_hex(mult(10,20));
-			
-			uint32_t y,c;
-			
-						
-			benchmark_messure(getFrame(color));
-			
 			test_receiveImage(&image, argv[1]);
-			
-
-			y = 300;
-			
-			benchmark_messure(c = image.width * y;);
-			
-			benchmark_messure(ALUEXT_OPA = image.width;
-							ALUEXT_OPB = y;
-							c = ALUEXT_RESMULT);
-			
+						
 			face = faceDetection(&image);
 			image_paintRectangle(&image, face);
 			svga_outputImage(&image);
@@ -64,6 +47,7 @@ int main(int argc, char **argv)
 		write_cam(0x23, 3);
 		dis7seg_hex(read_cam(0x04));
 		
+		uint32_t color = 0x000000FF;
 		while (1) {
 			getFrame(color);
 			color += 500;

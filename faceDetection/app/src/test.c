@@ -2,15 +2,16 @@
 #include <stdlib.h>
 #include <string.h>
 
-#ifdef __SPEAR32__
-	#include <machine/UART.h>
-	#include "sdram.h"
-#endif
-
 #include "image.h"
 #include "test.h"
 
 #define COUNTER_BADDR ((uint32_t)-320)
+
+#ifdef __SPEAR32__
+	#include <machine/UART.h>
+	#include "sdram.h"
+	uint8_t *reg = (uint8_t *)(COUNTER_CONFIG_C_BOFF + COUNTER_BADDR);
+#endif
 
 void test_init(void) {
 	#ifdef __SPEAR32__
@@ -29,7 +30,7 @@ void test_init(void) {
 			counterValues[i] = 0;
 		
 		counter_initHandle(&counterHandle, COUNTER_BADDR);
-		counter_setPrescaler(&counterHandle, 3);
+		counter_setPrescaler(&counterHandle, 0);
 	#endif // __SPEAR32__
 }
 
