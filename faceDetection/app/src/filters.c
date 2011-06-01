@@ -10,9 +10,6 @@
 #define WINDOW_LENGTH 3
 #define WINDOW_OFFSET ((WINDOW_LENGTH-1)/2)
 
-extern int *histX;
-extern int *histY;
-
 inline uint8_t findInWindow(bwimage_t *i, int x, int y, uint8_t compare);
 inline void fillWindow(bwimage_t *i, bwimage_t *flags, int x, int y, uint8_t color);
 
@@ -72,11 +69,6 @@ void erodeDilateFilter(bwimage_t *inputImage, bwimage_t *outputImage, uint8_t op
 						outputImage->fg_color_cnt++;
 					}
 				}
-				
-				if (outputImage->data[p] & pp) {
-					histX[x]++;
-					histY[y]++;
-				}
 			}
 		}
 	} else {
@@ -109,11 +101,6 @@ void erodeDilateFilter(bwimage_t *inputImage, bwimage_t *outputImage, uint8_t op
 							outputImage->data[p] |= pp; // set pixel
 							outputImage->fg_color_cnt++;
 						}
-					}
-					
-					if (outputImage->data[p] & pp) {
-						histX[x]++;
-						histY[y]++;
 					}
 					
 					if (!(flags.data[p] & pp)) {
@@ -179,11 +166,6 @@ inline void fillWindow(bwimage_t *i, bwimage_t *flags, int x, int y, uint8_t col
 							i->data[p] |= pp; // set pixel
 							i->fg_color_cnt++;
 						}
-					}
-					
-					if (i->data[p] & pp) {
-						histX[wx]++;
-						histY[wy]++;
 					}
 					
 					if (!(flags->data[p] & pp)) {
