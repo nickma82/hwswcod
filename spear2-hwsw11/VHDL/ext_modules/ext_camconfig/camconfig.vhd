@@ -22,9 +22,7 @@ entity ext_camconfig is
 		sdata_in		: in	std_logic;
 		sdata_out		: out	std_logic;
 		sdata_out_en 	: out 	std_logic;
-		led_red			: out 	std_logic_vector(17 downto 0);
-		cam_state		: out 	cam_state_type;
-		cam_i			: out 	integer range -1 to 7
+		led_red			: out 	std_logic_vector(17 downto 0)
     );
 end ;
 
