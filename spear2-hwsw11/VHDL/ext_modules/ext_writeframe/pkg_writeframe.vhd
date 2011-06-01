@@ -63,9 +63,28 @@ package pkg_writeframe is
 			cm_d		: in  std_logic_vector(11 downto 0);
 			cm_lval 	: in  std_logic; 	--Line valid
 			cm_fval 	: in  std_logic; 	--Frame valid
+			cm_pixclk	: in std_logic; 	--pixel Clock
 			cm_reset	: out std_logic;	--D5M reset
 			cm_trigger	: out std_logic;	--Snapshot trigger
 			cm_strobe	: in  std_logic 	--Snapshot strobe
+			
+			--data		: out STD_LOGIC_VECTOR (7 DOWNTO 0);
+			--wraddress	: out STD_LOGIC_VECTOR (10 DOWNTO 0);
+			--wrclock		: out STD_LOGIC  := '0';
+			--wren		: out STD_LOGIC  := '0'
 		);
 	end component;
+	
+	--component ram
+	--	PORT (
+	--		data		: IN STD_LOGIC_VECTOR (7 DOWNTO 0);
+	--		rdaddress		: IN STD_LOGIC_VECTOR (10 DOWNTO 0);
+	--		rdclock		: IN STD_LOGIC ;
+	--		wraddress		: IN STD_LOGIC_VECTOR (10 DOWNTO 0);
+	--		wrclock		: IN STD_LOGIC  := '1';
+	--		wren		: IN STD_LOGIC  := '0';
+	--		q		: OUT STD_LOGIC_VECTOR (7 DOWNTO 0)
+	--	);
+	--end component;
+	
 end pkg_writeframe;
