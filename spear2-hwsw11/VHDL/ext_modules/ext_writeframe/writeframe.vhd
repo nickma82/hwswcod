@@ -102,7 +102,7 @@ architecture rtl of ext_writeframe is
 	);
 	
 	signal rstint : std_ulogic;
-  
+	signal pix_next_dot : state_pixsync_cam_type;
 	
 begin
 	ahb_master : ahbmst generic map (1, 0, VENDOR_WIR, WIR_WRITEFRAME, 0, 3, 1)
@@ -119,6 +119,7 @@ begin
 	begin
     	v := r;
     	vpix:= pix;
+    	vpix_next_dot := pix_next_dot;
     	   	
     	--schreiben
     	if ((extsel = '1') and (exti.write_en = '1')) then
@@ -227,7 +228,7 @@ begin
 		
 		---Next dot descision logic
 		--takes care about PIX.NEXT_DOT
-		--@TODO in weiterer Folge in CCH-Handler verschieben
+		--@TODO in weiterer Folge in CCD-Handler verschieben
 		case pix.state is
 			when wait_frame_valid =>
 				--ROW sensitive
@@ -237,16 +238,21 @@ begin
 					vpix_next_dot := read_dot_b;
 				end if;
 			when read_dot_r =>
-				vpix_next_dot := read_dot_g1;
-			when read_dot_g1 =>
-				vpix_next_dot := read_dot_r;
-				--eol condition
-	--@TODO: fehler hier Abfrage nicht gut
-				if pix.p_c >= CAM_W-1 then
+				if pix.p_c < CAM_W-1 then
+					vpix_next_dot := read_dot_g1;
+				else
+					--eol1 condition
 					vpix_next_dot := next_line;
 				end if;
+			when read_dot_g1 =>
+				vpix_next_dot := read_dot_r;
 			when read_dot_g2 =>
-				vpix_next_dot := read_dot_b;
+				if pix.p_c < CAM_W-1 then
+					vpix_next_dot := read_dot_b;
+				else
+					--eol2 condition
+					vpix_next_dot := next_line;
+				end if;
 			when read_dot_b =>
 				vpix_next_dot := read_dot_g2;
 				--eol condition
@@ -355,6 +361,7 @@ begin
 		
 	    cm_reset <= rstint;
 	    
+	    pix_next_dot <= vpix_next_dot;
 	    pix_next <= vpix;
 		r_next <= v;
     end process;
