@@ -47,7 +47,6 @@ package pkg_writeframe is
 		cm_lval 	: in std_logic; 	--Line valid
 		cm_fval 	: in std_logic; 	--Frame valid
 		cm_pixclk	: in std_logic; 	--pixel Clock
-		cm_clk		: in std_logic;
 		cm_reset	: out std_logic;	--D5M reset
 		cm_trigger	: out std_logic;	--Snapshot trigger
 		cm_strobe	: in std_logic; 	--Snapshot strobe
