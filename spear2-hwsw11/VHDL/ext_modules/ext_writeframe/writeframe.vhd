@@ -50,8 +50,10 @@ architecture rtl of ext_writeframe is
 	-- Core Ext Signale
 	subtype BYTE is std_logic_vector(7 downto 0);
 	type register_set is array (0 to 4) of BYTE;
+
 	type state_type is (idle, adr, data, done, reset);
 		
+
 	
 	type reg_type is record
   		ifacereg	: register_set;
@@ -62,11 +64,9 @@ architecture rtl of ext_writeframe is
 		wdata		: std_logic_vector(31 downto 0);
 		state		: state_type;
 		color		: std_logic_vector(31 downto 0);
-		col			: integer range 0 to CAM_W;
-		tog			: std_logic;
+		send_px		: std_logic;
 	end record;
 
-	
 	
 	signal r_next : reg_type;
 	signal r : reg_type := 
@@ -86,6 +86,7 @@ architecture rtl of ext_writeframe is
 	signal rstint : std_ulogic;
 	signal cam_frame_ready : std_logic;
 	signal cam_enable : std_logic;
+
 begin
 	
 	------------------------
@@ -236,7 +237,9 @@ begin
 				v.getframe := '0';
 				v.start := '0';
 				v.state := idle;
+
 		end case;		
+
 		
 		-- Werte auf Interface zu Bus legen
 		dmai.wdata  <=  r.wdata;
@@ -248,7 +251,9 @@ begin
 	    dmai.start    <= r.start;
 	    dmai.address  <= r.address;    
 	    
+
 	    cam_enable <= r.cam_enable;
+
 		r_next <= v;
     end process;    
     
