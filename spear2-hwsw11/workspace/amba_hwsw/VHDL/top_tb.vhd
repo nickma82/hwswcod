@@ -148,12 +148,14 @@ begin
 
   clkgen : process
   begin
-    clk <= '1';
     cm_pixclk <= '0';
-    wait for cc/2;
-    clk <= '0'; 
+    wait for 2 ns;
+    clk <= '1';
+    wait for 18 ns;
     cm_pixclk <= '1';
-    wait for cc/2;
+    wait for 2 ns;
+    clk <= '0'; 
+    wait for 18 ns;
   end process clkgen;
   
   camgen : process
@@ -167,16 +169,17 @@ begin
   	cm_lval <= '0';
   	cm_fval <= '0';
   	
-  	wait for 300*cc;
+  	wait for 600*cc;
   	
   	cm_fval <= '1';
-	wait for 20*cc;
-	
+	wait for 21*cc;
+	wait for 10 ns;
   	for row_cnt in 1 to 480 loop
   		cm_lval <= '1';
   		for col_cnt in 1 to 640 loop
-  			cm_d <= "111111111111";
-  			wait for cc;
+  			--cm_d <= "111111111111";
+  			cm_d <= std_logic_vector(to_unsigned(col_cnt,12));
+  			wait for 2*cc;
   		end loop;
   		cm_lval <= '0';
   		wait for 5*cc;
