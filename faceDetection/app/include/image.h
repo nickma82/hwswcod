@@ -3,6 +3,12 @@
 
 #include <stdint.h>
 
+#define IMAGE_DATA_MAXVAL	31
+#define IMAGE_DATA_BITS		5
+
+#define SCALE_SHIFT 3
+#define SCALE 8
+
 typedef struct {
 	int topLeftX;
 	int topLeftY;
@@ -23,15 +29,15 @@ typedef struct {
 } ycbcr_color_t;
 
 typedef struct {
-	uint32_t width;
-	uint32_t height;
+	uint16_t width;
+	uint16_t height;
 	uint32_t dataLength;
 	unsigned char *data;
 } image_t;
 
 typedef struct {
-	uint32_t width;
-	uint32_t height;
+	uint16_t width;
+	uint16_t height;
 	uint32_t fg_color_cnt;
 	uint32_t dataLength;
 	uint32_t *data;
@@ -43,15 +49,11 @@ typedef struct {
 extern const uint8_t color_white;
 extern const uint8_t color_black;
 
-rgb_color_t image_getPixelValue(image_t *i, int x, int y);
 void image_setPixelValue(image_t *i, int x, int y, rgb_color_t cl);
 void image_paintRectangle(image_t *image, rect_t rectangle);
 
 void bwimage_init(image_t *template, bwimage_t *image);
 void bwimage_free(bwimage_t *image);
-uint8_t bwimage_getPixelValue(bwimage_t *i, int x, int y);
-void bwimage_setPixelValue(bwimage_t *i, int x, int y, uint8_t cl);
-
-ycbcr_color_t convertToYCbCrColor(rgb_color_t cl);
+inline uint8_t bwimage_getPixelValue(bwimage_t *i, int x, int y) __attribute__((always_inline));
 
 #endif // _image_h_

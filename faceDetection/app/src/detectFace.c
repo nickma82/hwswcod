@@ -12,20 +12,30 @@
 int getIndexBelowThreshold(int *hist, int histLen, int start, int step, int threshold);
 rect_t detectFace(bwimage_t *faceMask);
 
+int *histX;
+int *histY;
+
 rect_t faceDetection(image_t* inputImage) {
 	bwimage_t temp,temp2;
 	rect_t face;
-	
+		
 	printf("Starting computation.\n");
 	
 	bwimage_init(inputImage, &temp);
 	bwimage_init(inputImage, &temp2);
+	
+	histX = (int *)malloc(temp.width*sizeof(*histX));
+	histY = (int *)malloc(temp.height*sizeof(*histY));
 	
 	// perform face detection
 	benchmark_messure(skinFilter(inputImage, &temp));
 		svga_outputBwImage(&temp);
 	benchmark_messure(erodeDilateFilter(&temp, &temp2, FILTER_ERODE));
 		svga_outputBwImage(&temp2);
+		
+	memset(histX, 0, temp.width*sizeof(*histX));
+	memset(histY, 0, temp.height*sizeof(*histY));
+	
 	benchmark_messure(erodeDilateFilter(&temp2, &temp, FILTER_DILATE));
 		svga_outputBwImage(&temp);
 	benchmark_messure(face = detectFace(&temp));
@@ -40,10 +50,6 @@ rect_t faceDetection(image_t* inputImage) {
 
 rect_t detectFace(bwimage_t *faceMask)
 {
-	int *histX;
-	int *histY;
-	int x, y;
-	uint8_t c;
 	int i, j;
 	int width, height;
 	int maxHistX, maxHistY;
@@ -58,24 +64,8 @@ rect_t detectFace(bwimage_t *faceMask)
 	rect_t resultRect = {0, 0, 0, 0};
 	int maxArea;
 	
-	// compute histogramm
 	histXLen = faceMask->width;
 	histYLen = faceMask->height;
-	histX = (int *)malloc(histXLen*sizeof(int));
-	histY = (int *)malloc(histYLen*sizeof(int));
-	
-	memset(histX, 0, faceMask->width*sizeof(int));
-	memset(histY, 0, faceMask->height*sizeof(int));
-	
-	for (y = 0; y < faceMask->height; y++) {
-		for (x = 0; x < faceMask->width; x++) {
-			c = bwimage_getPixelValue(faceMask, x, y);			
-			if (c == color_white) {
-				histX[x]++;
-				histY[y]++;
-			}
-		}
-	}
 	
 	// find maximum histgram value and related xy-coordinate
 	maxHistX = 0;
@@ -92,7 +82,7 @@ rect_t detectFace(bwimage_t *faceMask)
 			faceY = i;
 		}
 	}
-	
+	printf("%d %d\n",maxHistX,maxHistY);
 	// select coordinates where histogram value is above half 
 	// of max hist value
 	aboveThresholdX = (int *)malloc(histXLen*sizeof(int));
