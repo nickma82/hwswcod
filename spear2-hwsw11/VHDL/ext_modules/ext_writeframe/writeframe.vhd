@@ -38,7 +38,8 @@ entity ext_writeframe is
 		cm_clk		: in std_logic;
 		cm_reset	: out std_logic;	--D5M reset
 		cm_trigger	: out std_logic;	--Snapshot trigger
-		cm_strobe	: in std_logic 	--Snapshot strobe
+		cm_strobe	: in std_logic; 	--Snapshot strobe
+		led_red		: out 	std_logic_vector(17 downto 0)
     );
 end ;
 
@@ -65,7 +66,7 @@ architecture rtl of ext_writeframe is
 		state		: state_type;
 		color		: std_logic_vector(31 downto 0);
 		send_px		: std_logic;
-		col      : integer range 0 to CAM_W-1;
+		col      : integer range 0 to CAM_W;
 		tog      : std_logic;
 	end record;
 
@@ -124,7 +125,7 @@ begin
 	------------------------
 	read_cam_unit : read_cam
       port map (
-		clk	=> cm_clk,	
+		clk	=> clk,	
 		rst => rstint,
 		enable	=> cam_enable,
 		frame_ready => cam_frame_ready,
@@ -251,13 +252,12 @@ begin
 					v.state := done;
 				else
 					-- Es sollen immer nur 640 Pixel ausgegeben werden da Bilder nie größer
-					if r.col >= (CAM_W-1) then
-						v.address := r.address + 4*(SCREEN_W-CAM_W);
+					if r.col >= CAM_W then
+						v.address := r.address + 4*(SCREEN_W-CAM_W+1);
 						v.col := 0;
 						v.tog := not r.tog;
 					else
 						v.address := r.address + 4;
-						v.col := r.col + 1;
 					end if;
 					
 					v.state := adr;
@@ -284,6 +284,7 @@ begin
 
 	    cam_enable <= r.cam_enable;
 
+	    led_red <= (others=>'1');
 		r_next <= v;
     end process;    
     

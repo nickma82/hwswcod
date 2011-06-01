@@ -50,7 +50,9 @@ package pkg_writeframe is
 		cm_clk		: in std_logic;
 		cm_reset	: out std_logic;	--D5M reset
 		cm_trigger	: out std_logic;	--Snapshot trigger
-		cm_strobe	: in std_logic 	--Snapshot strobe
+		cm_strobe	: in std_logic; 	--Snapshot strobe
+		
+		led_red			: out 	std_logic_vector(17 downto 0)
 		);
 	end component;
   

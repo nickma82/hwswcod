@@ -24,7 +24,6 @@ void skinFilter(image_t *inputImage, bwimage_t *outputImage) {
 			rgb_color_t tmp = image_getPixelValue(inputImage, x, y);
 			ALUEXT_RGB = (tmp.b << 16) | (tmp.g << 8) |  tmp.r;
 			if (ALUEXT_SKIN) {
-
 				bwimage_setPixelValue(outputImage, x, y, color_white); 
 			} else {
 				bwimage_setPixelValue(outputImage, x, y, color_black);
