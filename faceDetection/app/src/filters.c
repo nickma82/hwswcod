@@ -4,6 +4,7 @@
 
 #include "filters.h"
 #include "dis7seg.h"
+#include "test.h"
 
 #define WINDOW_LENGTH 5
 #define WINDOW_OFFSET ((WINDOW_LENGTH-1)/2)
@@ -21,16 +22,30 @@ void fillWindow(bwimage_t *i, bwimage_t *flags, int x, int y, uint8_t color);
 
 void skinFilter(image_t *inputImage, bwimage_t *outputImage) {
 	int x, y;
-	
+		
 	for (y = 0; y < inputImage->height; ++y) {
 		for (x = 0; x < inputImage->width; ++x) {
-			ycbcr_color_t ycbcr = convertToYCbCrColor(image_getPixelValue(inputImage, x, y));
+			rgb_color_t result;
+			int pIndex;
+			ycbcr_color_t ycbcr;
+			uint32_t p,pp;
+			
+			p = outputImage->width * y + x;
+			pIndex = p*3;
+			result.b = inputImage->data[pIndex];
+			result.g = inputImage->data[pIndex+1];
+			result.r = inputImage->data[pIndex+2];
+			
+			ycbcr = convertToYCbCrColor(result);
+			
+			pp = 1 << (IMAGE_DATA_MAXVAL - (p & IMAGE_DATA_MAXVAL)); // pixelposition
+			p >>= IMAGE_DATA_BITS;
+			
 			if (ycbcr.y >= Y_LOW && ycbcr.y <= Y_HIGH
 				&& ycbcr.cb >= CB_LOW && ycbcr.cb <= CB_HIGH
 				&& ycbcr.cr >= CR_LOW && ycbcr.cr <= CR_HIGH) {
-				bwimage_setPixelValue(outputImage, x, y, color_white);
-			} else {
-				bwimage_setPixelValue(outputImage, x, y, color_black);
+					outputImage->data[p] |= pp; // set pixel
+					outputImage->fg_color_cnt++;
 			}
 		}
 	}

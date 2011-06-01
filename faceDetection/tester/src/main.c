@@ -12,7 +12,7 @@
 #define ARRAY_SIZE(a) (sizeof(a) / sizeof(a[0]))
 
 #define CLKPERIOD 20
-#define PRESCALER 4
+#define PRESCALER 1
 static const char* counterNames[]={
 	"SkinFilter",
 	"Erode",
@@ -58,7 +58,7 @@ int main(int argc, char **argv)
   unsigned char *imageData;
   unsigned char imageDataBlock[1024];
   int ret;
-  uint32_t cycles;
+  int32_t cycles;
   unsigned short counterSize;
   float mseconds, msecSum=0, fps;
   char buffer[64];
@@ -167,14 +167,14 @@ int main(int argc, char **argv)
   for(i=0; i< counterSize; i++) {
     UART_read(serialfd, (char *)&cycles, sizeof(cycles));
     mseconds = cycles;
-    mseconds /= 1000000;
     mseconds *= CLKPERIOD * PRESCALER;
+    mseconds /= 1000;
     msecSum += mseconds;
-    printf("  %s, %.5f ms\n", counterNames[i], mseconds);
+    printf("  %s, %.5f us (%d)\n", counterNames[i], mseconds, cycles);
   }
   
   fps = 1000 / msecSum;
-  printf("Sum: %.3f ms, %.3f fps\n", msecSum, fps);
+  printf("Sum: %.0f us, %.3f fps\n", msecSum, fps);
     
   /*
   UART_read(serialfd, (char *)&filesize, sizeof(filesize));
