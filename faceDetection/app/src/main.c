@@ -18,7 +18,6 @@
 
 int main(int argc, char **argv)
 {	
-	int i,y;
 	uint32_t color = 0;
 	#ifdef __SPEAR32__
 		// initialize HW modules
@@ -43,14 +42,14 @@ int main(int argc, char **argv)
 		}
 	#else
 		dis7seg_hex(0x00);
-		write_cam(0x04, 2559);
+		/*write_cam(0x04, 2559);
 		write_cam(0x03, 1919);
 		write_cam(0x09, 470);
 		write_cam(0x22, 3);
 		write_cam(0x23, 3);
-		dis7seg_hex(read_cam(0x04));
+		dis7seg_hex(read_cam(0x04));*/
 		
-		
+		color = 0x000000FF;
 		while (1) {
 			getFrame(color);
 			// TODO:
