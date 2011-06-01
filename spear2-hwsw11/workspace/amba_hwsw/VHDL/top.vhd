@@ -108,8 +108,6 @@ architecture behaviour of top is
   signal camconfig_segsel : std_logic;
   signal camconfig_exto : module_out_type;
   
-  signal cam_state : cam_state_type;
-  signal cam_i	: integer range -1 to 7;
   signal cam_sclk : std_logic;
   signal cam_sdata_out_en, cam_sdata_out : std_logic;
   
@@ -138,7 +136,7 @@ architecture behaviour of top is
   -- signals for writeframe AMBA Master
   signal writeframe_ahbmo : ahb_mst_out_type;
   
-  
+  signal cam_clk		:std_logic;
   component altera_pll IS
     PORT
       (
@@ -158,7 +156,7 @@ begin
     inclk0	 => db_clk,
     c0	         => clk,
     c1	         => vga_clk_int,
-    c2			 => cm_xclkin,
+    c2			 => cam_clk,
     locked	 => open
     );
 
@@ -402,9 +400,7 @@ begin
 		sdata_in  => cm_sdata,
 		sdata_out => cam_sdata_out,
 		sdata_out_en => cam_sdata_out_en,
-		led_red	  => led_red,
-		cam_state => cam_state,
-		cam_i	  => cam_i
+		led_red	  => led_red
 	);
 	
 	cm_sclk <= cam_sclk;
@@ -430,12 +426,13 @@ begin
 		cm_lval 	=> cm_lval,
 		cm_fval 	=> cm_fval,
 		cm_pixclk	=> cm_pixclk,
-		--cm_xclkin	=> 
+		cm_clk		=> cam_clk,
 		cm_reset	=> cm_reset,
 		cm_trigger	=> cm_trigger,
 		cm_strobe	=> cm_strobe
 	);
     
+	cm_xclkin <= cam_clk;
 	gpio(4) <= cm_lval;
 	gpio(3) <= cm_fval;
 	gpio(5) <= cm_pixclk;
