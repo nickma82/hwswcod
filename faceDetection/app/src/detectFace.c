@@ -15,7 +15,7 @@ rect_t detectFace(bwimage_t *faceMask);
 rect_t faceDetection(image_t* inputImage) {
 	bwimage_t temp,temp2;
 	rect_t face;
-	
+		
 	printf("Starting computation.\n");
 	
 	bwimage_init(inputImage, &temp);
@@ -25,7 +25,9 @@ rect_t faceDetection(image_t* inputImage) {
 	benchmark_messure(skinFilter(inputImage, &temp));
 		svga_outputBwImage(&temp);
 	benchmark_messure(erodeDilateFilter(&temp, &temp2, FILTER_ERODE));
+		svga_outputBwImage(&temp2);
 	benchmark_messure(erodeDilateFilter(&temp2, &temp, FILTER_DILATE));
+		svga_outputBwImage(&temp);
 	benchmark_messure(face = detectFace(&temp));
 	
 	bwimage_free(&temp);
@@ -38,15 +40,13 @@ rect_t faceDetection(image_t* inputImage) {
 
 rect_t detectFace(bwimage_t *faceMask)
 {
-	int *histX;
-	int *histY;
-	int x, y;
-	uint8_t c;
-	int i, j;
+	int i, j, x, y;
 	int width, height;
 	int maxHistX, maxHistY;
 	int faceX, faceY;
 	
+	int *histX;
+	int *histY;
 	int histXLen, histYLen;
 	int *aboveThresholdX;
 	int *aboveThresholdY;
@@ -67,8 +67,10 @@ rect_t detectFace(bwimage_t *faceMask)
 	
 	for (y = 0; y < faceMask->height; y++) {
 		for (x = 0; x < faceMask->width; x++) {
-			c = bwimage_getPixelValue(faceMask, x, y);			
-			if (c == color_white) {
+			uint32_t p = faceMask->width * y + x;
+			uint32_t pp = 1 << (IMAGE_DATA_MAXVAL - (p & IMAGE_DATA_MAXVAL)); // pixelposition
+			p >>= IMAGE_DATA_BITS;	
+			if (faceMask->data[p] & pp) {
 				histX[x]++;
 				histY[y]++;
 			}

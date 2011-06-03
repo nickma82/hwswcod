@@ -3,21 +3,22 @@
 
 #ifdef __SPEAR32__
 	#include <drivers/counter.h>
-	#define COUNTER_COUNT 5
 
-	uint32_t counterValues[COUNTER_COUNT];
+	#define COUNTER_COUNT 11
+
+	extern uint8_t *reg;
+	int32_t counterValues[COUNTER_COUNT];
 	module_handle_t counterHandle;
 	unsigned short counterSize;
 	
 	#define benchmark_messure(callable) \
 	do { \
-	counter_start(&counterHandle); \
+	*reg = (1 << COUNTER_CLEAR_BIT); \
+	*reg = (1 << COUNTER_COUNT_BIT); \
 	callable; \
-	counter_stop(&counterHandle); \
+	*reg = 0; \
 	if (counterSize < COUNTER_COUNT) { \
 		counterValues[counterSize] = counter_getValue(&counterHandle); \
-		if (!counterValues[counterSize]) \
-			counterValues[counterSize] = 1; \
 		counterSize++; \
 	} \
 	} while (0)

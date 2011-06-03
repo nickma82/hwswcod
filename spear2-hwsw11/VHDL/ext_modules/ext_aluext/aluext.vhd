@@ -28,10 +28,16 @@ architecture rtl of ext_aluext is
 
 	type reg_type is record
   		ifacereg	: register_set;
-		r		: std_logic_vector(7 downto 0);
-		g		: std_logic_vector(7 downto 0);
-		b		: std_logic_vector(7 downto 0);
-		result  : std_logic;
+		r		: std_logic_vector(8 downto 0);
+		g		: std_logic_vector(8 downto 0);
+		b		: std_logic_vector(8 downto 0);
+		rf		: signed(31 downto 0);
+		gf		: signed(31 downto 0);
+		bf 		: signed(31 downto 0);
+		--op_a	: unsigned(31 downto 0);
+		--op_b	: unsigned(31 downto 0);
+		--mult	: unsigned(31 downto 0);
+		--div		: unsigned(31 downto 0);
   	end record;
 
 	signal r_next : reg_type;
@@ -41,20 +47,26 @@ architecture rtl of ext_aluext is
 		r => (others => '0'),
 		g => (others => '0'),
 		b => (others => '0'),
-		result => '0'
+		rf => (others => '0'),
+		gf => (others => '0'),
+		bf => (others => '0')
+		--op_a => (others => '0'),
+		--op_b => (others => '0'),
+		--mult => (others => '0'),
+		--div => (others => '0')
 	);
 	
 	signal rstint : std_ulogic;
+	signal result,result_next : std_logic;
 begin
 	
 	------------------------
 	---	ASync Core Ext Interface Daten übernehmen und schreiben
 	------------------------
-	comb : process(r, exti, extsel)
+	comb : process(r, exti, extsel,result)
 	variable v : reg_type;
-	variable rf,gf,bf : std_logic_vector(31 downto 0);
-	variable tmp_rf,tmp_gf,tmp_bf : unsigned(18 downto 0);
-	variable tmp_y,tmp_cb,tmp_cr,a1,a2,a3,a4,b1,b2,b3,b4,c1,c2,c3,c4 : signed(63 downto 0);
+	variable tmp_rf,tmp_gf,tmp_bf : signed(31 downto 0);
+	
 	begin
     	v := r;
     	   	
@@ -80,14 +92,18 @@ begin
 				-- op_a übernehmen
     			when "001" =>
     				if ((exti.byte_en(0) = '1')) then
-			    		v.r(7 downto 0) := exti.data(7 downto 0);
+			    		v.r(8 downto 0) := "0" & exti.data(7 downto 0);
 			    	end if;
 			    	if ((exti.byte_en(1) = '1')) then
-			    		v.g(7 downto 0) := exti.data(15 downto 8);
+			    		v.g(8 downto 0) := "0" & exti.data(15 downto 8);
 			    	end if;
 			    	if ((exti.byte_en(2) = '1')) then
-			    		v.b(7 downto 0) := exti.data(23 downto 16);
+			    		v.b(8 downto 0) := "0" & exti.data(23 downto 16);
 			    	end if;
+			    --when "011" =>
+			    --	v.op_a(31 downto 0) := UNSIGNED(exti.data(31 downto 0));
+			    --when "100" =>
+			    --	v.op_b(31 downto 0) := UNSIGNED(exti.data(31 downto 0));
    				when others =>
 					null;
 			end case;
@@ -102,7 +118,11 @@ begin
 					exto.data <= r.ifacereg(3) & r.ifacereg(2) & r.ifacereg(1) & r.ifacereg(0);
 				-- ergebnis auslesen
 				when "010" =>
-					exto.data(0) <= r.result;
+					exto.data(0) <= result;
+				--when "101" =>
+				--	exto.data(31 downto 0) <= STD_LOGIC_VECTOR(r.mult);
+				--when "111" =>
+				--	exto.data(31 downto 0) <= STD_LOGIC_VECTOR(r.div);
 				when others =>
 					null;
 			end case;
@@ -132,52 +152,41 @@ begin
 		  v.ifacereg(STATUSREG)(STA_INT) := '0';
 		end if; 
 		exto.intreq <= r.ifacereg(STATUSREG)(STA_INT);
-
 		
-		--tmp_rf := unsigned(r.r)*to_unsigned(1000,11);
-		--tmp_gf := unsigned(r.g)*to_unsigned(1000,11);
-		--tmp_bf := unsigned(r.b)*to_unsigned(1000,11);
-		--
-		--
-		--rf := "0000000000000" & To_StdLogicVector(to_bitvector(std_logic_vector(tmp_rf)) sra 8);
-		--gf := "0000000000000" & To_StdLogicVector(to_bitvector(std_logic_vector(tmp_gf)) sra 8);
-		--bf := "0000000000000" & To_StdLogicVector(to_bitvector(std_logic_vector(tmp_bf)) sra 8);
-		--
-		--a1 := signed(rf)*signed(gf);
-		--a1 := to_signed(299000,32) *signed(rf);
-		--a2 := to_signed(587000,32) *signed(gf);
-		--a3 := to_signed(114000,32) *signed(bf);
-		--a4  :=  a1 + a2;
-		--tmp_y := a4 + a3;
-		--
-		--b1 := to_signed(168736,32) *signed(rf);
-		--b2 := to_signed(331264,32) *signed(gf);
-		--b3 := to_signed(500000,32)  *signed(bf);
-		--b4 := b3 - b1;
-		--tmp_cb := b4 - b2;
-		--
-		--c1 := to_signed(500000,32) *signed(rf);
-		--c2 := to_signed(418688,32)*signed(gf);
-		--c3 := to_signed(81312,32) *signed(bf);
-		--c4 :=  c1 - c2;
-		--tmp_cr := c4 - c3;
+		--v.mult := RESIZE(r.op_a * r.op_b,32);
+		--v.div  := RESIZE(r.op_a / r.op_b,32);
 		
-		tmp_y := to_signed(0,64);
-		tmp_cb := to_signed(0,64);
-		tmp_cr := to_signed(0,64);
+		tmp_rf := RESIZE(signed(r.r)*to_signed(1000,16),32);
+		tmp_gf := RESIZE(signed(r.g)*to_signed(1000,16),32);
+		tmp_bf := RESIZE(signed(r.b)*to_signed(1000,16),32);
 		
-		if 	tmp_y >= Y_LOW and tmp_y <= Y_HIGH and 
-			tmp_cb >= CB_LOW and tmp_cb <= CB_HIGH and 
-			tmp_cr >= CR_LOW and tmp_cr <= CR_HIGH then
-			v.result := '1';
-		else
-			v.result := '0';
-		end if;
-		
+		v.rf := SHIFT_RIGHT(tmp_rf,8);
+		v.gf := SHIFT_RIGHT(tmp_gf,8);
+		v.bf := SHIFT_RIGHT(tmp_bf,8);
+				
 		r_next <= v;
     end process;	
 
-	------------------------
+    
+    color : process(r)
+    variable tmp_y,tmp_cb,tmp_cr : signed(63 downto 0);
+    
+    begin
+    			
+		tmp_y :=  to_signed(299000,32)  * r.rf + to_signed(587000,32) * r.gf + to_signed(114000,32) * r.bf;
+		tmp_cb := to_signed(500000,32)  * r.bf - to_signed(168736,32) * r.rf - to_signed(331264,32) * r.gf;
+		tmp_cr := to_signed(500000,32)  * r.rf - to_signed(418688,32) * r.gf - to_signed(81312,32)  * r.bf;
+		
+		if tmp_y >= Y_LOW and tmp_y <= Y_HIGH and 
+			tmp_cb >= CB_LOW and tmp_cb <= CB_HIGH and 
+			tmp_cr >= CR_LOW and tmp_cr <= CR_HIGH then
+			result_next <= '1';
+		else
+			result_next <= '0';
+		end if;
+    end process;
+	
+    ------------------------
 	---	Sync Daten übernehmen
 	------------------------
     reg : process(clk)
@@ -185,9 +194,10 @@ begin
 		if rising_edge(clk) then 
 			if rstint = RST_ACT then
 				r.ifacereg <= (others => (others => '0'));
-				
+				result <= '0';
 			else
 				r <= r_next;
+				result <= result_next;
 			end if;
 		end if;
 	end process;

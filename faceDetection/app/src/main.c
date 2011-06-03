@@ -18,7 +18,6 @@
 
 int main(int argc, char **argv)
 {	
-	uint32_t color = 0;
 	#ifdef __SPEAR32__
 		// initialize HW modules
 		dis7seg_init();
@@ -32,26 +31,26 @@ int main(int argc, char **argv)
 			image_t image;
 			rect_t face;
 			
-			//dis7seg_hex(mult(10,20));
-			benchmark_messure(getFrame());
 			test_receiveImage(&image, argv[1]);
+						
 			face = faceDetection(&image);
 			image_paintRectangle(&image, face);
-			//svga_outputImage(&image);
+			svga_outputImage(&image);
 			test_sendImage(&image, argv[2]);
 		}
 	#else
 		dis7seg_hex(0x00);
-		/*write_cam(0x04, 2559);
+		write_cam(0x04, 2559);
 		write_cam(0x03, 1919);
 		write_cam(0x09, 470);
 		write_cam(0x22, 3);
 		write_cam(0x23, 3);
-		dis7seg_hex(read_cam(0x04));*/
+		dis7seg_hex(read_cam(0x04));
 		
-		color = 0x000000FF;
+		uint32_t color = 0x000000FF;
 		while (1) {
 			getFrame(color);
+			color += 500;
 			// TODO:
 			// get picture from camera
 			//faceDetection();

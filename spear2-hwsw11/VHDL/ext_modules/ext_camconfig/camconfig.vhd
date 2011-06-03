@@ -21,8 +21,7 @@ entity ext_camconfig is
 		sclk			: out	std_logic;
 		sdata_in		: in	std_logic;
 		sdata_out		: out	std_logic;
-		sdata_out_en 	: out 	std_logic;
-		led_red			: out 	std_logic_vector(17 downto 0)
+		sdata_out_en 	: out 	std_logic
     );
 end ;
 
@@ -45,13 +44,10 @@ architecture rtl of ext_camconfig is
 		w_sent		: std_logic;
 		state		: cam_state_type;
 		ret_state	: cam_state_type;
-		
 		i			: integer range -1 to 7;
 		clkgen		: integer range 0 to CLK_COUNT;
-		
+		sdata_out       : std_logic;
 		sclk		: std_logic;
-		sdata_out	: std_logic;
-		leds		: std_logic_vector(17 downto 0);
   	end record;
 
 	signal r_next : reg_type;
@@ -71,8 +67,7 @@ architecture rtl of ext_camconfig is
 		i => 0,
 		clkgen => 0,
 		sclk => '1',
-		sdata_out => '1',
-		leds => (others=>'1')
+		sdata_out => '1'
 	);
 	
 	signal rstint : std_ulogic;
@@ -226,7 +221,6 @@ begin
 				v.i := 0;
 				v.clkgen := 0;				
 				v.ready := '1';
-				v.leds := (others => '1');
 				v.sclk := '1';
 				v.sdata_out := '1';
 				v.clkgen := 0;
@@ -236,7 +230,7 @@ begin
 				if r.ready = '0' then
 					v.state := send_start_bit;
 				end if;
-				v.leds(3) := '0';
+				
 			when send_start_bit =>
 				-- start bit wird nur gesendet wenn sclock high ist
 				if (r.sclk = '1' and r.clkgen < 20) then
@@ -249,7 +243,7 @@ begin
 					else
 						v.ret_state := send_r_id;
 					end if;
-					v.leds(4) := '0';
+					
 				end if;
 			when send_stop_bit =>
 				if r.sclk = '1' then
@@ -265,15 +259,12 @@ begin
 				
 			when restore_read =>
 				v.state := read2;
-				v.leds(6) := '0';
 			when done =>
 				v.state := idle;
 				v.ready := '1';
-				v.leds(7) := '0';
 			when error_state =>
 				v.state := idle;
 				v.ready := '1';
-				v.leds(17) := '0';
 			when 
 				others => null;
 		end case;		
@@ -297,7 +288,6 @@ begin
 							v.ret_state := send_address;
 							v.w_sent := '1';
 						end if;
-						v.leds(8) := '0';
 						
 					when send_r_id =>
 						-- 8 bit hinaus schicken
@@ -308,7 +298,6 @@ begin
 							v.state := wait_ack;
 							v.ret_state := read1;
 						end if;
-						v.leds(5) := '0';
 					-- address bits der reihe nach hinaus schicken
 					when send_address =>
 						-- 8 bit hinaus schicken
@@ -323,7 +312,6 @@ begin
 								v.ret_state := send_stop_bit;
 							end if;
 						end if;
-						v.leds(9) := '0';
 					-- WRITE: daten nacheinander hinaus schicken, dazwischen ack bit abwarten			
 					when write1 =>	
 						sdata_out_en <= '1';
@@ -333,7 +321,6 @@ begin
 							v.state := wait_ack;
 							v.ret_state := write2;
 						end if;	
-						v.leds(10) := '0';
 					when write2 =>
 						sdata_out_en <= '1';
 						if r.i >= 0 then
@@ -342,12 +329,10 @@ begin
 							v.state := wait_ack;
 							v.ret_state := done;
 						end if;
-						v.leds(11) := '0';
 					-- ack bit anlegen
 					when send_ack =>
 						v.sdata_out := '0';
 						v.state := wait_until_high;
-						v.leds(12) := '0';
 					when others => null;		
 				end case;
 			else
@@ -361,7 +346,6 @@ begin
 							v.state := error_state;
 							--v.state := wait_until_low;
 						end if;
-						v.leds(13) := '0';
 					-- READ: daten nacheinander lesen, jedes byte bestätigen
 					when read1 =>
 						if r.i >= 0 then
@@ -370,7 +354,6 @@ begin
 						if r.i = 0 then
 							v.state := send_ack;
 						end if;
-						v.leds(14) := '0';
 					when read2 =>
 						if r.i >= 0 then
 							v.data2(r.i) := sdata_in;
@@ -378,11 +361,9 @@ begin
 						if r.i = 0 then
 							v.state := done;
 						end if;
-						v.leds(15) := '0';
 					when wait_until_high =>
 						v.state := wait_until_low;
 						v.ret_state := restore_read;
-						v.leds(16) := '0';
 					when others => null;
 				end case;				
 			end if;
@@ -408,10 +389,6 @@ begin
 			sdata_out_en <= '1';
 		end if;
 		
-		led_red(0) <= r.sclk;
-		led_red(1) <= r.sdata_out;
-		led_red(2) <= rstint;
-		led_red(17 downto 3) <= r.leds(17 downto 3);
 		r_next <= v;
     end process;	
 

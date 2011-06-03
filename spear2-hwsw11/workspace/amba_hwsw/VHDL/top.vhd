@@ -136,7 +136,6 @@ architecture behaviour of top is
   -- signals for writeframe AMBA Master
   signal writeframe_ahbmo : ahb_mst_out_type;
   
-  signal cam_clk		:std_logic;
   component altera_pll IS
     PORT
       (
@@ -156,7 +155,7 @@ begin
     inclk0	 => db_clk,
     c0	         => clk,
     c1	         => vga_clk_int,
-    c2			 => cam_clk,
+    c2			 => cm_xclkin,
     locked	 => open
     );
 
@@ -399,17 +398,15 @@ begin
 		sclk	  => cam_sclk,
 		sdata_in  => cm_sdata,
 		sdata_out => cam_sdata_out,
-		sdata_out_en => cam_sdata_out_en,
-		led_red	  => led_red
+		sdata_out_en => cam_sdata_out_en
 	);
 	
-	cm_sclk <= cam_sclk;
 	--sdata_out_en 0=input 1=output
 	cm_sdata <= cam_sdata_out when cam_sdata_out_en = '1' else 'Z';
 	
 	gpio(0) <= clk;	
-	gpio(1) <= cam_sclk;
-	gpio(2) <= cm_sdata;
+	--gpio(1) <= cam_sclk;
+	--gpio(2) <= cm_sdata;
 	
 
 	writeframe_unit: ext_writeframe
@@ -426,13 +423,13 @@ begin
 		cm_lval 	=> cm_lval,
 		cm_fval 	=> cm_fval,
 		cm_pixclk	=> cm_pixclk,
-		cm_clk		=> cam_clk,
 		cm_reset	=> cm_reset,
 		cm_trigger	=> cm_trigger,
-		cm_strobe	=> cm_strobe
+		cm_strobe	=> cm_strobe,
+		led_red	  => led_red
 	);
     
-	cm_xclkin <= cam_clk;
+
 	gpio(4) <= cm_lval;
 	gpio(3) <= cm_fval;
 	gpio(5) <= cm_pixclk;

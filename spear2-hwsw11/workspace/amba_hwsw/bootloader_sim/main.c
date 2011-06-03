@@ -13,13 +13,26 @@
 #define WRITEFRAME_BASE 	(0xFFFFFEA0)
 #define WRITEFRAME_CMD		(*(volatile uint8_t *const)(WRITEFRAME_BASE+4))
 #define WRITEFRAME_COLOR	(*(volatile uint32_t *const)(WRITEFRAME_BASE+8))
+
+#define ALUEXT_BASE 		(0xFFFFFE80)
+
+
+#define ALUEXT_RGB	(*(volatile uint32_t *const)(ALUEXT_BASE+4))
+#define ALUEXT_SKIN	(*(volatile uint8_t *const)(ALUEXT_BASE+8))
+
+
 int main (int argc, char *argv[])
 {
-	WRITEFRAME_CMD = 1;
+	/*WRITEFRAME_CMD = 1;
 	
 	while (WRITEFRAME_CMD) {
 		asm("nop");
 	}
-	return WRITEFRAME_CMD;
+	return WRITEFRAME_CMD;*/
+	ALUEXT_RGB = (74 << 16) | (112 << 8) |  194;
+	asm("nop");
+	return ALUEXT_SKIN;
 }
+
+
 

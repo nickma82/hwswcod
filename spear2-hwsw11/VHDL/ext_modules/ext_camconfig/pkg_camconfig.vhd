@@ -29,8 +29,7 @@ component ext_camconfig
 		sclk			: out	std_logic;
 		sdata_in		: in	std_logic;
 		sdata_out		: out	std_logic;
-		sdata_out_en 	: out 	std_logic;
-		led_red			: out 	std_logic_vector(17 downto 0)
+		sdata_out_en 	: out 	std_logic
 	);
 end component;
   
