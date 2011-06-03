@@ -35,8 +35,10 @@ entity read_cam is
 		cm_pixclk	: in std_logic; 	--pixel Clock
 		cm_reset	: out std_logic;	--D5M reset
 		cm_trigger	: out std_logic;	--Snapshot trigger
-		cm_strobe	: in std_logic 	--Snapshot strobe
-		
+		cm_strobe	: in std_logic; 	--Snapshot strobe
+		cm_pixel		: out pixel_type;
+		cm_pixel_valid	: out std_logic
+			
 		--data		: out STD_LOGIC_VECTOR (7 DOWNTO 0);
 		--wraddress	: out STD_LOGIC_VECTOR (10 DOWNTO 0);
 		--wrclock		: out STD_LOGIC  := '0';

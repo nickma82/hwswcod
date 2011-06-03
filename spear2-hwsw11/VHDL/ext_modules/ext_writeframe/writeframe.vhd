@@ -89,7 +89,9 @@ architecture rtl of ext_writeframe is
 	signal rstint : std_ulogic;
 	signal cam_frame_ready : std_logic;
 	signal cam_enable : std_logic;
-	
+	signal cam_pixel		: pixel_type;
+	signal cam_pixel_valid	: std_logic;
+			
 	--signal data_sig			: STD_LOGIC_VECTOR (7 DOWNTO 0);
 	--signal rdaddress_sig	: STD_LOGIC_VECTOR (10 DOWNTO 0);
 	--signal rdclock_sig		: STD_LOGIC ;
@@ -134,8 +136,10 @@ begin
 		cm_pixclk => cm_pixclk,
 		cm_reset => cm_reset,
 		cm_trigger => cm_trigger,
-		cm_strobe => cm_strobe
-		
+		cm_strobe => cm_strobe,
+		cm_pixel		=> cam_pixel,
+		cm_pixel_valid	=> cam_pixel_valid
+			
 		--data		=> data_sig,
 		--wraddress	=> wraddress_sig,
 		--wrclock		=> wrclock_sig,
