@@ -37,9 +37,10 @@ int main(int argc, char **argv)
 			image_paintRectangle(&image, face);
 			svga_outputImage(&image);
 			test_sendImage(&image, argv[2]);
+			
 		}
 	#else
-		dis7seg_hex(0x00);
+		dis7seg_hex(0x01);
 		write_cam(0x04, 2559);
 		write_cam(0x03, 1919);
 		write_cam(0x09, 470);
@@ -49,8 +50,8 @@ int main(int argc, char **argv)
 		
 		uint32_t color = 0x000000FF;
 		while (1) {
-			getFrame(color);
-			color += 500;
+			//getFrame(color);
+			color += 20;
 			// TODO:
 			// get picture from camera
 			//faceDetection();

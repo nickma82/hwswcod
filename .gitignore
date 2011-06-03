@@ -19,3 +19,4 @@ faceDetection/app/main.txt
 spear2-hwsw11/workspace/amba_hwsw/modelsim/**/*
 transcript
 *.dpf
+*.wlf

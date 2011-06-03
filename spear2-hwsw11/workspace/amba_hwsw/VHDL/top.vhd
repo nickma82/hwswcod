@@ -401,6 +401,7 @@ begin
 		sdata_out_en => cam_sdata_out_en
 	);
 	
+	cm_sclk <= cam_sclk;
 	--sdata_out_en 0=input 1=output
 	cm_sdata <= cam_sdata_out when cam_sdata_out_en = '1' else 'Z';
 	
