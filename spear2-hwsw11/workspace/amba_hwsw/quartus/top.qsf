@@ -316,6 +316,7 @@ set_location_assignment PIN_H26 -to CM_D[0]
 set_location_assignment PIN_K26 -to CM_D[4]
 set_location_assignment PIN_L24 -to CM_D[8]
 set_location_assignment PIN_F26 -to CM_SDATA
+set_instance_assignment -name WEAK_PULL_UP_RESISTOR ON -to CM_SDATA
 set_location_assignment PIN_G25 -to CM_TRIGGER
 set_location_assignment PIN_K25 -to CM_D[2]
 set_location_assignment PIN_L23 -to CM_D[6]
@@ -421,7 +422,6 @@ set_global_assignment -name MISC_FILE "/homes/c0726179/hw-sw/hwswcod/spear2-hwsw
 
 
 set_global_assignment -name MISC_FILE "/homes/c0616782/hwswcod/spear2-hwsw11/workspace/amba_hwsw/quartus/top.dpf"
-set_instance_assignment -name WEAK_PULL_UP_RESISTOR ON -to CM_SDATA
 set_global_assignment -name VHDL_FILE ../../../VHDL/ext_modules/ext_writeframe/read_cam.vhd
 set_global_assignment -name VHDL_FILE ../../../VHDL/amba_modules/gaisler/misc/ahbmst.vhd
 set_global_assignment -name VHDL_FILE ../../../VHDL/amba_modules/gaisler/misc/svgactrl.vhd

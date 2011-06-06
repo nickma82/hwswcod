@@ -27,7 +27,6 @@ entity read_cam is
 		clk       	: in  std_logic;
 		rst			: in  std_logic;
 		enable		: in  std_logic;
-		frame_ready : out std_logic;
 		
 		cm_d		: in std_logic_vector(11 downto 0); --pixel data
 		cm_lval 	: in std_logic; 	--Line valid
@@ -36,13 +35,10 @@ entity read_cam is
 		cm_reset	: out std_logic;	--D5M reset
 		cm_trigger	: out std_logic;	--Snapshot trigger
 		cm_strobe	: in std_logic; 	--Snapshot strobe
-		cm_pixel		: out pixel_type;
-		cm_pixel_valid	: out std_logic
 			
-		--data		: out STD_LOGIC_VECTOR (7 DOWNTO 0);
-		--wraddress	: out STD_LOGIC_VECTOR (10 DOWNTO 0);
-		--wrclock		: out STD_LOGIC  := '0';
-		--wren		: out STD_LOGIC  := '0'
+		rd_row_rdy	: out row_count_type; --number of line which's rdy
+		rd_data		: out pixel_type;
+		rd_clk		: in std_logic
     );
 end ;
 
@@ -58,8 +54,6 @@ architecture rtl of read_cam is
 		toggle_c	: std_logic;
 		p_r      : integer range 0 to CAM_H;
 		p_c      : integer range 0 to CAM_W;
-		pixel	: pixel_type;
-		pixel_valid	: std_logic;
 	end record;
 
 
@@ -71,9 +65,7 @@ architecture rtl of read_cam is
 		toggle_r => '0',
 		toggle_c => '0',
 		p_r => 0,
-		p_c => 0,
-		pixel => (others => '0'),
-		pixel_valid => '0'
+		p_c => 0
 	);
 begin
 	------------------------
@@ -84,7 +76,11 @@ begin
 	variable vpix_next_dot	: state_type;
 	--variable tmp_pixel		: integer range 4095 downto 0;
 	begin
-    	v := r;
+    	
+		
+		
+		
+		v := r;
     	
     	---Next dot descision logic
 		--takes care about PIX.NEXT_DOT
@@ -127,14 +123,10 @@ begin
 		---	CCD Handler - FALLING EDGE PIXCLK sensitiv
 		--- state_pixsync_cam_type
 		------------------------
-		v.pixel := (others => '0');
 		case r.state is
 			when reset =>
 				v.state := wait_getframe;
-				--@TODO ev. schon zu syncen beginnen
 			when wait_getframe =>
-	--@TODO: enable auf der falschen STelle, produziert zu random
-	--       Zeit sicher fehler	
 				if enable = '1' then
 					v.state := wait_frame_invalid;
 				end if;
@@ -146,17 +138,17 @@ begin
 				end if;
 			when read_dot_r =>
 				-- r logic
-				v.pixel(23 downto 16) := cm_d(11 downto 4);
+				--v.pixel(23 downto 16) := cm_d(11 downto 4);
 				--v.pixel(23 downto 16) := cm_d(7 downto 0); -- test
 				v.state := vpix_next_dot;
 			when read_dot_g1 | read_dot_g2 =>
 				-- g1 logic
-				v.pixel(15 downto 8) := cm_d(11 downto 4);
+				--v.pixel(15 downto 8) := cm_d(11 downto 4);
 				--v.pixel(15 downto 8) := cm_d(7 downto 0); -- test
 				v.state := vpix_next_dot;
 			when read_dot_b =>
 				-- b logic
-				v.pixel(7 downto 0) := cm_d(11 downto 4);
+				--v.pixel(7 downto 0) := cm_d(11 downto 4);
 				--v.pixel(7 downto 0) := cm_d(7 downto 0); -- test
 				v.state := vpix_next_dot;
 			when next_line =>
@@ -177,17 +169,15 @@ begin
 		--takes care about PIX: p_c, p_r, toggle_c and toggle_r
 		case r.state is
 			when reset =>
-				v.pixel_valid := '0';
+				null;
 			when wait_getframe =>
-				v.pixel_valid := '0';
+				null;
 			when wait_frame_valid =>
-				v.pixel_valid := '0';
+				null;
 			when read_dot_r | read_dot_g1 | read_dot_g2 | read_dot_b =>
-				v.pixel_valid := '1';
 				v.p_c := r.p_c + 1;
 				v.toggle_c := not r.toggle_c;
 			when next_line =>
-				v.pixel_valid := '0';
 				--if r.p_r < CAM_H-1 then
 				v.p_r := r.p_r + 1;
 				v.toggle_r := not r.toggle_r;
@@ -204,22 +194,7 @@ begin
 		end case;
 		
 		
-		-----das folgende gehört in den CCD Handler rein
-		--if r.cam_state = read_line and cm_lval = '1' and r.p_c < CAM_W-1 then
-		--	if r.address <= FRAMEBUFFER_END_ADR and falling_edge(cm_pixclk) then
-		--		v.address := r.address + 4;
-		--	else
-		--		v.address := FRAMEBUFFER_BASE_ADR;
-		--	end if;
-		--else
-		--	--v.p_c := 0;
-		--	v.address := FRAMEBUFFER_BASE_ADR;
-		--end if;
-    	
-		cm_pixel <= v.pixel;
-		cm_pixel_valid <= v.pixel_valid;
 		cm_trigger <= '0';
-		frame_ready <= '0';
     	cm_reset <= rst;
     	r_next <= v;
     end process;

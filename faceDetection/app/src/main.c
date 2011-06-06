@@ -48,10 +48,22 @@ int main(int argc, char **argv)
 		write_cam(0x23, 3);
 		dis7seg_hex(read_cam(0x04));
 		
-		uint32_t color = 0x000000FF;
+		uint32_t color;
+		uint8_t r=0, g=0, b=0xff;
 		while (1) {
-			//getFrame(color);
-			color += 20;
+			/*if (b<0xff) {
+				b++;
+			} else if (g < 0xff) {
+				g++;
+			} else if (r < 0xff) {
+				r++;
+			} else {
+				r=g=b=0;
+			}*/
+			color |= (r<<16); 
+			color |= (g<<8);
+			color |= (b<<0);
+			getFrame(color);
 			// TODO:
 			// get picture from camera
 			//faceDetection();
