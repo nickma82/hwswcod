@@ -58,6 +58,8 @@ architecture rtl of read_cam is
 		toggle_c	: std_logic;
 		p_r      : integer range 0 to CAM_H;
 		p_c      : integer range 0 to CAM_W;
+		pixel	: pixel_type;
+		pixel_valid	: std_logic;
 	end record;
 
 
@@ -69,19 +71,20 @@ architecture rtl of read_cam is
 		toggle_r => '0',
 		toggle_c => '0',
 		p_r => 0,
-		p_c => 0
+		p_c => 0,
+		pixel => (others => '0'),
+		pixel_valid => '0'
 	);
-	
 begin
 	------------------------
 	---	ASync Core Ext Interface Daten übernehmen und schreiben
 	------------------------
 	comb : process(r,enable,cm_d,cm_lval,cm_fval,rst)
-	variable v 		: reg_type;
-	variable vpix_next_dot : state_type;
+	variable v 				: reg_type;
+	variable vpix_next_dot	: state_type;
+	--variable tmp_pixel		: integer range 4095 downto 0;
 	begin
     	v := r;
-    	
     	
     	---Next dot descision logic
 		--takes care about PIX.NEXT_DOT
@@ -124,6 +127,7 @@ begin
 		---	CCD Handler - FALLING EDGE PIXCLK sensitiv
 		--- state_pixsync_cam_type
 		------------------------
+		v.pixel := (others => '0');
 		case r.state is
 			when reset =>
 				v.state := wait_getframe;
@@ -142,21 +146,18 @@ begin
 				end if;
 			when read_dot_r =>
 				-- r logic
-				--v.color := (others => '0');
-				--v.color(23 downto 16) := (others => '1');
-				--v.send_px := '1';
+				v.pixel(23 downto 16) := cm_d(11 downto 4);
+				--v.pixel(23 downto 16) := cm_d(7 downto 0); -- test
 				v.state := vpix_next_dot;
-			when read_dot_g1 =>
+			when read_dot_g1 | read_dot_g2 =>
 				-- g1 logic
-				--v.color := (others => '0');
-				--v.color(15 downto 8) := (others => '1');
-				--v.send_px := '1';
-				v.state := vpix_next_dot;
-			when read_dot_g2 =>
-				-- g2 logic
+				v.pixel(15 downto 8) := cm_d(11 downto 4);
+				--v.pixel(15 downto 8) := cm_d(7 downto 0); -- test
 				v.state := vpix_next_dot;
 			when read_dot_b =>
 				-- b logic
+				v.pixel(7 downto 0) := cm_d(11 downto 4);
+				--v.pixel(7 downto 0) := cm_d(7 downto 0); -- test
 				v.state := vpix_next_dot;
 			when next_line =>
 				if r.p_r < CAM_H-1 then	
@@ -171,16 +172,23 @@ begin
 				end if;
 		end case;
 		
-		---row & column counter logic
+		---logic: row & column counter
+		---logic: pixel_valid
 		--takes care about PIX: p_c, p_r, toggle_c and toggle_r
 		case r.state is
-			--when wait_getframe =>
-			--when wait_frame_valid =>
+			when reset =>
+				v.pixel_valid := '0';
+			when wait_getframe =>
+				v.pixel_valid := '0';
+			when wait_frame_valid =>
+				v.pixel_valid := '0';
 			when read_dot_r | read_dot_g1 | read_dot_g2 | read_dot_b =>
+				v.pixel_valid := '1';
 				v.p_c := r.p_c + 1;
 				v.toggle_c := not r.toggle_c;
 			when next_line =>
-				--if r.p_r < CAM_H-1 then	
+				v.pixel_valid := '0';
+				--if r.p_r < CAM_H-1 then
 				v.p_r := r.p_r + 1;
 				v.toggle_r := not r.toggle_r;
 				v.p_c := 0;
@@ -208,6 +216,8 @@ begin
 		--	v.address := FRAMEBUFFER_BASE_ADR;
 		--end if;
     	
+		cm_pixel <= v.pixel;
+		cm_pixel_valid <= v.pixel_valid;
 		cm_trigger <= '0';
 		frame_ready <= '0';
     	cm_reset <= rst;

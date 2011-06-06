@@ -158,6 +158,7 @@ begin
     wait for 18 ns;
   end process clkgen;
   
+  
   camgen : process
   	variable col_cnt : integer;
   	variable row_cnt : integer;
@@ -182,7 +183,7 @@ begin
   			wait for 2*cc;
   		end loop;
   		cm_lval <= '0';
-  		wait for 5*cc;
+  		wait for 900*2*cc;
   	end loop;
   	cm_fval <= '0';
   end process camgen;
