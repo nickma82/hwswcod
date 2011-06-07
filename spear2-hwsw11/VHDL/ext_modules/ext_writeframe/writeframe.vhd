@@ -7,7 +7,7 @@
 
 library ieee;
 use ieee.std_logic_1164.all;
-
+use ieee.numeric_std.all;
 library grlib;
 use grlib.amba.all;
 use grlib.stdlib.all;
@@ -51,7 +51,7 @@ architecture rtl of ext_writeframe is
 	subtype BYTE is std_logic_vector(7 downto 0);
 	type register_set is array (0 to 4) of BYTE;
 
-	type state_type is (idle, adr, data, done, reset);
+	type state_type is (idle, data, done, reset, wait_burst, line_done, next_burst);
 		
 
 	
@@ -65,8 +65,8 @@ architecture rtl of ext_writeframe is
 		state		: state_type;
 		color		: std_logic_vector(31 downto 0);
 		send_px		: std_logic;
-		col      : integer range 0 to CAM_W;
-		tog      : std_logic;
+		cur_col		: natural range 0 to SCREEN_W;
+		cur_line	: natural range 0 to CAM_H;
 	end record;
 
 	
@@ -81,9 +81,9 @@ architecture rtl of ext_writeframe is
 		wdata  		=> (others => '0'),
 		state		=> reset,
 		color   	=> (others => '0'),
-		send_px => '0',
-		col			=> 0,
-		tog			=> '0'
+		send_px 	=> '0',
+		cur_col		=> 0,
+		cur_line	=> 0
 	);
 	
 	signal rstint : std_ulogic;
@@ -234,37 +234,47 @@ begin
 				v.state := idle;
 			when idle =>
 				v.address := FRAMEBUFFER_BASE_ADR;
-				v.col := 0;
+				
 				if r.getframe = '1' then
-					v.state := adr;
+					v.state := wait_burst;
 					v.start := '1';
+					v.cur_line := 0;
+					v.cur_col  := 0;
 				end if;
-			when adr =>
+			when wait_burst =>
 				if dmao.ready = '1' then
 					v.state := data;
-					v.col := r.col + 1;
-				end if;
-				if r.tog = '1' then
-					v.wdata := r.color;
-				else
-					v.wdata := "00000000111111110000000000000000";
-				end if;
+				end if;				
+				v.wdata := r.color;		
 				
 			when data =>
-				if r.address >= FRAMEBUFFER_END_ADR then
+				-- zeile noch nicht fertig
+				v.address := r.address + 4;
+				v.cur_col := r.cur_col + 1;
+						
+				--if r.cur_col < SCREEN_W then
+				--	v.wdata := r.color;
+				---- zeile fertig
+				---- Es sollen immer nur 640 Pixel ausgegeben werden da Bilder nie größer
+				--elsif r.cur_col >= CAM_W and r.cur_col < SCREEN_W then
+				--	v.wdata := (others => '0');
+				--else
+				if r.cur_col >= SCREEN_W then
+					v.state := line_done;
+					v.start := '0';
+				end if;			
+				
+			when next_burst =>
+				v.start := '1';
+				v.state := wait_burst;
+			when line_done =>
+				if r.cur_line >= CAM_H then
 					v.state := done;
 				else
-					-- Es sollen immer nur 640 Pixel ausgegeben werden da Bilder nie größer
-					if r.col >= CAM_W then
-						v.address := r.address + 4*(SCREEN_W-CAM_W+1);
-						v.col := 0;
-						v.tog := not r.tog;
-					else
-						v.address := r.address + 4;
-					end if;
-					
-					v.state := adr;
-					
+					v.cur_line := r.cur_line + 1;
+					v.cur_col := 0;
+					v.state := wait_burst;
+					v.start := '1';
 				end if;
 			when done =>
 				v.getframe := '0';
@@ -276,7 +286,7 @@ begin
 		
 		-- Werte auf Interface zu Bus legen
 		dmai.wdata  <=  r.wdata;
-	    dmai.burst  <= '0';
+	    dmai.burst  <= '1';
 	    dmai.irq    <= '0';
 	    dmai.size   <= "10";
 	    dmai.write  <= '1';
