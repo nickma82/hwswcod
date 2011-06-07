@@ -6,7 +6,6 @@
 #include "detectFace.h"
 #include "test.h"
 
-
 #ifdef __SPEAR32__
 	#include "sdram.h"
 	#include "svga.h"
@@ -14,16 +13,25 @@
 	#include "aluext.h"
 	#include "writeframe.h"
 	#include "camconfig.h"
+	
+	extern uint8_t *reg;
+	extern module_handle_t counterHandle;
 #endif // __SPEAR32__
+
+#define CLKPERIOD 20
+#define PRESCALER 1
 
 int main(int argc, char **argv)
 {	
+	uint32_t fps_c;
+	
 	#ifdef __SPEAR32__
 		// initialize HW modules
 		dis7seg_init();
 		sdram_init();
 		svga_init();
 		test_init();
+		
 	#endif
 	
 	#ifdef TEST
@@ -40,21 +48,32 @@ int main(int argc, char **argv)
 		}
 	#else
 		dis7seg_hex(0x00);
-		write_cam(0x04, 2559);
+		/*write_cam(0x04, 2559);
 		write_cam(0x03, 1919);
 		write_cam(0x09, 470);
 		write_cam(0x22, 3);
 		write_cam(0x23, 3);
-		dis7seg_hex(read_cam(0x04));
+		dis7seg_hex(read_cam(0x04));*/
 		
 		uint32_t color = 0x000000FF;
 		while (1) {
+			*reg = (1 << COUNTER_CLEAR_BIT);
+			*reg = (1 << COUNTER_COUNT_BIT);
+			
 			getFrame(color);
 			color += 500;
+			
+			
+			
 			// TODO:
 			// get picture from camera
 			//faceDetection();
 			// outout result image on screen
+			fps_c = counter_getValue(&counterHandle);
+			
+			fps_c *= CLKPERIOD * PRESCALER;
+			fps_c /= 1000000;
+			dis7seg_uint32(1000 / fps_c);
 		}  
 	#endif
 	
