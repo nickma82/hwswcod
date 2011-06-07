@@ -29,7 +29,7 @@ int main(int argc, char **argv)
 		// initialize HW modules
 		dis7seg_init();
 		sdram_init();
-		svga_init();
+		//svga_init();
 		test_init();
 		
 	#endif
@@ -59,19 +59,17 @@ int main(int argc, char **argv)
 		dis7seg_hex(read_cam(0x04));
 		
 		uint32_t color = 0x000000FF;
+		getFrame(color);
+		svga_init();
+		
 		while (1) {
 
 			*reg = (1 << COUNTER_CLEAR_BIT);
 			*reg = (1 << COUNTER_COUNT_BIT);
 			
-			getFrame(color);
+			//getFrame(color);
 			color += 500;
 			
-			
-			// TODO:
-			// get picture from camera
-			//faceDetection();
-			// outout result image on screen
 			fps_c = counter_getValue(&counterHandle);
 			
 			fps_c *= CLKPERIOD * PRESCALER;

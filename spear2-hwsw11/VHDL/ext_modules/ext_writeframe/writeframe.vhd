@@ -67,6 +67,7 @@ architecture rtl of ext_writeframe is
 		send_px		: std_logic;
 		cur_col		: natural range 0 to SCREEN_W;
 		cur_line	: natural range 0 to CAM_H;
+		burst_len	: natural range 0 to BURST_LENGTH;
 	end record;
 
 	
@@ -83,7 +84,8 @@ architecture rtl of ext_writeframe is
 		color   	=> (others => '0'),
 		send_px 	=> '0',
 		cur_col		=> 0,
-		cur_line	=> 0
+		cur_line	=> 0,
+		burst_len	=> 0
 	);
 	
 	signal rstint : std_ulogic;
@@ -240,6 +242,7 @@ begin
 					v.start := '1';
 					v.cur_line := 0;
 					v.cur_col  := 0;
+					v.burst_len := 0;
 				end if;
 			when wait_burst =>
 				if dmao.ready = '1' then
@@ -247,34 +250,33 @@ begin
 				end if;				
 				v.wdata := r.color;		
 				
-			when data =>
+			when data =>			
 				-- zeile noch nicht fertig
 				v.address := r.address + 4;
 				v.cur_col := r.cur_col + 1;
-						
-				--if r.cur_col < SCREEN_W then
-				--	v.wdata := r.color;
-				---- zeile fertig
-				---- Es sollen immer nur 640 Pixel ausgegeben werden da Bilder nie größer
-				--elsif r.cur_col >= CAM_W and r.cur_col < SCREEN_W then
-				--	v.wdata := (others => '0');
-				--else
-				if r.cur_col >= SCREEN_W then
-					v.state := line_done;
+				v.burst_len := r.burst_len + 1;
+				
+				if r.burst_len >= BURST_LENGTH then
+					v.state := next_burst;
 					v.start := '0';
-				end if;			
+				else
+					if r.cur_col >= SCREEN_W then
+						v.state := line_done;
+						v.start := '0';
+					end if;	
+				end if;		
 				
 			when next_burst =>
 				v.start := '1';
 				v.state := wait_burst;
+				v.burst_len := 0;
 			when line_done =>
 				if r.cur_line >= CAM_H then
 					v.state := done;
 				else
 					v.cur_line := r.cur_line + 1;
 					v.cur_col := 0;
-					v.state := wait_burst;
-					v.start := '1';
+					v.state := next_burst;
 				end if;
 			when done =>
 				v.getframe := '0';
