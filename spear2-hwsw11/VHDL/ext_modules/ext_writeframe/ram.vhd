@@ -6,17 +6,17 @@ use ieee.numeric_std.all;
 entity dp_ram is
 	generic
 	(
-		ADDR_WIDTH : integer range 1 to integer‘high;
-		DATA_WIDTH : integer range 1 to integer‘high
+		ADDR_WIDTH : integer range 1 to integer'high;
+		DATA_WIDTH : integer range 1 to integer'high
 	);
 	port
 	(
 		wrclk       : in std_logic;
-		wraddress 	: in std_logic_vector(ADDR_WIDTH -   1 downto 0);
-		wrdata_in 	: out std_logic_vector(DATA_WIDTH - 1 downto 0);
+		wraddress 	: in std_logic_vector(ADDR_WIDTH - 1 downto 0);
+		wrdata_in 	: in std_logic_vector(DATA_WIDTH - 1 downto 0);
 		
 		rdclk		: in std_logic;
-		rdaddress 	: in std_logic_vector(ADDR_WIDTH -   1 downto 0);
+		rdaddress 	: in std_logic_vector(ADDR_WIDTH -  1 downto 0);
 		rddata_out 	: out std_logic_vector(DATA_WIDTH - 1 downto 0)
 	);
 end entity dp_ram;
@@ -25,8 +25,8 @@ end entity dp_ram;
 
 architecture beh of dp_ram is
 	subtype RAM_ENTRY_TYPE is std_logic_vector(DATA_WIDTH - 1 downto 0);
-	type RAM_TYPE is array (0 to (2 ** ADDR_WIDTH) – 1) of RAM_ENTRY_TYPE;
-	signal ram : RAM_TYPE := (others => x”00”);
+	type RAM_TYPE is array (0 to (2 ** ADDR_WIDTH) - 1) of RAM_ENTRY_TYPE;
+	signal ram : RAM_TYPE := (others => x"00");
 begin
 	
 	read : process(rdclk)

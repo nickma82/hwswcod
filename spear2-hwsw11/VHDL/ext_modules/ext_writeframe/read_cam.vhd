@@ -28,10 +28,10 @@ entity read_cam is
 		rst			: in  std_logic;
 		enable		: in  std_logic;
 		
-		cm_d		: in std_logic_vector(11 downto 0); --pixel data
+		cm_d		: in std_logic_vector(11 downto 0); --dot data
 		cm_lval 	: in std_logic; 	--Line valid
 		cm_fval 	: in std_logic; 	--Frame valid
-		cm_pixclk	: in std_logic; 	--pixel Clock
+		cm_pixclk	: in std_logic; 	--dot Clock
 		cm_reset	: out std_logic;	--D5M reset
 		cm_trigger	: out std_logic;	--Snapshot trigger
 		cm_strobe	: in std_logic; 	--Snapshot strobe
@@ -44,43 +44,112 @@ end ;
 
 architecture rtl of read_cam is
 
-	-- Cam Async Signals
+	-- Cam read raw Signals
 	type state_type is (reset, wait_getframe, wait_frame_valid, read_dot_r, read_dot_g1, read_dot_g2, read_dot_b, next_line, wait_frame_invalid);
 	 
-	type reg_type is record
+	type readraw_reg_type is record
 		state		: state_type;
-		next_dot	: state_type;
 		toggle_r	: std_logic;
 		toggle_c	: std_logic;
-		p_r      : integer range 0 to CAM_H;
-		p_c      : integer range 0 to CAM_W;
+		p_r      	: integer range 0 to CAM_H;
+		p_c      	: integer range 0 to CAM_W;
 	end record;
 
 
-	signal r_next : reg_type;
-	signal r : reg_type := 
+	signal r_next : readraw_reg_type;
+	signal r : readraw_reg_type := 
 	(
-		state	 => reset,
-		next_dot => reset,
-		toggle_r => '0',
-		toggle_c => '0',
-		p_r => 0,
-		p_c => 0
+		state		=> reset,
+		toggle_r	=> '0',
+		toggle_c	=> '0',
+		p_r 		=> 0,
+		p_c 		=> 0
+	);
+	
+	--Ram Parts
+	type raw_write_dot_type is record
+		enable		: std_logic;
+		data		: std_logic_vector(7 downto 0);
+		toggle_r	: std_logic;
+		p_c			: integer range 0 to CAM_W;
+		        	
+		address		: std_logic_vector(9 downto 0);
+		en_odd		: std_logic;
+		en_even		: std_logic;
+	end record;
+	
+	signal wr_raw_dot_next : raw_write_dot_type;
+	signal wr_raw_dot : raw_write_dot_type :=
+	(
+		enable		=> '0',
+		data		=> (others => '0'),
+		toggle_r	=> '0',
+		p_c			=> 0,
+		
+		address	=> (others => '0'),
+		en_odd		=> '0',
+		en_even		=> '0'
+	);
+	
+	type raw_read_dot_type is record
+		enable		: std_logic;
+		data_odd	: std_logic_vector(7 downto 0); 
+		data_even	: std_logic_vector(7 downto 0);
+		address		: std_logic_vector(9 downto 0);
+	end record;
+	
+	signal rd_raw_dot_next : raw_read_dot_type;
+	signal rd_raw_dot : raw_read_dot_type := 
+	(
+		enable		=> '0',
+		data_odd	=> (others => '0'), 
+		data_even	=> (others => '0'),
+		address		=> (others => '0')
 	);
 begin
-	------------------------
-	---	ASync Core Ext Interface Daten übernehmen und schreiben
-	------------------------
-	comb : process(r,enable,cm_d,cm_lval,cm_fval,rst)
-	variable v 				: reg_type;
+	
+	ram_odd_dot_raw : dp_ram
+	generic map (
+		ADDR_WIDTH 	=> 10, 
+		DATA_WIDTH	=> 8
+	)
+	port map (
+		wrclk       => wr_raw_dot.en_odd,
+		wraddress 	=> wr_raw_dot.address,
+		wrdata_in 	=> wr_raw_dot.data,
+		
+		rdclk		=> rd_raw_dot.enable,
+		rdaddress 	=> rd_raw_dot.address,
+		rddata_out  => rd_raw_dot.data_odd
+	);
+	
+	ram_even_dot_raw : dp_ram
+	generic map (
+		ADDR_WIDTH 	=> 10, 
+		DATA_WIDTH	=> 8
+	)
+	port map (
+		wrclk       => wr_raw_dot.en_even,
+		wraddress 	=> wr_raw_dot.address,
+		wrdata_in 	=> wr_raw_dot.data,
+		
+		rdclk		=> rd_raw_dot.enable,
+		rdaddress 	=> rd_raw_dot.address,
+		rddata_out  => rd_raw_dot.data_even
+	);
+	
+	
+	
+	read_raw : process(r, enable, cm_d, cm_lval, cm_fval, rst, wr_raw_dot)
+	variable v 				: readraw_reg_type;
 	variable vpix_next_dot	: state_type;
 	--variable tmp_pixel		: integer range 4095 downto 0;
+	variable vwr_raw_dot : raw_write_dot_type;
 	begin
-    	
-		
-		
-		
 		v := r;
+    	vwr_raw_dot := wr_raw_dot;
+    	
+    	vwr_raw_dot.enable := '0'; --disable every cycle
     	
     	---Next dot descision logic
 		--takes care about PIX.NEXT_DOT
@@ -111,7 +180,6 @@ begin
 				end if;
 			when read_dot_b =>
 				vpix_next_dot := read_dot_g2;
-				--eol condition
 			when others => 
 				if r.p_c > 0 and cm_lval = '0' then
 					vpix_next_dot := next_line;
@@ -155,8 +223,7 @@ begin
 				if r.p_r < CAM_H-1 then	
 					v.state := wait_frame_valid;
 				else
-					--ganzes Bild gelesen
-					v.state := wait_frame_invalid;
+					v.state := wait_frame_invalid; --ganzes Bild gelesen
 				end if;
 			when wait_frame_invalid =>
 				if cm_lval = '0' and cm_fval = '0' then
@@ -165,7 +232,7 @@ begin
 		end case;
 		
 		---logic: row & column counter
-		---logic: pixel_valid
+		---logic: dot_valid
 		--takes care about PIX: p_c, p_r, toggle_c and toggle_r
 		case r.state is
 			when reset =>
@@ -193,7 +260,7 @@ begin
 				null;
 		end case;
 		
-		
+		wr_raw_dot_next <= vwr_raw_dot;
 		cm_trigger <= '0';
     	cm_reset <= rst;
     	r_next <= v;
@@ -203,13 +270,14 @@ begin
 	------------------------
 	---	Sync Daten übernehmen
 	------------------------
-    reg : process(clk)
+    read_raw_reg : process(cm_pixclk)
 	begin
-		if rising_edge(clk) then
+		if falling_edge(cm_pixclk) then
 			if rst = RST_ACT then
 				r.state <= reset;
 			else
 				r <= r_next;
+				wr_raw_dot <= wr_raw_dot_next;
 			end if;
 		end if;
 	end process;

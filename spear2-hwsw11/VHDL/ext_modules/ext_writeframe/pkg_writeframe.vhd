@@ -40,12 +40,12 @@ package pkg_writeframe is
 	
 	component ext_writeframe
 	  port (
-		clk        : IN  std_logic;
-		extsel     : in   std_ulogic;
-		exti       : in  module_in_type;
-		exto       : out module_out_type;
-		ahbi      : in  ahb_mst_in_type;
-		ahbo      : out ahb_mst_out_type;
+		clk      	: IN  std_logic;
+		extsel   	: in   std_ulogic;
+		exti     	: in  module_in_type;
+		exto     	: out module_out_type;
+		ahbi      	: in  ahb_mst_in_type;
+		ahbo      	: out ahb_mst_out_type;
 		cm_d		: in std_logic_vector(11 downto 0);
 		cm_lval 	: in std_logic; 	--Line valid
 		cm_fval 	: in std_logic; 	--Frame valid
@@ -54,7 +54,7 @@ package pkg_writeframe is
 		cm_trigger	: out std_logic;	--Snapshot trigger
 		cm_strobe	: in std_logic; 	--Snapshot strobe
 		
-		led_red			: out 	std_logic_vector(17 downto 0)
+		led_red		: out 	std_logic_vector(17 downto 0)
 		);
 	end component;
   
@@ -78,5 +78,22 @@ package pkg_writeframe is
 		);
 	end component;
 	
+	component dp_ram
+		generic
+		(
+			ADDR_WIDTH 	: integer range 1 to integer'high;
+			DATA_WIDTH 	: integer range 1 to integer'high
+		);
+		port
+		(
+			wrclk       : in std_logic;
+			wraddress 	: in std_logic_vector(ADDR_WIDTH -   1 downto 0);
+			wrdata_in 	: in std_logic_vector(DATA_WIDTH - 1 downto 0);
+			
+			rdclk		: in std_logic;
+			rdaddress 	: in std_logic_vector(ADDR_WIDTH -   1 downto 0);
+			rddata_out 	: out std_logic_vector(DATA_WIDTH - 1 downto 0)
+		);
+	end component dp_ram;
 	
 end pkg_writeframe;

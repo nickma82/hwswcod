@@ -27,6 +27,9 @@ Jedes Mal vor Neuaufspielen der Software den FPGA Reseten (Key0)
 ##### Compiling app code #####
 make TEST=1
 
+#### bootloader make ####
+make -f spears32-Makefile
+
 ##### Documentation #####
 -) speqars 32 Header File location:
 	/opt/spear2_toolchain/spear32/include/drivers

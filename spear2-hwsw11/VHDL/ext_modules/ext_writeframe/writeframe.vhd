@@ -104,17 +104,17 @@ begin
 	------------------------
 	read_cam_unit : read_cam
       port map (
-		clk	=> clk,	
-		rst => rstint,
+		clk		=> clk,	
+		rst 	=> rstint,
 		enable	=> cam_enable,
 		
-		cm_d => cm_d,
+		cm_d 	=> cm_d,
 		cm_lval => cm_lval,
 		cm_fval => cm_fval,
-		cm_pixclk => cm_pixclk,
-		cm_reset => cm_reset,
-		cm_trigger => cm_trigger,
-		cm_strobe => cm_strobe,
+		cm_pixclk	=> cm_pixclk,
+		cm_reset	=> cm_reset,
+		cm_trigger	=> cm_trigger,
+		cm_strobe 	=> cm_strobe,
 			
 		rd_row_rdy	=> cam_rd_row_rdy,
 		rd_data		=> cam_rd_data,
