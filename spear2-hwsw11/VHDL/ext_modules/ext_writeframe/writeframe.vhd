@@ -89,18 +89,10 @@ architecture rtl of ext_writeframe is
 	);
 	
 	signal rstint : std_ulogic;
-	signal cam_frame_ready : std_logic;
-	signal cam_enable : std_logic;
-	signal cam_pixel		: pixel_type;
-	signal cam_pixel_valid	: std_logic;
-			
-	--signal data_sig			: STD_LOGIC_VECTOR (7 DOWNTO 0);
-	--signal rdaddress_sig	: STD_LOGIC_VECTOR (10 DOWNTO 0);
-	--signal rdclock_sig		: STD_LOGIC ;
-	--signal wraddress_sig	: STD_LOGIC_VECTOR (10 DOWNTO 0);
-	--signal wrclock_sig		: STD_LOGIC  := '0';
-	--signal wren_sig			: STD_LOGIC  := '0';
-	--signal q_sig			: STD_LOGIC_VECTOR (7 DOWNTO 0);
+	signal cam_enable 		: std_logic;
+	signal cam_rd_row_rdy	: row_count_type;
+	signal cam_rd_data		: pixel_type;
+	signal cam_rd_clk		: std_logic;
 begin
 	
 	------------------------
@@ -109,49 +101,32 @@ begin
 	ahb_master : ahbmst generic map (1, 0, VENDOR_WIR, WIR_WRITEFRAME, 0, 3, 1)
 	port map (rstint, clk, dmai, dmao, ahbi, ahbo);
 	
-	
-	------------------------
-	---	RAM Instance
-	------------------------
-	--ram_inst : ram PORT MAP (
-	--	data	 	=> data_sig, 		--write port
-	--	rdaddress	=> rdaddress_sig,
-	--	rdclock	 	=> rdclock_sig,
-	--	wraddress	=> wraddress_sig,
-	--	wrclock	=> wrclock_sig,
-	--	wren	=> wren_sig, 
-	--	q		=> q_sig --out
-	--);
-	
 	------------------------
 	---	Lesen von Bildern Einheit anlegen
 	------------------------
 	read_cam_unit : read_cam
       port map (
-		clk	=> clk,	
-		rst => rstint,
+		clk		=> clk,	
+		rst 	=> rstint,
 		enable	=> cam_enable,
-		frame_ready => cam_frame_ready,
-		cm_d => cm_d,
+		
+		cm_d 	=> cm_d,
 		cm_lval => cm_lval,
 		cm_fval => cm_fval,
-		cm_pixclk => cm_pixclk,
-		cm_reset => cm_reset,
-		cm_trigger => cm_trigger,
-		cm_strobe => cm_strobe,
-		cm_pixel		=> cam_pixel,
-		cm_pixel_valid	=> cam_pixel_valid
+		cm_pixclk	=> cm_pixclk,
+		cm_reset	=> cm_reset,
+		cm_trigger	=> cm_trigger,
+		cm_strobe 	=> cm_strobe,
 			
-		--data		=> data_sig,
-		--wraddress	=> wraddress_sig,
-		--wrclock		=> wrclock_sig,
-		--wren		=> wren_sig
+		rd_row_rdy	=> cam_rd_row_rdy,
+		rd_data		=> cam_rd_data,
+		rd_clk		=> cam_rd_clk
     );
 	
 	------------------------
 	---	ASync Core Ext Interface Daten übernehmen und schreiben
 	------------------------
-	comb : process(r, exti, extsel,dmao, rstint, cam_frame_ready)
+	comb : process(r, exti, extsel,dmao, rstint)
 	variable v 		: reg_type;
 	begin
     	v := r;

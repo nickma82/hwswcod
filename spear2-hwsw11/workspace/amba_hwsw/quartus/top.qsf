@@ -316,6 +316,7 @@ set_location_assignment PIN_H26 -to CM_D[0]
 set_location_assignment PIN_K26 -to CM_D[4]
 set_location_assignment PIN_L24 -to CM_D[8]
 set_location_assignment PIN_F26 -to CM_SDATA
+set_instance_assignment -name WEAK_PULL_UP_RESISTOR ON -to CM_SDATA
 set_location_assignment PIN_G25 -to CM_TRIGGER
 set_location_assignment PIN_K25 -to CM_D[2]
 set_location_assignment PIN_L23 -to CM_D[6]
@@ -421,8 +422,6 @@ set_global_assignment -name MISC_FILE "/homes/c0726179/hw-sw/hwswcod/spear2-hwsw
 
 
 set_global_assignment -name MISC_FILE "/homes/c0616782/hwswcod/spear2-hwsw11/workspace/amba_hwsw/quartus/top.dpf"
-set_instance_assignment -name WEAK_PULL_UP_RESISTOR ON -to CM_SDATA
-set_global_assignment -name VHDL_FILE ../../../VHDL/ext_modules/ext_writeframe/read_cam.vhd
 set_global_assignment -name VHDL_FILE ../../../VHDL/amba_modules/gaisler/misc/ahbmst.vhd
 set_global_assignment -name VHDL_FILE ../../../VHDL/amba_modules/gaisler/misc/svgactrl.vhd
 set_global_assignment -name VHDL_FILE ../../../VHDL/common/spear_amba_pkg.vhd
@@ -455,6 +454,8 @@ set_global_assignment -name VHDL_FILE ../../../VHDL/ext_modules/ext_counter/pkg_
 set_global_assignment -name VHDL_FILE ../../../VHDL/ext_modules/ext_counter/ext_counter_ent.vhd
 set_global_assignment -name VHDL_FILE ../../../VHDL/ext_modules/ext_counter/ext_counter.vhd
 set_global_assignment -name VHDL_FILE ../../../VHDL/ext_modules/ext_writeframe/pkg_writeframe.vhd
+set_global_assignment -name VHDL_FILE ../../../VHDL/ext_modules/ext_writeframe/read_cam.vhd
+set_global_assignment -name VHDL_FILE ../../../VHDL/ext_modules/ext_writeframe/ram.vhd
 set_global_assignment -name VHDL_FILE ../../../VHDL/ext_modules/ext_writeframe/writeframe.vhd
 set_global_assignment -name VHDL_FILE ../../../VHDL/ext_modules/ext_aluext/pkg_aluext.vhd
 set_global_assignment -name VHDL_FILE ../../../VHDL/ext_modules/ext_aluext/aluext.vhd
@@ -491,7 +492,6 @@ set_global_assignment -name IP_TOOL_NAME ALTPLL -qip ../VHDL/altera_pll.qip
 set_global_assignment -name IP_TOOL_VERSION 10.1 -qip ../VHDL/altera_pll.qip
 set_global_assignment -name VHDL_FILE ../VHDL/altera_pll.vhd -qip ../VHDL/altera_pll.qip
 set_global_assignment -name MISC_FILE ../VHDL/altera_pll.ppf -qip ../VHDL/altera_pll.qip
-#set_global_assignment -name QIP_FILE ../../../VHDL/ext_modules/ext_writeframe/ram.qip
 set_global_assignment -name PHYSICAL_SYNTHESIS_REGISTER_DUPLICATION OFF
 set_global_assignment -name PHYSICAL_SYNTHESIS_COMBO_LOGIC OFF
 set_global_assignment -name PHYSICAL_SYNTHESIS_REGISTER_RETIMING OFF
