@@ -57,6 +57,11 @@ architecture rtl of read_raw is
 		toggle_c	: std_logic;
 		p_r      	: integer range 0 to CAM_H;
 		p_c      	: integer range 0 to CAM_W;
+		
+		en_odd		: std_logic;
+		en_even		: std_logic;
+		data		: dot_type;
+		address		: dot_addr_type;
 	end record;
 
 
@@ -67,40 +72,23 @@ architecture rtl of read_raw is
 		toggle_r	=> '0',
 		toggle_c	=> '0',
 		p_r 		=> 0,
-		p_c 		=> 0
-	);
-	
-	--Ram Parts
-	type raw_write_dot_type is record
-		data		: dot_type;
-		        	
-		address		: dot_addr_type;
-		en_odd		: std_logic;
-		en_even		: std_logic;
-	end record;
-	
-	signal wr_raw_dot_next : raw_write_dot_type;
-	signal wr_raw_dot : raw_write_dot_type :=
-	(
-		data	=> (others => '0'),
+		p_c 		=> 0,
 		
-		address	=> (others => '0'),
 		en_odd		=> '0',
-		en_even		=> '0'
-	);
-	
+		en_even		=> '0',
+		data	=> (others => '0'),
+		address	=> (others => '0')
+	);	
 begin
-	read_raw : process(r, getframe, cm_d, cm_lval, cm_fval, rst, wr_raw_dot)
+	read_raw : process(r, getframe, cm_d, cm_lval, cm_fval, rst)
 	variable v 				: readraw_reg_type;
 	variable vpix_next_dot	: state_type;
 	--variable tmp_pixel		: integer range 4095 downto 0;
-	variable vwr_raw_dot 	: raw_write_dot_type;
 	begin
 		v := r;
-    	vwr_raw_dot := wr_raw_dot;
     	
-    	vwr_raw_dot.en_odd := '0'; --disable every cycle
-    	vwr_raw_dot.en_even := '0'; --disable every cycle
+    	v.en_odd := '0'; --disable every cycle
+    	v.en_even := '0'; --disable every cycle
     	
     	---Next dot descision logic
 		--takes care about PIX.NEXT_DOT
@@ -192,7 +180,14 @@ begin
 				null;
 			when wait_frame_valid =>
 				null;
-			when read_dot_r | read_dot_g1 | read_dot_g2 | read_dot_b =>
+			when read_dot_g1 | read_dot_r  =>
+				--odd
+				v.en_odd := '1';
+				v.p_c := r.p_c + 1;
+				v.toggle_c := not r.toggle_c;
+			when read_dot_b | read_dot_g2  =>
+				--even
+				v.en_even := '1';
 				v.p_c := r.p_c + 1;
 				v.toggle_c := not r.toggle_c;
 			when next_line =>
@@ -211,7 +206,6 @@ begin
 				null;
 		end case;
 		
-		wr_raw_dot_next <= vwr_raw_dot;
 		cm_trigger <= '0';
     	cm_reset <= rst;
     	r_next <= v;
@@ -228,7 +222,6 @@ begin
 				r.state <= reset;
 			else
 				r <= r_next;
-				wr_raw_dot <= wr_raw_dot_next;
 			end if;
 		end if;
 	end process;
