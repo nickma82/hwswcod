@@ -51,7 +51,7 @@ architecture rtl of ext_writeframe is
 	subtype BYTE is std_logic_vector(7 downto 0);
 	type register_set is array (0 to 4) of BYTE;
 
-	type state_type is (idle, data, done, reset, wait_burst, line_done, next_burst);
+	type state_type is (idle, data, done, reset, wait_burst, next_burst);
 		
 
 	
@@ -242,7 +242,6 @@ begin
 					v.start := '1';
 					v.cur_line := 0;
 					v.cur_col  := 0;
-					v.burst_len := 0;
 				end if;
 			when wait_burst =>
 				if dmao.ready = '1' then
@@ -251,33 +250,29 @@ begin
 				v.wdata := r.color;		
 				
 			when data =>			
-				-- zeile noch nicht fertig
-				v.address := r.address + 4;
-				v.cur_col := r.cur_col + 1;
-				v.burst_len := r.burst_len + 1;
 				
-				if r.burst_len >= BURST_LENGTH then
+				v.wdata := r.address;			
+				if dmao.haddr = "1111111110" then
 					v.state := next_burst;
 					v.start := '0';
 				else
 					if r.cur_col >= SCREEN_W then
-						v.state := line_done;
-						v.start := '0';
-					end if;	
-				end if;		
-				
+						if r.cur_line >= CAM_H then
+							v.state := done;
+						else
+							v.cur_line := r.cur_line + 1;
+							v.cur_col := 0;
+						end if;
+					else
+						v.cur_col := r.cur_col + 1;
+					end if;
+					-- zeile noch nicht fertig
+					v.address := r.address + 4;
+				end if;
 			when next_burst =>
 				v.start := '1';
 				v.state := wait_burst;
 				v.burst_len := 0;
-			when line_done =>
-				if r.cur_line >= CAM_H then
-					v.state := done;
-				else
-					v.cur_line := r.cur_line + 1;
-					v.cur_col := 0;
-					v.state := next_burst;
-				end if;
 			when done =>
 				v.getframe := '0';
 				v.start := '0';
