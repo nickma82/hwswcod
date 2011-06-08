@@ -453,10 +453,12 @@ set_global_assignment -name VHDL_FILE ../../../VHDL/ext_modules/ext_Dis7Seg/pkg_
 set_global_assignment -name VHDL_FILE ../../../VHDL/ext_modules/ext_counter/pkg_counter.vhd
 set_global_assignment -name VHDL_FILE ../../../VHDL/ext_modules/ext_counter/ext_counter_ent.vhd
 set_global_assignment -name VHDL_FILE ../../../VHDL/ext_modules/ext_counter/ext_counter.vhd
-set_global_assignment -name VHDL_FILE ../../../VHDL/ext_modules/ext_writeframe/pkg_writeframe.vhd
-set_global_assignment -name VHDL_FILE ../../../VHDL/ext_modules/ext_writeframe/read_cam.vhd
-set_global_assignment -name VHDL_FILE ../../../VHDL/ext_modules/ext_writeframe/ram.vhd
-set_global_assignment -name VHDL_FILE ../../../VHDL/ext_modules/ext_writeframe/writeframe.vhd
+set_global_assignment -name VHDL_FILE ../../../VHDL/ext_modules/ext_getframe/pkg_getframe.vhd
+set_global_assignment -name VHDL_FILE ../../../VHDL/ext_modules/ext_getframe/read_raw.vhd
+set_global_assignment -name VHDL_FILE ../../../VHDL/ext_modules/ext_getframe/ram.vhd
+set_global_assignment -name VHDL_FILE ../../../VHDL/ext_modules/ext_getframe/writeframe.vhd
+set_global_assignment -name VHDL_FILE ../../../VHDL/ext_modules/ext_getframe/convert.vhd
+set_global_assignment -name VHDL_FILE ../../../VHDL/ext_modules/ext_getframe/getframe.vhd
 set_global_assignment -name VHDL_FILE ../../../VHDL/ext_modules/ext_aluext/pkg_aluext.vhd
 set_global_assignment -name VHDL_FILE ../../../VHDL/ext_modules/ext_aluext/aluext.vhd
 set_global_assignment -name VHDL_FILE ../../../VHDL/ext_modules/ext_camconfig/pkg_camconfig.vhd

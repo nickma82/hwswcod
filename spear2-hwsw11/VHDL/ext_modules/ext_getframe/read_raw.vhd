@@ -20,13 +20,16 @@ library gaisler;
 use gaisler.misc.all;
 
 USE work.spear_pkg.all;
-use work.pkg_writeframe.all;
+use work.pkg_getframe.all;
 
-entity read_cam is
+entity read_raw is
 	port (
 		clk       	: in  std_logic;
 		rst			: in  std_logic;
-		enable		: in  std_logic;
+		getframe	: in  std_logic;
+		
+		start_conv	: out std_logic;
+		line_ready	: out std_logic;
 		
 		cm_d		: in std_logic_vector(11 downto 0); --dot data
 		cm_lval 	: in std_logic; 	--Line valid
@@ -35,14 +38,15 @@ entity read_cam is
 		cm_reset	: out std_logic;	--D5M reset
 		cm_trigger	: out std_logic;	--Snapshot trigger
 		cm_strobe	: in std_logic; 	--Snapshot strobe
-			
-		rd_row_rdy	: out row_count_type; --number of line which's rdy
-		rd_data		: out pixel_type;
-		rd_clk		: in std_logic
+		
+		wr_en_odd	: out std_logic;
+		wr_en_even	: out std_logic;
+		wr_data		: out dot_type;
+		wr_address	: out dot_addr_type
     );
 end ;
 
-architecture rtl of read_cam is
+architecture rtl of read_raw is
 
 	-- Cam read raw Signals
 	type state_type is (reset, wait_getframe, wait_frame_valid, read_dot_r, read_dot_g1, read_dot_g2, read_dot_b, next_line, wait_frame_invalid);
@@ -68,12 +72,9 @@ architecture rtl of read_cam is
 	
 	--Ram Parts
 	type raw_write_dot_type is record
-		enable		: std_logic;
-		data		: std_logic_vector(7 downto 0);
-		toggle_r	: std_logic;
-		p_c			: integer range 0 to CAM_W;
+		data		: dot_type;
 		        	
-		address		: std_logic_vector(9 downto 0);
+		address		: dot_addr_type;
 		en_odd		: std_logic;
 		en_even		: std_logic;
 	end record;
@@ -81,75 +82,25 @@ architecture rtl of read_cam is
 	signal wr_raw_dot_next : raw_write_dot_type;
 	signal wr_raw_dot : raw_write_dot_type :=
 	(
-		enable		=> '0',
-		data		=> (others => '0'),
-		toggle_r	=> '0',
-		p_c			=> 0,
+		data	=> (others => '0'),
 		
 		address	=> (others => '0'),
 		en_odd		=> '0',
 		en_even		=> '0'
 	);
 	
-	type raw_read_dot_type is record
-		enable		: std_logic;
-		data_odd	: std_logic_vector(7 downto 0); 
-		data_even	: std_logic_vector(7 downto 0);
-		address		: std_logic_vector(9 downto 0);
-	end record;
-	
-	signal rd_raw_dot_next : raw_read_dot_type;
-	signal rd_raw_dot : raw_read_dot_type := 
-	(
-		enable		=> '0',
-		data_odd	=> (others => '0'), 
-		data_even	=> (others => '0'),
-		address		=> (others => '0')
-	);
 begin
-	
-	ram_odd_dot_raw : dp_ram
-	generic map (
-		ADDR_WIDTH 	=> 10, 
-		DATA_WIDTH	=> 8
-	)
-	port map (
-		wrclk       => wr_raw_dot.en_odd,
-		wraddress 	=> wr_raw_dot.address,
-		wrdata_in 	=> wr_raw_dot.data,
-		
-		rdclk		=> rd_raw_dot.enable,
-		rdaddress 	=> rd_raw_dot.address,
-		rddata_out  => rd_raw_dot.data_odd
-	);
-	
-	ram_even_dot_raw : dp_ram
-	generic map (
-		ADDR_WIDTH 	=> 10, 
-		DATA_WIDTH	=> 8
-	)
-	port map (
-		wrclk       => wr_raw_dot.en_even,
-		wraddress 	=> wr_raw_dot.address,
-		wrdata_in 	=> wr_raw_dot.data,
-		
-		rdclk		=> rd_raw_dot.enable,
-		rdaddress 	=> rd_raw_dot.address,
-		rddata_out  => rd_raw_dot.data_even
-	);
-	
-	
-	
-	read_raw : process(r, enable, cm_d, cm_lval, cm_fval, rst, wr_raw_dot)
+	read_raw : process(r, getframe, cm_d, cm_lval, cm_fval, rst, wr_raw_dot)
 	variable v 				: readraw_reg_type;
 	variable vpix_next_dot	: state_type;
 	--variable tmp_pixel		: integer range 4095 downto 0;
-	variable vwr_raw_dot : raw_write_dot_type;
+	variable vwr_raw_dot 	: raw_write_dot_type;
 	begin
 		v := r;
     	vwr_raw_dot := wr_raw_dot;
     	
-    	vwr_raw_dot.enable := '0'; --disable every cycle
+    	vwr_raw_dot.en_odd := '0'; --disable every cycle
+    	vwr_raw_dot.en_even := '0'; --disable every cycle
     	
     	---Next dot descision logic
 		--takes care about PIX.NEXT_DOT
@@ -195,7 +146,7 @@ begin
 			when reset =>
 				v.state := wait_getframe;
 			when wait_getframe =>
-				if enable = '1' then
+				if getframe = '1' then
 					v.state := wait_frame_invalid;
 				end if;
 			when wait_frame_valid =>

@@ -1,5 +1,5 @@
 -----------------------------------------------------------------------------
--- Entity:      writeframe
+-- Entity:      getframe
 -- Author:      Johannes Kasberger
 -- Description: Ein Bild in Framebuffer übertragen
 -- Date:		15.05.2011
@@ -20,9 +20,9 @@ library gaisler;
 use gaisler.misc.all;
 
 USE work.spear_pkg.all;
-use work.pkg_writeframe.all;
+use work.pkg_getframe.all;
 
-entity ext_writeframe is
+entity ext_getframe is
 	port (
 		clk       : in  std_logic;
 		extsel    : in  std_ulogic;
@@ -42,71 +42,97 @@ entity ext_writeframe is
     );
 end ;
 
-architecture rtl of ext_writeframe is
-	-- AMBA Signale 
-	signal dmai               : ahb_dma_in_type;
-	signal dmao               : ahb_dma_out_type;
-  
+architecture rtl of ext_getframe is  
 	-- Core Ext Signale
 	subtype BYTE is std_logic_vector(7 downto 0);
 	type register_set is array (0 to 4) of BYTE;
-
-	type state_type is (idle, data, done, reset, next_burst);
-		
-
 	
 	type reg_type is record
   		ifacereg	: register_set;
-		getframe	: std_logic;
-		cam_enable	: std_logic;
-		start		: std_logic;
-		address		: std_logic_vector(31 downto 0);
-		wdata		: std_logic_vector(31 downto 0);
-		state		: state_type;
-		color		: std_logic_vector(31 downto 0);
-		send_px		: std_logic;
-		cur_col		: natural range 0 to SCREEN_W;
-		cur_line	: natural range 0 to CAM_H;
+		getframe	: std_logic;	
 	end record;
-
 	
 	signal r_next : reg_type;
 	signal r : reg_type := 
 	(
 		ifacereg 	=> (others => (others => '0')),
-		getframe 	=> '0',
-		cam_enable 	=> '1',
-		start		=> '0',
-		address 	=> (others => '0'),
-		wdata  		=> (others => '0'),
-		state		=> reset,
-		color   	=> (others => '0'),
-		send_px 	=> '0',
-		cur_col		=> 0,
-		cur_line	=> 0
+		getframe 	=> '0'
 	);
 	
 	signal rstint : std_ulogic;
-	signal cam_enable 		: std_logic;
-	signal cam_rd_row_rdy	: row_count_type;
-	signal cam_rd_data		: pixel_type;
-	signal cam_rd_clk		: std_logic;
+	
+	signal wr_en_odd,wr_en_even,wr_en_burst : std_logic;
+	signal rd_en,rd_en_burst :std_logic;
+	
+	signal wr_address : dot_addr_type;
+	signal rd_address : dot_addr_type;
+	
+	signal rd_data_even, rd_data_odd, wr_data : dot_type;
+	
+	signal wr_address_burst, rd_address_burst : pix_addr_type;
+	signal wr_data_burst, rd_data_burst : pix_type;
+	
+	signal start_conv : std_logic;
+	signal line_ready : std_logic;
+	signal next_burst : std_logic;
+	signal frame_done : std_logic;
 begin
 	
 	------------------------
-	---	AHB Master
+	---	RAMs
 	------------------------
-	ahb_master : ahbmst generic map (1, 0, VENDOR_WIR, WIR_WRITEFRAME, 0, 3, 1)
-	port map (rstint, clk, dmai, dmao, ahbi, ahbo);
+	ram_odd_raw : dp_ram
+		generic map (
+			ADDR_WIDTH 	=> DOT_ADDR_WIDTH,
+			DATA_WIDTH	=> DOT_WIDTH
+		)
+		port map (
+			wrclk       => wr_en_odd,
+			wraddress 	=> wr_address,
+			wrdata_in 	=> wr_data,
+			
+			rdclk		=> rd_en,
+			rdaddress 	=> rd_address,
+			rddata_out 	=> rd_data_odd
+		);
 	
+	ram_even_raw : dp_ram
+		generic map (
+			ADDR_WIDTH 	=> DOT_ADDR_WIDTH,
+			DATA_WIDTH	=> DOT_WIDTH
+		)
+		port map (
+			wrclk       => wr_en_even,
+			wraddress 	=> wr_address,
+			wrdata_in 	=> wr_data,
+			
+			rdclk		=> rd_en,
+			rdaddress 	=> rd_address,
+			rddata_out 	=> rd_data_even
+		);	
+		
+	ram_burst	: dp_ram
+		generic map (
+			ADDR_WIDTH 	=> PIXEL_ADDR_WIDTH, 
+			DATA_WIDTH	=> PIXEL_WIDTH
+		)
+		port map (
+			wrclk       => wr_en_burst,
+			wraddress 	=> wr_address_burst,
+			wrdata_in 	=> wr_data_burst,
+			               
+			rdclk		=> rd_en_burst,
+			rdaddress 	=> rd_address_burst,
+			rddata_out 	=> rd_data_burst
+		);
 	------------------------
 	---	Lesen von Bildern Einheit anlegen
 	------------------------
-	read_cam_unit : read_cam
+	read_raw_unit : read_raw
       port map (
 		clk		=> clk,	
 		rst 	=> rstint,
-		enable	=> cam_enable,
+		getframe	=> r.getframe,
 		
 		cm_d 	=> cm_d,
 		cm_lval => cm_lval,
@@ -116,15 +142,44 @@ begin
 		cm_trigger	=> cm_trigger,
 		cm_strobe 	=> cm_strobe,
 			
-		rd_row_rdy	=> cam_rd_row_rdy,
-		rd_data		=> cam_rd_data,
-		rd_clk		=> cam_rd_clk
+		wr_en_odd	=>  wr_en_odd,	
+		wr_en_even	=>  wr_en_even,
+		wr_data		=>  wr_data,		
+		wr_address	=>  wr_address
     );
+    
+    convert_unit : convert
+    port map (
+    	clk       		 =>  clk,
+		rst				 =>  rstint, 	
+		start_conv		 =>  start_conv,
+		line_ready		 =>  line_ready,
+		next_burst		 =>  next_burst,
+		rd_en			 =>  rd_en,
+		rd_address		 =>  rd_address,
+		rd_data_even	 =>  rd_data_even,
+		rd_data_odd		 =>  rd_data_odd,
+		wr_en_burst		 =>  wr_en_burst, 
+		wr_address_burst =>  wr_address_burst, 
+		wr_data_burst	 =>  wr_data_burst
+	);
 	
+	writeframe_unit : writeframe
+	port map (
+		clk     		 => clk,     		
+		rst    			 => rstint,    			
+		ahbi    		 => ahbi,    		
+		ahbo    		 => ahbo,    		
+		next_burst		 => next_burst,		
+		frame_done		 => frame_done,		
+		rd_en_burst		 => rd_en_burst,		
+		rd_address_burst => rd_address_burst,
+		rd_data_burst	 => rd_data_burst	
+	);
 	------------------------
 	---	ASync Core Ext Interface Daten übernehmen und schreiben
 	------------------------
-	comb : process(r, exti, extsel,dmao, rstint)
+	comb : process(r, exti, extsel, rstint)
 	variable v 		: reg_type;
 	begin
     	v := r;
@@ -153,9 +208,8 @@ begin
     				if ((exti.byte_en(0) = '1')) then
     					v.getframe := '1';
     				end if;
-    			when "010" =>
-    				v.color(31 downto 0) := exti.data(31 downto 0);
-   				when others =>
+    			
+   			when others =>
 					null;
 			end case;
 		end if;
@@ -200,72 +254,7 @@ begin
 		end if; 
 		exto.intreq <= r.ifacereg(STATUSREG)(STA_INT);
 		
-		------------------
-		--- Statemachine
-		------------------
-		case r.state is
-			when reset =>
-				v.getframe := '0';
-				v.state := idle;
-			when idle =>
-				v.address := FRAMEBUFFER_BASE_ADR;
-				v.cur_line := 0;
-				v.cur_col  := 0;
-				
-				if r.getframe = '1' then
-					v.state := data;
-					v.start := '1';	
-				end if;
-				v.wdata := r.color;
-			when data =>				
-				if dmao.ready = '1' then
-					if dmao.haddr = (9 downto 0 => '0') then
-						v.address := (v.address(31 downto 10) + 1) & dmao.haddr;
-					else
-						v.address := v.address(31 downto 10) & dmao.haddr;
-					end if;
 
-					if (dmao.haddr(BURST_LENGTH+1 downto 0) = ((BURST_LENGTH+1 downto 2 => '1') & "00")) then 
-						v.start := '0';
-						v.state := next_burst;
-					else
-						if r.cur_col >= SCREEN_W then
-							if r.cur_line >= CAM_H then
-								v.state := done;
-							else
-								v.cur_line := r.cur_line + 1;
-								v.cur_col := 0;
-							end if;
-						else
-							v.cur_col := r.cur_col + 1;
-						end if;
-					end if;
-				end if;					
-			when next_burst =>
-				v.start := '1';
-				v.state := data;
-			when done =>
-				v.getframe := '0';
-				v.start := '0';
-				v.state := idle;
-
-		end case;		
-
-		
-		-- Werte auf Interface zu Bus legen
-		dmai.wdata  <=  r.wdata;
-	    dmai.burst  <= '1';
-	    dmai.irq    <= '0';
-	    dmai.size   <= "10";
-	    dmai.write  <= '1';
-	    dmai.busy   <= '0';
-	    dmai.start    <= r.start;
-	    dmai.address  <= r.address;    
-	    
-
-	    cam_enable <= r.cam_enable;
-
-	    led_red <= (others=>'1');
 		r_next <= v;
     end process;    
     
@@ -278,7 +267,6 @@ begin
 		if rising_edge(clk) then
 			if rstint = RST_ACT then
 				r.ifacereg <= (others => (others => '0'));
-				r.state <= reset;
 			else
 				r <= r_next;
 			end if;

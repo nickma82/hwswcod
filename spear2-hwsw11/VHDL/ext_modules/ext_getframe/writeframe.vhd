@@ -1,0 +1,173 @@
+-----------------------------------------------------------------------------
+-- Entity:      writeframe
+-- Author:      Johannes Kasberger
+-- Description: Ein Bild in Framebuffer übertragen
+-- Date:		15.05.2011
+-----------------------------------------------------------------------------
+
+library ieee;
+use ieee.std_logic_1164.all;
+use ieee.numeric_std.all;
+library grlib;
+use grlib.amba.all;
+use grlib.stdlib.all;
+use grlib.devices.all;
+
+library techmap;
+use techmap.gencomp.all;
+
+library gaisler;
+use gaisler.misc.all;
+
+USE work.spear_pkg.all;
+use work.pkg_getframe.all;
+
+entity writeframe is
+	port (
+		clk     			: in  std_logic;
+		rst    				: in  std_logic;
+		ahbi    			: in  ahb_mst_in_type;
+		ahbo    			: out ahb_mst_out_type;
+		next_burst			: in std_logic;
+		frame_done			: out std_logic;
+		rd_en_burst			: out std_logic;
+		rd_address_burst	: out pix_addr_type;
+		rd_data_burst		: in pix_type
+    );
+end ;
+
+architecture rtl of writeframe is
+	-- AMBA Signale 
+	signal dmai               : ahb_dma_in_type;
+	signal dmao               : ahb_dma_out_type;
+  
+	-- Core Ext Signale
+	subtype BYTE is std_logic_vector(7 downto 0);
+	type register_set is array (0 to 4) of BYTE;
+
+	type state_type is (idle, data, done, reset, start_next_burst);
+	
+	type reg_type is record
+  		start		  : std_logic;
+		address		  : std_logic_vector(31 downto 0);
+		wdata		  : std_logic_vector(31 downto 0);
+		state		  : state_type;
+		cur_col		  : natural range 0 to SCREEN_W;
+		cur_line	  : natural range 0 to CAM_H;
+		burst_counter : natural range 0 to BURST_BUFFER_LENGTH; --@TODO kontrollieren
+		frame_done	  : std_logic;
+	end record;
+
+	
+	signal r_next : reg_type;
+	signal r : reg_type := 
+	(
+		start			=> '0',
+		address 		=> (others => '0'),
+		wdata  			=> (others => '0'),
+		state			=> reset,
+		cur_col			=> 0,
+		cur_line		=> 0,
+		burst_counter 	=> 0,
+		frame_done 		=> '0'
+	);
+	
+begin
+	
+	------------------------
+	---	AHB Master
+	------------------------
+	ahb_master : ahbmst generic map (1, 0, VENDOR_WIR, WIR_WRITEFRAME, 0, 3, 1)
+	port map (rst, clk, dmai, dmao, ahbi, ahbo);
+	
+	
+	------------------------
+	---	ASync Core Ext Interface Daten übernehmen und schreiben
+	------------------------
+	comb : process(r,next_burst,dmao, rst)
+	variable v 		: reg_type;
+	begin
+    	v := r;   	
+		
+		------------------
+		--- Statemachine
+		------------------
+		case r.state is
+			when reset =>
+				v.state := idle;
+			when idle =>
+				v.address := FRAMEBUFFER_BASE_ADR;
+				v.cur_line := 0;
+				v.cur_col  := 0;
+				
+				if next_burst = '1' then
+					v.state := data;
+					v.start := '1';	
+					v.frame_done := '0';
+				end if;
+				v.wdata := "00000000111111110000000000000000";
+			when data =>				
+				if dmao.ready = '1' then
+					if dmao.haddr = (9 downto 0 => '0') then
+						v.address := (v.address(31 downto 10) + 1) & dmao.haddr;
+					else
+						v.address := v.address(31 downto 10) & dmao.haddr;
+					end if;
+
+					if (dmao.haddr(BURST_LENGTH+1 downto 0) = ((BURST_LENGTH+1 downto 2 => '1') & "00")) then 
+						v.start := '0';
+						v.state := start_next_burst;
+					else
+						if r.cur_col >= SCREEN_W then
+							if r.cur_line >= CAM_H then
+								v.state := done;
+							else
+								v.cur_line := r.cur_line + 1;
+								v.cur_col := 0;
+							end if;
+						else
+							v.cur_col := r.cur_col + 1;
+						end if;
+					end if;
+				end if;					
+			when start_next_burst =>
+				v.start := '1';
+				v.state := data;
+			when done =>
+				v.frame_done := '1';
+				v.start := '0';
+				v.state := idle;
+
+		end case;		
+
+		
+		-- Werte auf Interface zu Bus legen
+		dmai.wdata  <=  r.wdata;
+	    dmai.burst  <= '1';
+	    dmai.irq    <= '0';
+	    dmai.size   <= "10";
+	    dmai.write  <= '1';
+	    dmai.busy   <= '0';
+	    dmai.start    <= r.start;
+	    dmai.address  <= r.address;    
+	    frame_done <= r.frame_done;
+
+		r_next <= v;
+    end process;    
+    
+    
+    ------------------------
+	---	Sync Daten übernehmen
+	------------------------
+    reg : process(clk)
+	begin
+		if rising_edge(clk) then
+			if rst = RST_ACT then
+				r.state <= reset;
+			else
+				r <= r_next;
+			end if;
+		end if;
+	end process;
+end ;
+
