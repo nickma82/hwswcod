@@ -19,7 +19,7 @@ void svga_init(void) {
 	SVGA_STATUS = (1<<0) | (3<<4);
 	sdramBytesAllocated += SCREEN_WIDTH*SCREEN_HEIGHT*4;
 	screenData = (volatile uint32_t *)SDRAM_BASE;
-	//memset((void *)screenData, 0, (SCREEN_WIDTH*SCREEN_HEIGHT*4));
+	memset((void *)screenData, 0, (SCREEN_WIDTH*SCREEN_HEIGHT*4));
 }
 
 void svga_outputImage(image_t *image) {
