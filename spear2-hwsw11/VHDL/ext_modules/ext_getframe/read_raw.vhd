@@ -7,6 +7,8 @@
 
 library ieee;
 use ieee.std_logic_1164.all;
+use ieee.numeric_std.all;
+
 
 library grlib;
 use grlib.amba.all;
@@ -145,18 +147,18 @@ begin
 				end if;
 			when read_dot_r =>
 				-- r logic
-				--v.pixel(23 downto 16) := cm_d(11 downto 4);
-				--v.pixel(23 downto 16) := cm_d(7 downto 0); -- test
+				--v.data(23 downto 16) := cm_d(11 downto 4);
+				--v.data(23 downto 16) := cm_d(7 downto 0); -- test
 				v.state := vpix_next_dot;
 			when read_dot_g1 | read_dot_g2 =>
 				-- g1 logic
-				--v.pixel(15 downto 8) := cm_d(11 downto 4);
-				--v.pixel(15 downto 8) := cm_d(7 downto 0); -- test
+				--v.data(15 downto 8) := cm_d(11 downto 4);
+				--v.data(15 downto 8) := cm_d(7 downto 0); -- test
 				v.state := vpix_next_dot;
 			when read_dot_b =>
 				-- b logic
-				--v.pixel(7 downto 0) := cm_d(11 downto 4);
-				--v.pixel(7 downto 0) := cm_d(7 downto 0); -- test
+				--v.data(7 downto 0) := cm_d(11 downto 4);
+				--v.data(7 downto 0) := cm_d(7 downto 0); -- test
 				v.state := vpix_next_dot;
 			when next_line =>
 				if r.p_r < CAM_H-1 then	
@@ -206,6 +208,9 @@ begin
 				null;
 		end case;
 		
+		
+		wr_data		<= v.data;
+		wr_address	<= std_logic_vector(to_unsigned(v.p_c, DOT_ADDR_WIDTH)); --@TODO Grenzen der Counter angleichen
 		cm_trigger <= '0';
     	cm_reset <= rst;
     	r_next <= v;
@@ -224,6 +229,18 @@ begin
 				r <= r_next;
 			end if;
 		end if;
+		
+		if r_next.en_odd = '1' then
+			wr_en_odd	<= not cm_pixclk;
+			wr_en_even	<= '0';
+		elsif r_next.en_even = '1' then
+			wr_en_odd	<= '0';
+			wr_en_even	<= not cm_pixclk;
+		else
+			wr_en_odd	<= '0';
+		end if;
+		--wr_en_odd	<= (cm_pixclk) when r_next.en_odd  = '1' else '0';
+		--wr_en_even	<= (cm_pixclk) when r_next.en_even = '1' else '0';
 	end process;
 end;
 
