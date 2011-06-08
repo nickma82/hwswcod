@@ -35,7 +35,7 @@ package pkg_writeframe is
 	constant FRAMEBUFFER_BASE_ADR : std_logic_vector(31 downto 0) := "11100000000000000000000000000000";
 	constant FRAMEBUFFER_END_ADR	: std_logic_vector(31 downto 0) := FRAMEBUFFER_BASE_ADR+(PIXEL_COUNT*4);
 	
-	constant BURST_LENGTH				: natural := 250;
+	constant BURST_LENGTH				: natural range 2 to 8 := 4;
 	
 	subtype pixel_type is std_logic_vector(31 downto 0);
 	subtype row_count_type is integer range 0 to CAM_H-1;

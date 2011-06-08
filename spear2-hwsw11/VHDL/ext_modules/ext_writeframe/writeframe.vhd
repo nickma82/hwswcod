@@ -51,7 +51,7 @@ architecture rtl of ext_writeframe is
 	subtype BYTE is std_logic_vector(7 downto 0);
 	type register_set is array (0 to 4) of BYTE;
 
-	type state_type is (idle, data, done, reset, wait_burst, next_burst);
+	type state_type is (idle, data, done, reset, next_burst);
 		
 
 	
@@ -67,7 +67,6 @@ architecture rtl of ext_writeframe is
 		send_px		: std_logic;
 		cur_col		: natural range 0 to SCREEN_W;
 		cur_line	: natural range 0 to CAM_H;
-		burst_len	: natural range 0 to BURST_LENGTH;
 	end record;
 
 	
@@ -84,8 +83,7 @@ architecture rtl of ext_writeframe is
 		color   	=> (others => '0'),
 		send_px 	=> '0',
 		cur_col		=> 0,
-		cur_line	=> 0,
-		burst_len	=> 0
+		cur_line	=> 0
 	);
 	
 	signal rstint : std_ulogic;
@@ -211,43 +209,41 @@ begin
 				v.state := idle;
 			when idle =>
 				v.address := FRAMEBUFFER_BASE_ADR;
+				v.cur_line := 0;
+				v.cur_col  := 0;
 				
 				if r.getframe = '1' then
-					v.state := wait_burst;
-					v.start := '1';
-					v.cur_line := 0;
-					v.cur_col  := 0;
-				end if;
-			when wait_burst =>
-				if dmao.ready = '1' then
 					v.state := data;
-				end if;				
-				v.wdata := r.color;		
-				
-			when data =>			
-				
-				v.wdata := r.address;			
-				if dmao.haddr = "1111111110" then
-					v.state := next_burst;
-					v.start := '0';
-				else
-					if r.cur_col >= SCREEN_W then
-						if r.cur_line >= CAM_H then
-							v.state := done;
-						else
-							v.cur_line := r.cur_line + 1;
-							v.cur_col := 0;
-						end if;
-					else
-						v.cur_col := r.cur_col + 1;
-					end if;
-					-- zeile noch nicht fertig
-					v.address := r.address + 4;
+					v.start := '1';	
 				end if;
+				v.wdata := r.color;
+			when data =>				
+				if dmao.ready = '1' then
+					if dmao.haddr = (9 downto 0 => '0') then
+						v.address := (v.address(31 downto 10) + 1) & dmao.haddr;
+					else
+						v.address := v.address(31 downto 10) & dmao.haddr;
+					end if;
+
+					if (dmao.haddr(BURST_LENGTH+1 downto 0) = ((BURST_LENGTH+1 downto 2 => '1') & "00")) then 
+						v.start := '0';
+						v.state := next_burst;
+					else
+						if r.cur_col >= SCREEN_W then
+							if r.cur_line >= CAM_H then
+								v.state := done;
+							else
+								v.cur_line := r.cur_line + 1;
+								v.cur_col := 0;
+							end if;
+						else
+							v.cur_col := r.cur_col + 1;
+						end if;
+					end if;
+				end if;					
 			when next_burst =>
 				v.start := '1';
-				v.state := wait_burst;
-				v.burst_len := 0;
+				v.state := data;
 			when done =>
 				v.getframe := '0';
 				v.start := '0';

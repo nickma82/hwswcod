@@ -23,13 +23,13 @@
 
 int main(int argc, char **argv)
 {	
-	uint32_t fps_c;
+	uint32_t fps_c,i;
 	
 	#ifdef __SPEAR32__
 		// initialize HW modules
 		dis7seg_init();
 		sdram_init();
-		//svga_init();
+		svga_init();
 		test_init();
 		
 	#endif
@@ -48,6 +48,7 @@ int main(int argc, char **argv)
 			
 		}
 	#else
+				
 		dis7seg_hex(0x01);
 		
 		write_cam(0x04, 2559);
@@ -58,26 +59,25 @@ int main(int argc, char **argv)
 		
 		dis7seg_hex(read_cam(0x04));
 		
-		uint32_t color = 0x000000FF;
-		getFrame(color);
-		svga_init();
-		
-		while (1) {
+		uint32_t color = 0x00FF000F;
+		i = 0;
+		while (i < 100000) {
 
 			*reg = (1 << COUNTER_CLEAR_BIT);
 			*reg = (1 << COUNTER_COUNT_BIT);
 			
-			//getFrame(color);
-			color += 500;
+			getFrame(color);
+			color += 50;
 			
 			fps_c = counter_getValue(&counterHandle);
 			
 			fps_c *= CLKPERIOD * PRESCALER;
 			fps_c /= 1000000;
 			dis7seg_uint32(1000 / fps_c);
-		}  
+			i++;
+		}
 	#endif
-	
+	dis7seg_hex(0xEEEEEEEE);
 	#ifdef __SPEAR32__
 		test_release();
 		dis7seg_release();
