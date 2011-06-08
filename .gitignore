@@ -7,7 +7,6 @@
 *.pin
 *.qdf
 *.srec
-*.sof
 *.o
 *.bak
 spear2-hwsw11/workspace/amba_hwsw/quartus/**/*

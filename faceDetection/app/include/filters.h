@@ -7,6 +7,6 @@
 #define FILTER_DILATE 1
 
 void skinFilter(image_t *inputImage, bwimage_t *outputImage);
-void erodeDilateFilter(bwimage_t *inputImage, bwimage_t *outputImage, uint8_t op);
-
+void erodeFilter(bwimage_t *inputImage, bwimage_t *outputImage);
+void dilateFilter(bwimage_t *inputImage, bwimage_t *outputImage);
 #endif // _filters_h_

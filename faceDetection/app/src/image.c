@@ -10,7 +10,7 @@ const uint8_t color_black = BACKGROUND_COLOR;
 void bwimage_init(image_t *template, bwimage_t *image) {
 	image->width = template->width/SCALE;
 	image->height = template->height/SCALE;
-	image->fg_color_cnt = 0;
+	//image->fg_color_cnt = 0;
 	image->dataLength = sizeof(*(image->data))*(template->dataLength / (3*SCALE*SCALE) + IMAGE_DATA_MAXVAL) >> IMAGE_DATA_BITS;
 	image->data = (typeof(image->data))malloc(image->dataLength);
 	memset((void *)image->data, 0, image->dataLength);

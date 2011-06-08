@@ -38,7 +38,7 @@ typedef struct {
 typedef struct {
 	uint16_t width;
 	uint16_t height;
-	uint32_t fg_color_cnt;
+	//uint32_t fg_color_cnt;
 	uint32_t dataLength;
 	uint32_t *data;
 } bwimage_t;
