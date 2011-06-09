@@ -51,19 +51,22 @@ end ;
 architecture rtl of read_raw is
 
 	-- Cam read raw Signals
-	type state_type is (reset, wait_getframe, wait_frame_valid, read_dot_r, read_dot_g1, read_dot_g2, read_dot_b, next_line, wait_frame_invalid);
+	type state_type is (reset, wait_getframe, wait_frame_valid, read_dot, next_line, wait_frame_invalid);
 	 
 	type readraw_reg_type is record
+		--intern
 		state		: state_type;
 		toggle_r	: std_logic;
 		toggle_c	: std_logic;
 		p_r      	: integer range 0 to CAM_H;
 		p_c      	: integer range 0 to CAM_W;
-		
+		--rams
 		en_odd		: std_logic;
 		en_even		: std_logic;
 		data		: dot_type;
 		address		: dot_addr_type;
+		--cam
+		cm_trigger	: std_logic;
 	end record;
 
 
@@ -79,7 +82,8 @@ architecture rtl of read_raw is
 		en_odd		=> '0',
 		en_even		=> '0',
 		data	=> (others => '0'),
-		address	=> (others => '0')
+		address	=> (others => '0'),
+		cm_trigger 	=> '0'
 	);	
 begin
 	read_raw : process(r, getframe, cm_d, cm_lval, cm_fval, rst)
@@ -92,42 +96,6 @@ begin
     	v.en_odd := '0'; --disable every cycle
     	v.en_even := '0'; --disable every cycle
     	
-    	---Next dot descision logic
-		--takes care about PIX.NEXT_DOT
-		--@TODO in weiterer Folge in CCD-Handler verschieben
-		case r.state is
-			when wait_frame_valid =>
-				--ROW sensitive
-				if r.toggle_r = '0' then
-					vpix_next_dot := read_dot_g1;
-				else
-					vpix_next_dot := read_dot_b;
-				end if;
-			when read_dot_r =>
-				if r.p_c < CAM_W-1 then
-					vpix_next_dot := read_dot_g1;
-				else
-					--eol1 condition
-					vpix_next_dot := next_line;
-				end if;
-			when read_dot_g1 =>
-				vpix_next_dot := read_dot_r;
-			when read_dot_g2 =>
-				if r.p_c < CAM_W-1 then
-					vpix_next_dot := read_dot_b;
-				else
-					--eol2 condition
-					vpix_next_dot := next_line;
-				end if;
-			when read_dot_b =>
-				vpix_next_dot := read_dot_g2;
-			when others => 
-				if r.p_c > 0 and cm_lval = '0' then
-					vpix_next_dot := next_line;
-				end if;
-				vpix_next_dot := read_dot_g1;
-		end case;
-		
 		------------------------
 		---	CCD Handler - FALLING EDGE PIXCLK sensitiv
 		--- state_pixsync_cam_type
@@ -140,26 +108,19 @@ begin
 					v.state := wait_frame_invalid;
 				end if;
 			when wait_frame_valid =>
+				--@TODO trigger starten
 				if cm_fval = '1' then
 					if cm_lval = '1' then
 						v.state := vpix_next_dot;
 					end if;
 				end if;
-			when read_dot_r =>
-				-- r logic
-				--v.data(23 downto 16) := cm_d(11 downto 4);
-				--v.data(23 downto 16) := cm_d(7 downto 0); -- test
-				v.state := vpix_next_dot;
-			when read_dot_g1 | read_dot_g2 =>
-				-- g1 logic
-				--v.data(15 downto 8) := cm_d(11 downto 4);
-				--v.data(15 downto 8) := cm_d(7 downto 0); -- test
-				v.state := vpix_next_dot;
-			when read_dot_b =>
-				-- b logic
-				--v.data(7 downto 0) := cm_d(11 downto 4);
-				--v.data(7 downto 0) := cm_d(7 downto 0); -- test
-				v.state := vpix_next_dot;
+			when read_dot =>
+				if r.p_c < CAM_W-1 then
+					v.state := read_dot;
+				else
+					--eol1 condition
+					v.state := next_line;
+				end if;
 			when next_line =>
 				if r.p_r < CAM_H-1 then	
 					v.state := wait_frame_valid;
@@ -181,17 +142,21 @@ begin
 			when wait_getframe =>
 				null;
 			when wait_frame_valid =>
-				null;
-			when read_dot_g1 | read_dot_r  =>
-				--odd
-				v.en_odd := '1';
+				v.cm_trigger := '1';
+			when read_dot =>
+				v.cm_trigger := '0';
+				if r.toggle_c = '0' then
+					--odd
+					v.en_odd := '1';
+				else
+					--even
+					v.en_even := '1';
+				end if;
 				v.p_c := r.p_c + 1;
 				v.toggle_c := not r.toggle_c;
-			when read_dot_b | read_dot_g2  =>
-				--even
-				v.en_even := '1';
-				v.p_c := r.p_c + 1;
-				v.toggle_c := not r.toggle_c;
+				-- r logic
+				--v.data(23 downto 16) := cm_d(11 downto 4);
+				--v.data(23 downto 16) := cm_d(7 downto 0); -- test
 			when next_line =>
 				--if r.p_r < CAM_H-1 then
 				v.p_r := r.p_r + 1;
@@ -204,14 +169,16 @@ begin
 				v.toggle_r	:= '0';
 				v.p_c 		:=  0;
 				v.toggle_c	:= '0';
+				v.cm_trigger:= '0';
 			when others =>
 				null;
 		end case;
 		
 		
 		wr_data		<= v.data;
-		wr_address	<= std_logic_vector(to_unsigned(v.p_c, DOT_ADDR_WIDTH)); --@TODO Grenzen der Counter angleichen
-		cm_trigger <= '0';
+		wr_address	<= std_logic_vector(to_unsigned(r.p_c, DOT_ADDR_WIDTH)); --@TODO Grenzen der Counter angleichen
+		
+		cm_trigger <= v.cm_trigger;
     	cm_reset <= rst;
     	r_next <= v;
     end process;

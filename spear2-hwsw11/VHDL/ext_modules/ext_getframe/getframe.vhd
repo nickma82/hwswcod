@@ -75,7 +75,6 @@ architecture rtl of ext_getframe is
 	signal wr_address_burst, rd_address_burst : pix_addr_type;
 	signal wr_data_burst, rd_data_burst : pix_type;
 	
-	signal start_conv : std_logic;
 	signal line_ready : std_logic;
 	signal next_burst : std_logic;
 	signal frame_done : std_logic;
@@ -159,7 +158,6 @@ begin
     port map (
     	clk       		 =>  clk,
 		rst				 =>  rstint, 	
-		start_conv		 =>  start_conv,
 		line_ready		 =>  line_ready,
 		next_burst		 =>  next_burst,
 		rd_address		 =>  rd_address,
@@ -185,7 +183,7 @@ begin
 	------------------------
 	---	ASync Core Ext Interface Daten übernehmen und schreiben
 	------------------------
-	comb : process(r, exti, extsel, rstint)
+	comb : process(r, exti, extsel, rstint,frame_ready,return_pgm)
 	variable v 		: reg_type;
 	begin
     	v := r;
@@ -233,10 +231,10 @@ begin
     					exto.data(7 downto 0) <= (0 => r.getframe, others=>'0');
     				end if;
     				if ((exti.byte_en(1) = '1')) then
-    					exto.data(15 downto 8) <= (0 => r.return_pgm, others=>'0');
+    					exto.data(15 downto 8) <= (8 => r.return_pgm, others=>'0');
     				end if;
     				if ((exti.byte_en(2) = '1')) then
-    					exto.data(23 downto 16) <= (0 => r.frame_done, others=>'0');
+    					exto.data(23 downto 16) <= (16 => r.frame_done, others=>'0');
     				end if;
 				when others =>
 					null;
@@ -277,6 +275,7 @@ begin
 			v.return_pgm := '1';
 		end if;
 
+		led_red <= (others=>'1');
 		r_next <= v;
     end process;    
     

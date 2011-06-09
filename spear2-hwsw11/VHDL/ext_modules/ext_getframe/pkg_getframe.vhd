@@ -47,13 +47,13 @@ package pkg_getframe is
 	
 	-- PIXEL definitions
 	constant PIXEL_WIDTH				: natural := 24; 
-	constant PIXEL_ADDR_WIDTH			: natural := 6; 
+	constant PIXEL_ADDR_WIDTH			: natural := 11; 
 	constant BURST_BUFFER_LENGTH		: natural := 4;
 	
 	subtype pix_type is std_logic_vector(PIXEL_WIDTH-1 downto 0);
 	subtype pix_addr_type is std_logic_vector(PIXEL_ADDR_WIDTH-1 downto 0);
 	
-	constant BURST_RAM_END_ADR			: pix_addr_type := "0111100";
+	constant BURST_RAM_END_ADR			: pix_addr_type := "11111111000";
 	
 	subtype row_count_type is integer range 0 to CAM_H-1;
 	
@@ -105,11 +105,9 @@ package pkg_getframe is
 		port (
 			clk       			: in  std_logic;
 			rst					: in  std_logic;		
-			start_conv			: in  std_logic;
 			line_ready			: in  std_logic;
 			next_burst			: out std_logic;
 			            		
-			rd_en				: out std_logic;
 			rd_address			: out dot_addr_type;
 			rd_data_even		: in  dot_type;
 			rd_data_odd			: in  dot_type;
@@ -129,7 +127,6 @@ package pkg_getframe is
 			next_burst			: in std_logic;
 			frame_done			: out std_logic;
 			return_pgm			: out std_logic;
-			rd_en_burst			: out std_logic;
 			rd_address_burst	: out pix_addr_type;
 			rd_data_burst		: in pix_type
 		);
@@ -144,6 +141,7 @@ package pkg_getframe is
 		port
 		(
 			wrclk       : in std_logic;
+			wen			: in std_logic;
 			wraddress 	: in std_logic_vector(ADDR_WIDTH -   1 downto 0);
 			wrdata_in 	: in std_logic_vector(DATA_WIDTH - 1 downto 0);
 			
