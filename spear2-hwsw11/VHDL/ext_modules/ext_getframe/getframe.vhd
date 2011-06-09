@@ -49,14 +49,18 @@ architecture rtl of ext_getframe is
 	
 	type reg_type is record
   		ifacereg	: register_set;
-		getframe	: std_logic;	
+		getframe	: std_logic;
+		frame_done	: std_logic;
+		return_pgm	: std_logic;
 	end record;
 	
 	signal r_next : reg_type;
 	signal r : reg_type := 
 	(
 		ifacereg 	=> (others => (others => '0')),
-		getframe 	=> '0'
+		getframe 	=> '0',
+		frame_done	=> '0',
+		return_pgm	=> '0'
 	);
 	
 	signal rstint : std_ulogic;
@@ -75,6 +79,7 @@ architecture rtl of ext_getframe is
 	signal line_ready : std_logic;
 	signal next_burst : std_logic;
 	signal frame_done : std_logic;
+	signal return_pgm : std_logic;
 begin
 	
 	------------------------
@@ -173,6 +178,7 @@ begin
 		ahbo    		 => ahbo,    		
 		next_burst		 => next_burst,		
 		frame_done		 => frame_done,	
+		return_pgm		 => return_pgm,
 		rd_address_burst => rd_address_burst,
 		rd_data_burst	 => rd_data_burst	
 	);
@@ -207,6 +213,8 @@ begin
     			when "001" =>
     				if ((exti.byte_en(0) = '1')) then
     					v.getframe := '1';
+    					v.return_pgm := '0';
+    					v.frame_done := '0';
     				end if;
     			
    			when others =>
@@ -223,6 +231,12 @@ begin
 				when "001" =>
 					if ((exti.byte_en(0) = '1')) then
     					exto.data(7 downto 0) <= (0 => r.getframe, others=>'0');
+    				end if;
+    				if ((exti.byte_en(1) = '1')) then
+    					exto.data(15 downto 8) <= (0 => r.return_pgm, others=>'0');
+    				end if;
+    				if ((exti.byte_en(2) = '1')) then
+    					exto.data(23 downto 16) <= (0 => r.frame_done, others=>'0');
     				end if;
 				when others =>
 					null;
@@ -253,7 +267,15 @@ begin
 		  v.ifacereg(STATUSREG)(STA_INT) := '0';
 		end if; 
 		exto.intreq <= r.ifacereg(STATUSREG)(STA_INT);
+
+		if frame_done = '1' then
+			v.frame_done := '1';
+			v.return_pgm := '1';
+		end if;
 		
+		if return_pgm = '1' then
+			v.return_pgm := '1';
+		end if;
 
 		r_next <= v;
     end process;    

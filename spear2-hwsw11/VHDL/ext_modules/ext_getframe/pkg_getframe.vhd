@@ -35,9 +35,8 @@ package pkg_getframe is
 	constant FRAMEBUFFER_BASE_ADR : std_logic_vector(31 downto 0) := "11100000000000000000000000000000";
 	constant FRAMEBUFFER_END_ADR	: std_logic_vector(31 downto 0) := FRAMEBUFFER_BASE_ADR+(PIXEL_COUNT*4);
 	
+	-- 	constante für burstlänge
 	constant BURST_LENGTH				: natural range 2 to 8 := 4;
-	constant BURST_BUFFER_LENGTH		: natural range 1 to 15 := 5;
-
 	
 	-- DOT definitions
 	constant DOT_WIDTH					: natural := 8;
@@ -47,12 +46,14 @@ package pkg_getframe is
 	subtype dot_addr_type is std_logic_vector(DOT_ADDR_WIDTH-1 downto 0);
 	
 	-- PIXEL definitions
-	constant PIXEL_WIDTH				: natural := 24; --11Bit = ~5.5Zeilen
-	constant PIXEL_ADDR_WIDTH			: natural := 11;
-
+	constant PIXEL_WIDTH				: natural := 24; 
+	constant PIXEL_ADDR_WIDTH			: natural := 6; 
+	constant BURST_BUFFER_LENGTH		: natural := 4;
+	
 	subtype pix_type is std_logic_vector(PIXEL_WIDTH-1 downto 0);
 	subtype pix_addr_type is std_logic_vector(PIXEL_ADDR_WIDTH-1 downto 0);
 	
+	constant BURST_RAM_END_ADR			: pix_addr_type := "0111100";
 	
 	subtype row_count_type is integer range 0 to CAM_H-1;
 	
@@ -127,6 +128,7 @@ package pkg_getframe is
 			ahbo    			: out ahb_mst_out_type;
 			next_burst			: in std_logic;
 			frame_done			: out std_logic;
+			return_pgm			: out std_logic;
 			rd_en_burst			: out std_logic;
 			rd_address_burst	: out pix_addr_type;
 			rd_data_burst		: in pix_type

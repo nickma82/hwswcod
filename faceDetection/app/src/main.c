@@ -11,7 +11,7 @@
 	#include "svga.h"
 	#include "dis7seg.h"
 	#include "aluext.h"
-	#include "writeframe.h"
+	#include "getframe.h"
 	#include "camconfig.h"
 	
 	extern uint8_t *reg;
@@ -59,15 +59,14 @@ int main(int argc, char **argv)
 		
 		dis7seg_hex(read_cam(0x04));
 		
-		uint32_t color = 0x00FF000F;
 		i = 0;
 		while (i < 100000) {
 
 			*reg = (1 << COUNTER_CLEAR_BIT);
 			*reg = (1 << COUNTER_COUNT_BIT);
 			
-			getFrame(color);
-			color += 50;
+			GETFRAME_START = 1;
+			getframe_wait_return();
 			
 			fps_c = counter_getValue(&counterHandle);
 			

@@ -30,6 +30,7 @@ entity writeframe is
 		ahbo    			: out ahb_mst_out_type;
 		next_burst			: in std_logic;
 		frame_done			: out std_logic;
+		return_pgm			: out std_logic;
 		rd_address_burst	: out pix_addr_type;
 		rd_data_burst		: in pix_type
     );
@@ -53,8 +54,9 @@ architecture rtl of writeframe is
 		state		: state_type;
 		cur_col		: natural range 0 to SCREEN_W;
 		cur_line	: natural range 0 to CAM_H;
-		burst_count	: natural range 0 to BURST_BUFFER_LENGTH; --@TODO kontrollieren
+		burst_count	: natural range 0 to BURST_BUFFER_LENGTH;
 		frame_done	: std_logic;
+		rd_pointer	: pix_addr_type;
 	end record;
 
 	
@@ -68,7 +70,8 @@ architecture rtl of writeframe is
 		cur_col			=> 0,
 		cur_line		=> 0,
 		burst_count 	=> 0,
-		frame_done 		=> '0'
+		frame_done 		=> '0',
+		rd_pointer		=> (others => '0')
 	);
 				
 begin
@@ -100,14 +103,20 @@ begin
 				v.cur_col  := 0;
 				v.burst_count := 0;
 				
+				-- sicherstellen, dass 0 tes element anliegt sobald verarbeitung startet
+				v.rd_pointer := (others => '0');
+				
 				if next_burst = '1' then
 					v.state := data;
 					v.start := '1';	
 					v.frame_done := '0';
 					v.burst_count := 1;
+					-- addresse gleich auf 1 stellen um im nächsten zyklus die richtige addresse anzulegen
+					v.rd_pointer := (0 => '1', others => '0');
 				end if;
-				v.wdata := "00000000111111110000000000000000";
-			when data =>				
+				
+			when data =>
+				--v.wdata := 
 				if dmao.ready = '1' then
 					if dmao.haddr = (9 downto 0 => '0') then
 						v.address := (v.address(31 downto 10) + 1) & dmao.haddr;
@@ -131,7 +140,15 @@ begin
 							v.cur_col := r.cur_col + 1;
 						end if;
 					end if;
-				end if;					
+					
+					-- pointer immer auf nächsten pixel erhöhen
+					v.rd_pointer := r.rd_pointer + 1;
+					
+					-- wenn letztes element gelesen wieder bei 0 anfangen
+					if v.rd_pointer = BURST_RAM_END_ADR then
+						v.rd_pointer := (others=> '0');
+					end if;
+				end if;
 			when start_next_burst =>
 				if r.burst_count > 0 then
 					v.start := '1';
@@ -150,16 +167,20 @@ begin
 		end if;
 		
 		-- Werte auf Interface zu Bus legen
-		dmai.wdata  <=  r.wdata;
+		dmai.wdata  <=  "00000000" & rd_data_burst;
 	    dmai.burst  <= '1';
 	    dmai.irq    <= '0';
 	    dmai.size   <= "10";
 	    dmai.write  <= '1';
 	    dmai.busy   <= '0';
 	    dmai.start    <= r.start;
-	    dmai.address  <= r.address;    
+	    dmai.address  <= r.address;  
+	    
 	    frame_done <= r.frame_done;
-
+	    return_pgm <= '0';
+	    
+	    rd_address_burst <= r.rd_pointer;
+	    
 		r_next <= v;
     end process;    
     
