@@ -238,9 +238,8 @@ begin
 			wr_en_even	<= not cm_pixclk;
 		else
 			wr_en_odd	<= '0';
+			wr_en_even	<= '0';
 		end if;
-		--wr_en_odd	<= (cm_pixclk) when r_next.en_odd  = '1' else '0';
-		--wr_en_even	<= (cm_pixclk) when r_next.en_even = '1' else '0';
 	end process;
 end;
 
