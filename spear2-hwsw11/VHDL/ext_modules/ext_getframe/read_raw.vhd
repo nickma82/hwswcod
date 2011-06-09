@@ -88,7 +88,6 @@ architecture rtl of read_raw is
 begin
 	read_raw : process(r, getframe, cm_d, cm_lval, cm_fval, rst)
 	variable v 				: readraw_reg_type;
-	variable vpix_next_dot	: state_type;
 	--variable tmp_pixel		: integer range 4095 downto 0;
 	begin
 		v := r;
@@ -111,7 +110,7 @@ begin
 				--@TODO trigger starten
 				if cm_fval = '1' then
 					if cm_lval = '1' then
-						v.state := vpix_next_dot;
+						v.state := read_dot;
 					end if;
 				end if;
 			when read_dot =>
@@ -145,18 +144,18 @@ begin
 				v.cm_trigger := '1';
 			when read_dot =>
 				v.cm_trigger := '0';
-				if r.toggle_c = '0' then
+				if r.toggle_r = '0' then
 					--odd
-					v.en_odd := '1';
+					v.en_even := '1';
 				else
 					--even
-					v.en_even := '1';
+					v.en_odd := '1';
 				end if;
 				v.p_c := r.p_c + 1;
 				v.toggle_c := not r.toggle_c;
-				-- r logic
-				--v.data(23 downto 16) := cm_d(11 downto 4);
-				--v.data(23 downto 16) := cm_d(7 downto 0); -- test
+				-- dot data logic
+				--v.data := cm_d(11 downto 4);
+				v.data := cm_d(7 downto 0); -- test
 			when next_line =>
 				--if r.p_r < CAM_H-1 then
 				v.p_r := r.p_r + 1;
@@ -177,6 +176,8 @@ begin
 		
 		wr_data		<= v.data;
 		wr_address	<= std_logic_vector(to_unsigned(r.p_c, DOT_ADDR_WIDTH)); --@TODO Grenzen der Counter angleichen
+		wr_en_odd	<= v.en_odd;
+		wr_en_even	<= v.en_even;
 		
 		cm_trigger <= v.cm_trigger;
     	cm_reset <= rst;
@@ -195,17 +196,6 @@ begin
 			else
 				r <= r_next;
 			end if;
-		end if;
-		
-		if r_next.en_odd = '1' then
-			wr_en_odd	<= not cm_pixclk;
-			wr_en_even	<= '0';
-		elsif r_next.en_even = '1' then
-			wr_en_odd	<= '0';
-			wr_en_even	<= not cm_pixclk;
-		else
-			wr_en_odd	<= '0';
-			wr_en_even	<= '0';
 		end if;
 	end process;
 end;
