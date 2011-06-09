@@ -29,8 +29,7 @@ entity convert is
 		start_conv			: in  std_logic;
 		line_ready			: in  std_logic;
 		next_burst			: out std_logic;
-		            		
-		rd_en				: out std_logic;
+
 		rd_address			: out dot_addr_type;
 		rd_data_even		: in  dot_type;
 		rd_data_odd			: in  dot_type;

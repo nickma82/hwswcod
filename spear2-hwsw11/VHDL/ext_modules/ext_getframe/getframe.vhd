@@ -157,7 +157,6 @@ begin
 		start_conv		 =>  start_conv,
 		line_ready		 =>  line_ready,
 		next_burst		 =>  next_burst,
-		rd_en			 =>  rd_en,
 		rd_address		 =>  rd_address,
 		rd_data_even	 =>  rd_data_even,
 		rd_data_odd		 =>  rd_data_odd,
@@ -173,8 +172,7 @@ begin
 		ahbi    		 => ahbi,    		
 		ahbo    		 => ahbo,    		
 		next_burst		 => next_burst,		
-		frame_done		 => frame_done,		
-		rd_en_burst		 => rd_en_burst,		
+		frame_done		 => frame_done,	
 		rd_address_burst => rd_address_burst,
 		rd_data_burst	 => rd_data_burst	
 	);

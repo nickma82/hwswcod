@@ -30,7 +30,6 @@ entity writeframe is
 		ahbo    			: out ahb_mst_out_type;
 		next_burst			: in std_logic;
 		frame_done			: out std_logic;
-		rd_en_burst			: out std_logic;
 		rd_address_burst	: out pix_addr_type;
 		rd_data_burst		: in pix_type
     );
