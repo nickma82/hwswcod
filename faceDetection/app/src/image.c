@@ -10,21 +10,7 @@ const uint8_t color_black = BACKGROUND_COLOR;
 void bwimage_init(image_t *template, bwimage_t *image) {
 	image->width = template->width/SCALE;
 	image->height = template->height/SCALE;
-	//image->fg_color_cnt = 0;
-	image->dataLength = sizeof(*(image->data))*(template->dataLength / (3*SCALE*SCALE) + IMAGE_DATA_MAXVAL) >> IMAGE_DATA_BITS;
-	image->data = (typeof(image->data))malloc(image->dataLength);
-	memset((void *)image->data, 0, image->dataLength);
-}
-
-void bwimage_free(bwimage_t *image) {
-	free(image->data);
-}
-
-inline uint8_t bwimage_getPixelValue(bwimage_t* image, int x, int y) {
-	uint32_t p = image->width * y + x;
-	uint32_t pp = 1 << (IMAGE_DATA_MAXVAL - (p & IMAGE_DATA_MAXVAL)); // pixelposition
-	p >>= IMAGE_DATA_BITS;
-	return image->data[p] & pp ? color_white : color_black;
+	memset((void *)image->data, 0, sizeof(image->data));
 }
 
 void image_setPixelValue(image_t *i, int x, int y, rgb_color_t cl) {
