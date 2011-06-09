@@ -48,7 +48,7 @@ package pkg_getframe is
 	-- PIXEL definitions
 	constant PIXEL_WIDTH				: natural := 24; 
 	constant PIXEL_ADDR_WIDTH			: natural := 11; 
-	constant BURST_BUFFER_LENGTH		: natural := 4;
+	constant BURST_BUFFER_LENGTH		: natural := 135;
 	
 	subtype pix_type is std_logic_vector(PIXEL_WIDTH-1 downto 0);
 	subtype pix_addr_type is std_logic_vector(PIXEL_ADDR_WIDTH-1 downto 0);

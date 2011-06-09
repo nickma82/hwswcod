@@ -167,7 +167,7 @@ begin
 		end if;
 		
 		-- Werte auf Interface zu Bus legen
-		dmai.wdata  <=  "00000000" & rd_data_burst;
+		dmai.wdata  <=  "00000000" & rd_data_burst; --("000000001111111100000000");
 	    dmai.burst  <= '1';
 	    dmai.irq    <= '0';
 	    dmai.size   <= "10";

@@ -123,7 +123,9 @@ begin
 					v.state := next_line;
 				end if;
 			when next_line =>
-				v.conv_line_rdy := '1';
+				if r.p_r > 0 then
+					v.conv_line_rdy := '1';
+				end if;
 				if r.p_r < CAM_H-1 then
 					v.state := wait_frame_valid;
 				else

@@ -179,6 +179,7 @@ read_raw : process(r, line_ready, rst, rd_data_even, rd_data_odd)
 							v.pixel_data := cur_dot & other_dot & r.last_dot;
 					end case;
 				end if;
+				--v.pixel_data := (7 => '1', others => '0'); -- TEEEESSST
 				
 				v.col_cnt := r.col_cnt + 1;
 				if v.col_cnt = CAM_W then
