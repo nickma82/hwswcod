@@ -53,6 +53,7 @@ package pkg_getframe is
 	subtype pix_type is std_logic_vector(PIXEL_WIDTH-1 downto 0);
 	subtype pix_addr_type is std_logic_vector(PIXEL_ADDR_WIDTH-1 downto 0);
 	
+	constant BURST_PIXEL_COUNT			: natural := 15;
 	constant BURST_RAM_END_ADR			: pix_addr_type := "11111111000";
 	
 	subtype row_count_type is integer range 0 to CAM_H-1;

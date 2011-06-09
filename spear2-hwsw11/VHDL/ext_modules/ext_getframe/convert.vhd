@@ -40,152 +40,191 @@ entity convert is
 end ;
 
 architecture rtl of convert is
-	type state_type is (reset, wait_getframe, wait_frame_valid, read_dot_r, read_dot_g1, read_dot_g2, read_dot_b, next_line, wait_frame_invalid);
+	type state_type is (reset, wait_line_ready, convert_line, line_done, frame_done);
+	type dot_state_type is (p_g1, p_g2, p_b, p_r);
 	 
-	type readraw_reg_type is record
+	type reg_type is record
 		state		: state_type;
-		toggle_r	: std_logic;
-		toggle_c	: std_logic;
-		p_r      	: integer range 0 to CAM_H;
-		p_c      	: integer range 0 to CAM_W;
+		dot_state	: dot_state_type;
 		
-		enable		: std_logic;
-		data_odd	: dot_type;
-		data_even	: dot_type;
-		address		: dot_addr_type;
+		toggle_r	: std_logic;
+		col_cnt    	: natural range 0 to CAM_W;
+		row_cnt    	: natural range 0 to CAM_H;
+				
+		rd_address	: dot_addr_type;
+		
+		wr_enable	: std_logic;
+		pixel_data	: pix_type;
+		last_dot	: dot_type;
+		pixel_addr	: pix_addr_type;
+		b_cnt		: natural range 0 to BURST_PIXEL_COUNT;
+		next_burst	: std_logic;
 	end record;
 
 
-	signal r_next : readraw_reg_type;
-	signal r : readraw_reg_type := 
+	signal r_next : reg_type;
+	signal r : reg_type := 
 	(
 		state		=> reset,
+		dot_state	=> p_g1,
 		toggle_r	=> '0',
-		toggle_c	=> '0',
-		p_r 		=> 0,
-		p_c 		=> 0,
+		col_cnt		=> 0,
+		row_cnt		=> 0,
+			
+		rd_address	=> (others => '0'),
 		
-		
-		enable		=> '0',
-		data_odd	=> (others => '0'), 
-		data_even	=> (others => '0'),
-		address		=> (others => '0')
+		wr_enable	=> '0',
+		pixel_data	=> (others => '0'),
+		last_dot		=> (others => '0'),
+		pixel_addr	=> (others => '0'),
+		b_cnt		=> 0,
+		next_burst	=> '0'
 	);
 begin
 read_raw : process(r, line_ready, rst, rd_data_even, rd_data_odd)
-	variable v 				: readraw_reg_type;
-	variable vpix_next_dot	: state_type;
-	--variable tmp_pixel		: integer range 4095 downto 0;
+	variable v 	: reg_type;
+	variable cur_dot,other_dot : dot_type;
 	begin
 		v := r;
-    	
+		v.next_burst := '0';
+		
+		if r.toggle_r = '0' then
+			cur_dot := rd_data_even;
+			other_dot := rd_data_odd;
+		else
+			cur_dot := rd_data_odd;
+			other_dot := rd_data_even;
+		end if;
+		
     	---Next dot descision logic
-		--takes care about PIX.NEXT_DOT
-		case r.state is
-			when wait_frame_valid =>
-				--ROW sensitive
-				if r.toggle_r = '0' then
-					vpix_next_dot := read_dot_g1;
-				else
-					vpix_next_dot := read_dot_b;
-				end if;
-			when read_dot_r =>
-				if r.p_c < CAM_W-1 then
-					vpix_next_dot := read_dot_g1;
-				else
-					--eol1 condition
-					vpix_next_dot := next_line;
-				end if;
-			when read_dot_g1 =>
-				vpix_next_dot := read_dot_r;
-			when read_dot_g2 =>
-				if r.p_c < CAM_W-1 then
-					vpix_next_dot := read_dot_b;
-				else
-					--eol2 condition
-					vpix_next_dot := next_line;
-				end if;
-			when read_dot_b =>
-				vpix_next_dot := read_dot_g2;
-			when others => 
-				null;
-		end case;
+		if r.state = convert_line then
+			if r.toggle_r = '0' then
+				case r.dot_state is
+					when p_g1 =>
+						v.dot_state := p_r;
+					when p_r =>
+						v.dot_state := p_g1;
+					when others =>
+						null;
+				end case;
+			else
+				case r.dot_state is
+					when p_b =>
+						v.dot_state := p_g2;
+					when p_g2 =>
+						v.dot_state := p_b;
+					when others =>
+						null;
+				end case;
+			end if;
+		end if;
 		
-		------------------------
-		---	CCD Handler - FALLING EDGE PIXCLK sensitiv
-		--- state_pixsync_cam_type
-		------------------------
 		case r.state is
 			when reset =>
-				v.state := wait_getframe;
-			when wait_getframe =>
-				if line_ready = '1' then --@TODO umbaun auf next_burst
-					v.state := wait_frame_invalid;
+				v.state := wait_line_ready;
+				v.row_cnt := 0;
+				v.col_cnt := 0;
+				v.wr_enable := '0';
+				v.pixel_addr := (others=>'0');
+				v.b_cnt := 0;
+			when wait_line_ready =>	
+				if line_ready = '1' then 
+					v.state := convert_line;
+					if r.toggle_r = '0' then
+						v.dot_state := p_g1;
+					else
+						v.dot_state := p_b;
+					end if;
+					v.rd_address := (0 => '1', others => '0');
 				end if;
-			when wait_frame_valid =>
-				v.state := vpix_next_dot;
-				--@TODO: erste ram Anfrage starten
-			when read_dot_r =>
-				-- r logic
-				--v.data(23 downto 16) := cm_d(11 downto 4);
-				--v.data(23 downto 16) := cm_d(7 downto 0); -- test
-				v.state := vpix_next_dot;
-			when read_dot_g1 | read_dot_g2 =>
-				-- g1 logic
-				--v.data(15 downto 8) := cm_d(11 downto 4);
-				--v.data(15 downto 8) := cm_d(7 downto 0); -- test
-				v.state := vpix_next_dot;
-			when read_dot_b =>
-				-- b logic
-				--v.data(7 downto 0) := cm_d(11 downto 4);
-				--v.data(7 downto 0) := cm_d(7 downto 0); -- test
-				v.state := vpix_next_dot;
-			when next_line =>
-				if r.p_r < CAM_H-1 then	
-					v.state := wait_frame_valid;
+			when convert_line =>
+				-- bei rot muss blau der zeile darüber verwendet werden
+				-- => bei g1 muss blau auf last dot gespeichert werden
+				
+				-- bei g1 muss rot der selben zeile verwenden werden
+				-- bei r muss r als last dot gespeichert werden
+				
+				-- bei b muss rot der zeile darüber verwendet werden
+				-- bei g2 muss rot als last dot gespeichert werden
+				
+				-- bei g2 muss blau der selben zeile verwendet werden
+				-- bei b muss b als last dot gespeichert werden
+				
+				v.wr_enable := '1';
+				
+				case r.dot_state is
+					when p_g1 =>
+						v.last_dot := other_dot;
+					when p_r =>
+						v.last_dot := cur_dot;
+					when p_b =>
+						v.last_dot := cur_dot;
+					when p_g2 =>
+						v.last_dot := other_dot;
+				end case;
+				
+			
+				if r.col_cnt = 0 then
+					-- in nullter spalte keine konvertierung möglich
+					v.pixel_data := (others=>'0');
 				else
-					v.state := wait_frame_invalid; --ganzes Bild gelesen
+					case r.dot_state is
+						when p_b =>
+							v.pixel_data := r.last_dot & other_dot  & cur_dot;
+						when p_g2 =>
+							v.pixel_data := other_dot & cur_dot & r.last_dot;
+						when p_g1 =>
+							v.pixel_data := r.last_dot & cur_dot & other_dot;
+						when p_r =>
+							v.pixel_data := cur_dot & other_dot & r.last_dot;
+					end case;
 				end if;
-			when wait_frame_invalid =>
-				--@TODO if line_ready -> jump to read
-				--      else wait for burst
-				v.state := wait_frame_valid;
-		end case;
-		
-		---logic: row & column counter
-		---logic: dot_valid
-		--takes care about PIX: p_c, p_r, toggle_c and toggle_r
-		case r.state is
-			when reset =>
-				null;
-			when wait_getframe =>
-				null;
-			when wait_frame_valid =>
-				null;
-			when read_dot_g1 | read_dot_r  =>
-				--odd
-				v.p_c := r.p_c + 1;
-				v.toggle_c := not r.toggle_c;
-			when read_dot_b | read_dot_g2  =>
-				--even
-				v.p_c := r.p_c + 1;
-				v.toggle_c := not r.toggle_c;
-			when next_line =>
-				--if r.p_r < CAM_H-1 then
-				v.p_r := r.p_r + 1;
+				
+				v.col_cnt := r.col_cnt + 1;
+				if v.col_cnt = CAM_W then
+					v.state := line_done;
+				end if;
+				
+				v.rd_address := r.rd_address + 1;
+				
+				v.pixel_addr := r.pixel_addr + 1;
+				if r.pixel_addr = BURST_RAM_END_ADR then
+						v.pixel_addr := (others=> '0'); 
+				end if;
+				
+				v.b_cnt := r.b_cnt + 1;
+				
+				if r.b_cnt = BURST_PIXEL_COUNT-1 then
+					v.next_burst := '1';
+					v.b_cnt := 0;
+				end if;
+			when line_done => 
+				v.row_cnt := r.row_cnt + 1;
+				v.col_cnt := 0;
 				v.toggle_r := not r.toggle_r;
-				v.p_c := 0;
-				v.toggle_c := '0';
-			when wait_frame_invalid =>
-				--nur hier nötig, weil jedes Mal zum Syncen hier sind
-				v.p_r 		:=  0;
-				v.toggle_r	:= '0';
-				v.p_c 		:=  0;
-				v.toggle_c	:= '0';
-			when others =>
-				null;
+				v.wr_enable := '0';
+				
+				if v.row_cnt = CAM_H then
+					v.state := frame_done;
+				else
+					v.state := wait_line_ready;
+				end if;
+			
+			when frame_done =>
+				v.row_cnt := 0;
+				v.col_cnt := 0;
+				v.toggle_r := '0';
+				v.rd_address := (others=>'0');
+				v.pixel_addr := (others=>'0');
+				v.b_cnt := 0;
 		end case;
+			
+		rd_address <= r.rd_address;
 		
+		wr_en_burst <= r.wr_enable;
+		wr_address_burst <= r.pixel_addr;
+		wr_data_burst <= r.pixel_data;
+		next_burst <= r.next_burst;
 		
     	r_next <= v;
     end process;
