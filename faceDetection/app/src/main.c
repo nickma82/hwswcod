@@ -29,13 +29,12 @@ int main(int argc, char **argv)
 	#ifdef TEST
 		{
 			image_t image;
-			rect_t face;
 			
 			test_receiveImage(&image, argv[1]);
-						
-			face = faceDetection(&image);
-			image_paintRectangle(&image, face);
 			svga_outputImage(&image);
+			
+			svga_paintRectangle(faceDetection(&image));
+			
 			test_sendImage(&image, argv[2]);
 		}
 	#else

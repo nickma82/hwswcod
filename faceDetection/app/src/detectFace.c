@@ -23,15 +23,14 @@ rect_t faceDetection(image_t* inputImage) {
 	
 	// perform face detection
 	benchmark_messure(skinFilter(inputImage, &temp));
-		svga_outputBwImage(&temp);
-	benchmark_messure(erodeDilateFilter(&temp, &temp2, FILTER_ERODE));
-		svga_outputBwImage(&temp2);
-	benchmark_messure(erodeDilateFilter(&temp2, &temp, FILTER_DILATE));
-		svga_outputBwImage(&temp);
+	benchmark_messure(erodeFilter(&temp, &temp2));
+	benchmark_messure(dilateFilter(&temp2, &temp));
 	benchmark_messure(face = detectFace(&temp));
 	
-	bwimage_free(&temp);
-	bwimage_free(&temp2);
+	face.bottomRightX *= SCALE;
+	face.bottomRightY *= SCALE;
+	face.topLeftX *= SCALE;
+	face.topLeftY *= SCALE;
 	
 	printf("Computation completed.\n");
 
@@ -67,10 +66,10 @@ rect_t detectFace(bwimage_t *faceMask)
 	
 	for (y = 0; y < faceMask->height; y++) {
 		for (x = 0; x < faceMask->width; x++) {
-			uint32_t p = faceMask->width * y + x;
+			uint32_t p = x;
 			uint32_t pp = 1 << (IMAGE_DATA_MAXVAL - (p & IMAGE_DATA_MAXVAL)); // pixelposition
 			p >>= IMAGE_DATA_BITS;	
-			if (faceMask->data[p] & pp) {
+			if (faceMask->data[y][p] & pp) {
 				histX[x]++;
 				histY[y]++;
 			}
@@ -151,9 +150,11 @@ rect_t detectFace(bwimage_t *faceMask)
 		height = resultRect.bottomRightY-resultRect.topLeftY;
 		if (width < height) {
 			width = (3*width) >> 1;
-			if (height > width) {
+			if (width < height) {
 				resultRect.bottomRightY = resultRect.topLeftY + width;
 			}
+		} else {
+			resultRect.bottomRightX = resultRect.topLeftX + height;
 		}
 		//printf("Selected rect: topLeft=(%d, %d), bottomRight=(%d, %d)\n", resultRect.topLeftX, resultRect.topLeftY, resultRect.bottomRightX, resultRect.bottomRightY);
 	}

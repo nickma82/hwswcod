@@ -16,7 +16,7 @@
 static const char* counterNames[]={	
 	"SkinFilter",
 	"Erode",
-	"Dilate", 
+	"Dilate",
 	"DetectFace"
 };
 
@@ -56,7 +56,6 @@ int main(int argc, char **argv)
   FILE *f;
   uint32_t filesize = 0;
   unsigned char *imageData;
-  unsigned char imageDataBlock[1024];
   int ret;
   int32_t cycles;
   unsigned short counterSize;
@@ -186,6 +185,7 @@ int main(int argc, char **argv)
   }
     
   while (filesize > 0) {
+  	unsigned char imageDataBlock[1024];
     int bytesToRead = ((filesize > 1024) ? 1024 : filesize);
     UART_read(serialfd, (char *)imageDataBlock, bytesToRead);
     fwrite(imageDataBlock, 1, bytesToRead, f);

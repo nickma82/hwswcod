@@ -26,6 +26,7 @@ void test_init(void) {
 		UART_init (cfg);
 		
 		counterSize = 0;
+		cnt = 0;
 		for(i = 0; i < COUNTER_COUNT; i++)
 			counterValues[i] = 0;
 		

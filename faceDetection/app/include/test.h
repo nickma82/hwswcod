@@ -10,6 +10,7 @@
 	int32_t counterValues[COUNTER_COUNT];
 	module_handle_t counterHandle;
 	unsigned short counterSize;
+	int cnt;
 	
 	#define benchmark_messure(callable) \
 	do { \
@@ -20,6 +21,19 @@
 	if (counterSize < COUNTER_COUNT) { \
 		counterValues[counterSize] = counter_getValue(&counterHandle); \
 		counterSize++; \
+	} \
+	} while (0)
+		
+	#define benchmark_messure2(callable) \
+	do { \
+	*reg = (1 << COUNTER_CLEAR_BIT); \
+	*reg = (1 << COUNTER_COUNT_BIT); \
+	callable; \
+	*reg = 0; \
+	if (cnt < 5 && counterSize < COUNTER_COUNT) { \
+		counterValues[counterSize] = counter_getValue(&counterHandle); \
+		counterSize++; \
+		cnt++; \
 	} \
 	} while (0)
 #else

@@ -38,9 +38,7 @@ typedef struct {
 typedef struct {
 	uint16_t width;
 	uint16_t height;
-	uint32_t fg_color_cnt;
-	uint32_t dataLength;
-	uint32_t *data;
+	uint32_t data[480][20];
 } bwimage_t;
 
 #define BACKGROUND_COLOR 0
@@ -53,7 +51,5 @@ void image_setPixelValue(image_t *i, int x, int y, rgb_color_t cl);
 void image_paintRectangle(image_t *image, rect_t rectangle);
 
 void bwimage_init(image_t *template, bwimage_t *image);
-void bwimage_free(bwimage_t *image);
-inline uint8_t bwimage_getPixelValue(bwimage_t *i, int x, int y) __attribute__((always_inline));
 
 #endif // _image_h_
