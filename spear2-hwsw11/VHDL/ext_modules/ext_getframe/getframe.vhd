@@ -71,7 +71,6 @@ architecture rtl of ext_getframe is
 	signal wr_address_burst, rd_address_burst : pix_addr_type;
 	signal wr_data_burst, rd_data_burst : pix_type;
 	
-	signal start_conv : std_logic;
 	signal line_ready : std_logic;
 	signal next_burst : std_logic;
 	signal frame_done : std_logic;
@@ -154,7 +153,6 @@ begin
     port map (
     	clk       		 =>  clk,
 		rst				 =>  rstint, 	
-		start_conv		 =>  start_conv,
 		line_ready		 =>  line_ready,
 		next_burst		 =>  next_burst,
 		rd_address		 =>  rd_address,
@@ -173,6 +171,7 @@ begin
 		ahbo    		 => ahbo,    		
 		next_burst		 => next_burst,		
 		frame_done		 => frame_done,	
+		
 		rd_address_burst => rd_address_burst,
 		rd_data_burst	 => rd_data_burst	
 	);

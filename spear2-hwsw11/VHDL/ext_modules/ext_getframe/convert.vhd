@@ -26,7 +26,6 @@ entity convert is
 	port (
 		clk       			: in  std_logic;
 		rst					: in  std_logic;		
-		start_conv			: in  std_logic;
 		line_ready			: in  std_logic;
 		next_burst			: out std_logic;
 
@@ -73,7 +72,7 @@ architecture rtl of convert is
 		address		=> (others => '0')
 	);
 begin
-read_raw : process(r, next_burst, cm_d, cm_lval, cm_fval, rst)
+read_raw : process(r, line_ready, rst, rd_data_even, rd_data_odd)
 	variable v 				: readraw_reg_type;
 	variable vpix_next_dot	: state_type;
 	--variable tmp_pixel		: integer range 4095 downto 0;
@@ -109,10 +108,7 @@ read_raw : process(r, next_burst, cm_d, cm_lval, cm_fval, rst)
 			when read_dot_b =>
 				vpix_next_dot := read_dot_g2;
 			when others => 
-				if r.p_c > 0 and cm_lval = '0' then
-					vpix_next_dot := next_line;
-				end if;
-				vpix_next_dot := read_dot_g1;
+				null;
 		end case;
 		
 		------------------------
@@ -123,15 +119,12 @@ read_raw : process(r, next_burst, cm_d, cm_lval, cm_fval, rst)
 			when reset =>
 				v.state := wait_getframe;
 			when wait_getframe =>
-				if getframe = '1' then --@TODO umbaun auf next_burst
+				if line_ready = '1' then --@TODO umbaun auf next_burst
 					v.state := wait_frame_invalid;
 				end if;
 			when wait_frame_valid =>
-				if cm_fval = '1' then
-					if cm_lval = '1' then
-						v.state := vpix_next_dot;
-					end if;
-				end if;
+				v.state := vpix_next_dot;
+				--@TODO: erste ram Anfrage starten
 			when read_dot_r =>
 				-- r logic
 				--v.data(23 downto 16) := cm_d(11 downto 4);
@@ -154,9 +147,9 @@ read_raw : process(r, next_burst, cm_d, cm_lval, cm_fval, rst)
 					v.state := wait_frame_invalid; --ganzes Bild gelesen
 				end if;
 			when wait_frame_invalid =>
-				if cm_lval = '0' and cm_fval = '0' then
-					v.state := wait_frame_valid;
-				end if;
+				--@TODO if line_ready -> jump to read
+				--      else wait for burst
+				v.state := wait_frame_valid;
 		end case;
 		
 		---logic: row & column counter
@@ -201,9 +194,9 @@ read_raw : process(r, next_burst, cm_d, cm_lval, cm_fval, rst)
 	------------------------
 	---	Sync Daten übernehmen
 	------------------------
-    read_raw_reg : process(cm_pixclk)
+    read_raw_reg : process(clk)
 	begin
-		if falling_edge(cm_pixclk) then
+		if rising_edge(clk) then
 			if rst = RST_ACT then
 				r.state <= reset;
 			else

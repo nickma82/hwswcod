@@ -104,11 +104,9 @@ package pkg_getframe is
 		port (
 			clk       			: in  std_logic;
 			rst					: in  std_logic;		
-			start_conv			: in  std_logic;
 			line_ready			: in  std_logic;
 			next_burst			: out std_logic;
 			            		
-			rd_en				: out std_logic;
 			rd_address			: out dot_addr_type;
 			rd_data_even		: in  dot_type;
 			rd_data_odd			: in  dot_type;
@@ -127,7 +125,6 @@ package pkg_getframe is
 			ahbo    			: out ahb_mst_out_type;
 			next_burst			: in std_logic;
 			frame_done			: out std_logic;
-			rd_en_burst			: out std_logic;
 			rd_address_burst	: out pix_addr_type;
 			rd_data_burst		: in pix_type
 		);
@@ -142,6 +139,7 @@ package pkg_getframe is
 		port
 		(
 			wrclk       : in std_logic;
+			wen			: in std_logic;
 			wraddress 	: in std_logic_vector(ADDR_WIDTH -   1 downto 0);
 			wrdata_in 	: in std_logic_vector(DATA_WIDTH - 1 downto 0);
 			
