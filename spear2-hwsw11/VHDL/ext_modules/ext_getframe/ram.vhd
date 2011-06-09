@@ -18,6 +18,7 @@ entity dp_ram is
 	port
 	(
 		wrclk       : in std_logic;
+		wen			: in std_logic;
 		wraddress 	: in std_logic_vector(ADDR_WIDTH - 1 downto 0);
 		wrdata_in 	: in std_logic_vector(DATA_WIDTH - 1 downto 0);
 		
@@ -45,7 +46,9 @@ begin
 	write : process(wrclk)
 	begin
 		if rising_edge(wrclk) then
-			ram(to_integer(unsigned(wraddress))) <= wrdata_in;
+			if wen = '1' then
+				ram(to_integer(unsigned(wraddress))) <= wrdata_in;
+			end if;
 		end if;
 	end process;
 	

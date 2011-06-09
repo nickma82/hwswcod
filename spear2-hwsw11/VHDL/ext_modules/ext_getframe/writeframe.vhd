@@ -48,14 +48,14 @@ architecture rtl of writeframe is
 	type state_type is (idle, data, done, reset, start_next_burst);
 	
 	type reg_type is record
-  		start		  : std_logic;
-		address		  : std_logic_vector(31 downto 0);
-		wdata		  : std_logic_vector(31 downto 0);
-		state		  : state_type;
-		cur_col		  : natural range 0 to SCREEN_W;
-		cur_line	  : natural range 0 to CAM_H;
-		burst_counter : natural range 0 to BURST_BUFFER_LENGTH; --@TODO kontrollieren
-		frame_done	  : std_logic;
+  		start		: std_logic;
+		address		: std_logic_vector(31 downto 0);
+		wdata		: std_logic_vector(31 downto 0);
+		state		: state_type;
+		cur_col		: natural range 0 to SCREEN_W;
+		cur_line	: natural range 0 to CAM_H;
+		burst_count	: natural range 0 to BURST_BUFFER_LENGTH; --@TODO kontrollieren
+		frame_done	: std_logic;
 	end record;
 
 	
@@ -68,10 +68,10 @@ architecture rtl of writeframe is
 		state			=> reset,
 		cur_col			=> 0,
 		cur_line		=> 0,
-		burst_counter 	=> 0,
+		burst_count 	=> 0,
 		frame_done 		=> '0'
 	);
-	
+				
 begin
 	
 	------------------------
@@ -88,7 +88,7 @@ begin
 	variable v 		: reg_type;
 	begin
     	v := r;   	
-		
+
 		------------------
 		--- Statemachine
 		------------------
@@ -99,11 +99,13 @@ begin
 				v.address := FRAMEBUFFER_BASE_ADR;
 				v.cur_line := 0;
 				v.cur_col  := 0;
+				v.burst_count := 0;
 				
 				if next_burst = '1' then
 					v.state := data;
 					v.start := '1';	
 					v.frame_done := '0';
+					v.burst_count := 1;
 				end if;
 				v.wdata := "00000000111111110000000000000000";
 			when data =>				
@@ -117,6 +119,7 @@ begin
 					if (dmao.haddr(BURST_LENGTH+1 downto 0) = ((BURST_LENGTH+1 downto 2 => '1') & "00")) then 
 						v.start := '0';
 						v.state := start_next_burst;
+						v.burst_count := v.burst_count - 1;
 					else
 						if r.cur_col >= SCREEN_W then
 							if r.cur_line >= CAM_H then
@@ -131,8 +134,10 @@ begin
 					end if;
 				end if;					
 			when start_next_burst =>
-				v.start := '1';
-				v.state := data;
+				if r.burst_count > 0 then
+					v.start := '1';
+					v.state := data;
+				end if;
 			when done =>
 				v.frame_done := '1';
 				v.start := '0';
@@ -140,6 +145,10 @@ begin
 
 		end case;		
 
+		-- neue burts zählen
+		if next_burst = '1' then
+			v.burst_count := v.burst_count + 1;
+		end if;
 		
 		-- Werte auf Interface zu Bus legen
 		dmai.wdata  <=  r.wdata;

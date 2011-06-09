@@ -62,7 +62,6 @@ architecture rtl of ext_getframe is
 	signal rstint : std_ulogic;
 	
 	signal wr_en_odd,wr_en_even,wr_en_burst : std_logic;
-	signal rd_en,rd_en_burst :std_logic;
 	
 	signal wr_address : dot_addr_type;
 	signal rd_address : dot_addr_type;
@@ -87,11 +86,12 @@ begin
 			DATA_WIDTH	=> DOT_WIDTH
 		)
 		port map (
-			wrclk       => wr_en_odd,
+			wrclk       => cm_pixclk,
+			wen			=> wr_en_odd,
 			wraddress 	=> wr_address,
 			wrdata_in 	=> wr_data,
 			
-			rdclk		=> rd_en,
+			rdclk		=> clk,
 			rdaddress 	=> rd_address,
 			rddata_out 	=> rd_data_odd
 		);
@@ -102,11 +102,12 @@ begin
 			DATA_WIDTH	=> DOT_WIDTH
 		)
 		port map (
-			wrclk       => wr_en_even,
+			wrclk       => cm_pixclk,
+			wen			=> wr_en_even,
 			wraddress 	=> wr_address,
 			wrdata_in 	=> wr_data,
 			
-			rdclk		=> rd_en,
+			rdclk		=> clk,
 			rdaddress 	=> rd_address,
 			rddata_out 	=> rd_data_even
 		);	
@@ -117,11 +118,12 @@ begin
 			DATA_WIDTH	=> PIXEL_WIDTH
 		)
 		port map (
-			wrclk       => wr_en_burst,
+			wrclk       => clk,
+			wen			=> wr_en_burst,
 			wraddress 	=> wr_address_burst,
 			wrdata_in 	=> wr_data_burst,
 			               
-			rdclk		=> rd_en_burst,
+			rdclk		=> clk,
 			rdaddress 	=> rd_address_burst,
 			rddata_out 	=> rd_data_burst
 		);
