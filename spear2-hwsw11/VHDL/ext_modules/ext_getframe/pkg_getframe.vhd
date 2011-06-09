@@ -84,7 +84,6 @@ package pkg_getframe is
 			rst			: in  std_logic;
 			getframe	: in  std_logic;
 			
-			start_conv	: out std_logic;
 			line_ready	: out std_logic;
 			
 			cm_d		: in std_logic_vector(11 downto 0); --dot data

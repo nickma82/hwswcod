@@ -140,6 +140,8 @@ begin
 		rst 	=> rstint,
 		getframe	=> r.getframe,
 		
+		line_ready	=> line_ready,
+		
 		cm_d 	=> cm_d,
 		cm_lval => cm_lval,
 		cm_fval => cm_fval,

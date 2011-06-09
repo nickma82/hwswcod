@@ -77,7 +77,7 @@ vcom  -work gaisler ../../../VHDL/amba_modules/gaisler/misc/svgactrl.vhd
 vcom  -work gaisler ../../../VHDL/amba_modules/gaisler/memctrl/memctrl.vhd
 vcom  -work gaisler ../../../VHDL/amba_modules/gaisler/memctrl/sdctrl.vhd
 
-vcom  -work work ../../../VHDL/ext_modules/ext_getframe/pkg_writeframe.vhd
+vcom  -work work ../../../VHDL/ext_modules/ext_getframe/pkg_getframe.vhd
 vcom  -work work ../../../VHDL/ext_modules/ext_getframe/ram.vhd
 vcom  -work work ../../../VHDL/ext_modules/ext_getframe/read_raw.vhd
 vcom  -work work ../../../VHDL/ext_modules/ext_getframe/writeframe.vhd
