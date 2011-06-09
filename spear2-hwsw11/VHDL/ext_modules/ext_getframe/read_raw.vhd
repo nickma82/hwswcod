@@ -30,7 +30,6 @@ entity read_raw is
 		rst			: in  std_logic;
 		getframe	: in  std_logic;
 		
-		start_conv	: out std_logic;
 		line_ready	: out std_logic;
 		
 		cm_d		: in std_logic_vector(11 downto 0); --dot data
@@ -67,6 +66,7 @@ architecture rtl of read_raw is
 		address		: dot_addr_type;
 		--cam
 		cm_trigger	: std_logic;
+		conv_line_rdy:std_logic;
 	end record;
 
 
@@ -81,9 +81,10 @@ architecture rtl of read_raw is
 		
 		en_odd		=> '0',
 		en_even		=> '0',
-		data	=> (others => '0'),
-		address	=> (others => '0'),
-		cm_trigger 	=> '0'
+		data		=> (others => '0'),
+		address		=> (others => '0'),
+		cm_trigger 	=> '0',
+		conv_line_rdy	=> '0'
 	);	
 begin
 	read_raw : process(r, getframe, cm_d, cm_lval, cm_fval, rst)
@@ -109,6 +110,7 @@ begin
 			when wait_frame_valid =>
 				--@TODO trigger starten
 				if cm_fval = '1' then
+					v.conv_line_rdy := '0';
 					if cm_lval = '1' then
 						v.state := read_dot;
 					end if;
@@ -121,7 +123,8 @@ begin
 					v.state := next_line;
 				end if;
 			when next_line =>
-				if r.p_r < CAM_H-1 then	
+				v.conv_line_rdy := '1';
+				if r.p_r < CAM_H-1 then
 					v.state := wait_frame_valid;
 				else
 					v.state := wait_frame_invalid; --ganzes Bild gelesen
@@ -154,8 +157,8 @@ begin
 				v.p_c := r.p_c + 1;
 				v.toggle_c := not r.toggle_c;
 				-- dot data logic
-				--v.data := cm_d(11 downto 4);
-				v.data := cm_d(7 downto 0); -- test
+				v.data := cm_d(11 downto 4);
+				--v.data := cm_d(7 downto 0); -- test
 			when next_line =>
 				--if r.p_r < CAM_H-1 then
 				v.p_r := r.p_r + 1;
@@ -178,6 +181,7 @@ begin
 		wr_address	<= std_logic_vector(to_unsigned(r.p_c, DOT_ADDR_WIDTH)); --@TODO Grenzen der Counter angleichen
 		wr_en_odd	<= v.en_odd;
 		wr_en_even	<= v.en_even;
+		line_ready	<= v.conv_line_rdy;
 		
 		cm_trigger <= v.cm_trigger;
     	cm_reset <= rst;
