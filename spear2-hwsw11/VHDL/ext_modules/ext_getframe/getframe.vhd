@@ -276,6 +276,10 @@ begin
 		if return_pgm = '1' then
 			v.return_pgm := '1';
 		end if;
+		
+		if r.getframe = '1' then
+			v.getframe := '0';
+		end if;
 
 		led_red <= (0=>line_ready, 1=>next_burst, 2=>frame_done, 3=>return_pgm, others=>'1');
 		r_next <= v;

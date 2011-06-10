@@ -48,15 +48,17 @@ architecture rtl of writeframe is
 	type state_type is (idle, data, done, reset, start_next_burst);
 	
 	type reg_type is record
-  		start		: std_logic;
-		address		: std_logic_vector(31 downto 0);
-		wdata		: std_logic_vector(31 downto 0);
-		state		: state_type;
-		cur_col		: natural range 0 to SCREEN_W;
-		cur_line	: natural range 0 to CAM_H;
-		burst_count	: natural range 0 to BURST_BUFFER_LENGTH;
-		frame_done	: std_logic;
-		rd_pointer	: pix_addr_type;
+  		start				: std_logic;
+		address				: std_logic_vector(31 downto 0);
+		wdata				: std_logic_vector(31 downto 0);
+		state				: state_type;
+		cur_col				: natural range 0 to SCREEN_W-1;
+		cur_line			: natural range 0 to SCREEN_H-1;
+		burst_count			: natural range 0 to 25600;
+		burst_done_count	: natural range 0 to 25600;
+		frame_done			: std_logic;
+		rd_pointer			: pix_addr_type;
+		sent				: natural range 0 to 100;
 	end record;
 
 	
@@ -70,8 +72,10 @@ architecture rtl of writeframe is
 		cur_col			=> 0,
 		cur_line		=> 0,
 		burst_count 	=> 0,
+		burst_done_count=> 0,
 		frame_done 		=> '0',
-		rd_pointer		=> (others => '0')
+		rd_pointer		=> (others => '0'),
+		sent			=> 0
 	);
 				
 begin
@@ -102,21 +106,20 @@ begin
 				v.cur_line := 0;
 				v.cur_col  := 0;
 				v.burst_count := 0;
-				
+				v.burst_done_count := 0;
 				-- sicherstellen, dass 0 tes element anliegt sobald verarbeitung startet
 				v.rd_pointer := (others => '0');
+				v.sent := 0;
 				
 				if next_burst = '1' then
 					v.state := data;
 					v.start := '1';	
 					v.frame_done := '0';
-					v.burst_count := 1;
 					-- addresse gleich auf 1 stellen um im nächsten zyklus die richtige addresse anzulegen
 					v.rd_pointer := (0 => '1', others => '0');
 				end if;
 				
 			when data =>
-				--v.wdata := 
 				if dmao.ready = '1' then
 					if dmao.haddr = (9 downto 0 => '0') then
 						v.address := (v.address(31 downto 10) + 1) & dmao.haddr;
@@ -127,30 +130,36 @@ begin
 					if (dmao.haddr(BURST_LENGTH+1 downto 0) = ((BURST_LENGTH+1 downto 2 => '1') & "00")) then 
 						v.start := '0';
 						v.state := start_next_burst;
-						v.burst_count := v.burst_count - 1;
-					else
-						if r.cur_col >= SCREEN_W then
-							if r.cur_line >= CAM_H then
-								v.state := done;
-							else
-								v.cur_line := r.cur_line + 1;
-								v.cur_col := 0;
-							end if;
-						else
-							v.cur_col := r.cur_col + 1;
-						end if;
+						v.burst_done_count := r.burst_done_count + 1;
 					end if;
 					
+					-- zeile noch nicht fertig
+					if r.cur_col < SCREEN_W-1 then
+						v.wdata := "00000000" & rd_data_burst;
+						v.cur_col := r.cur_col + 1;
+					-- wenn zeile fertig
+					else
+						-- und bildschirm voll aufhören
+						if r.cur_line = SCREEN_H-1 then
+							v.state := done;
+						-- ansonsten nächste zeile
+						else
+							v.cur_line := r.cur_line + 1;
+							v.cur_col := 0;
+						end if;							
+					end if;
 					-- pointer immer auf nächsten pixel erhöhen
 					v.rd_pointer := r.rd_pointer + 1;
-					
-					-- wenn letztes element gelesen wieder bei 0 anfangen
-					if v.rd_pointer = BURST_RAM_END_ADR then
-						v.rd_pointer := (others=> '0');
-					end if;
+					v.sent := r.sent + 1;
+				end if;		
+				
+				-- wenn letztes element gelesen wieder bei 0 anfangen
+				if v.rd_pointer = BURST_RAM_END_ADR then
+					v.rd_pointer := (others=> '0');
 				end if;
 			when start_next_burst =>
-				if r.burst_count > 0 then
+				v.sent := 0;
+				if r.burst_count > r.burst_done_count then
 					v.start := '1';
 					v.state := data;
 				end if;
@@ -163,11 +172,11 @@ begin
 
 		-- neue burts zählen
 		if next_burst = '1' then
-			v.burst_count := v.burst_count + 1;
+			v.burst_count := r.burst_count + 1;
 		end if;
 		
 		-- Werte auf Interface zu Bus legen
-		dmai.wdata  <=  "00000000" & rd_data_burst; --("000000001111111100000000");
+		dmai.wdata  <=  r.wdata; --("000000001111111100000000");
 	    dmai.burst  <= '1';
 	    dmai.irq    <= '0';
 	    dmai.size   <= "10";

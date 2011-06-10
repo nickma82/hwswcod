@@ -48,8 +48,8 @@ architecture rtl of convert is
 		dot_state	: dot_state_type;
 		
 		toggle_r	: std_logic;
-		col_cnt    	: natural range 0 to CAM_W;
-		row_cnt    	: natural range 0 to CAM_H;
+		col_cnt    	: natural range 0 to SCREEN_W-1;
+		row_cnt    	: natural range 0 to SCREEN_H-1;
 				
 		rd_address	: dot_addr_type;
 		
@@ -135,6 +135,9 @@ read_raw : process(r, line_ready, rst, rd_data_even, rd_data_odd)
 					else
 						v.dot_state := p_b;
 					end if;
+					if r.row_cnt = 0 then
+						v.b_cnt := 1;
+					end if;
 					v.rd_address := (0 => '1', others => '0');
 				end if;
 			when convert_line =>
@@ -163,30 +166,29 @@ read_raw : process(r, line_ready, rst, rd_data_even, rd_data_odd)
 						v.last_dot := other_dot;
 				end case;
 				
-			
-				if r.col_cnt = 0 then
-					-- in nullter spalte keine konvertierung möglich
-					v.pixel_data := (others=>'0');
-				else
-					case r.dot_state is
-						when p_b =>
-							v.pixel_data := r.last_dot & other_dot  & cur_dot;
-						when p_g2 =>
-							v.pixel_data := other_dot & cur_dot & r.last_dot;
-						when p_g1 =>
-							v.pixel_data := r.last_dot & cur_dot & other_dot;
-						when p_r =>
-							v.pixel_data := cur_dot & other_dot & r.last_dot;
-					end case;
-				end if;
-				--v.pixel_data := (7 => '1', others => '0'); -- TEEEESSST
+				case r.dot_state is
+					when p_b =>
+						v.pixel_data := r.last_dot & other_dot  & cur_dot;
+					when p_g2 =>
+						v.pixel_data := other_dot & cur_dot & r.last_dot;
+					when p_g1 =>
+						v.pixel_data := r.last_dot & cur_dot & other_dot;
+					when p_r =>
+						v.pixel_data := cur_dot & other_dot & r.last_dot;
+				end case;
 				
-				v.col_cnt := r.col_cnt + 1;
-				if v.col_cnt = CAM_W then
+				
+				if r.col_cnt = SCREEN_W-1 then
 					v.state := line_done;
+				else
+					v.col_cnt := r.col_cnt + 1;
+					if v.col_cnt < CAM_W then
+						v.rd_address := r.rd_address + 1;
+					else
+						v.pixel_data := (others=>'1');
+					end if;
 				end if;
 				
-				v.rd_address := r.rd_address + 1;
 				
 				v.pixel_addr := r.pixel_addr + 1;
 				if r.pixel_addr = BURST_RAM_END_ADR then
@@ -205,7 +207,7 @@ read_raw : process(r, line_ready, rst, rd_data_even, rd_data_odd)
 				v.toggle_r := not r.toggle_r;
 				v.wr_enable := '0';
 				
-				if v.row_cnt = CAM_H then
+				if r.row_cnt = SCREEN_H-1 then
 					v.state := frame_done;
 				else
 					v.state := wait_line_ready;
@@ -218,6 +220,7 @@ read_raw : process(r, line_ready, rst, rd_data_even, rd_data_odd)
 				v.rd_address := (others=>'0');
 				v.pixel_addr := (others=>'0');
 				v.b_cnt := 0;
+				v.state := wait_line_ready;
 		end case;
 			
 		rd_address <= r.rd_address;
