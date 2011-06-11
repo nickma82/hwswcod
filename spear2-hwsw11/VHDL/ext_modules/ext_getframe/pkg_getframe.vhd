@@ -28,7 +28,7 @@ package pkg_getframe is
 	constant SCREEN_H					: integer := 480;
 	
 	constant CAM_W						: integer := 640;
-	constant CAM_H						: integer := 480;
+	constant CAM_H						: integer := SCREEN_H;
 	constant CAM_PIXEL_COUNT			: integer := CAM_W*CAM_H;
 	
 	constant PIXEL_COUNT				: integer := SCREEN_W*SCREEN_H;

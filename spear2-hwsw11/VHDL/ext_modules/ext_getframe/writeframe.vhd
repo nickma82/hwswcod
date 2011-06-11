@@ -135,7 +135,6 @@ begin
 					
 					-- zeile noch nicht fertig
 					if r.cur_col < SCREEN_W-1 then
-						v.wdata := "00000000" & rd_data_burst;
 						v.cur_col := r.cur_col + 1;
 					-- wenn zeile fertig
 					else
@@ -173,7 +172,10 @@ begin
 		-- neue burts zählen
 		if next_burst = '1' then
 			v.burst_count := r.burst_count + 1;
+			assert (v.burst_count-r.burst_done_count) < 100	report "Burst Counter Overflow" severity error;
 		end if;
+		
+		v.wdata := "00000000" & rd_data_burst;
 		
 		-- Werte auf Interface zu Bus legen
 		dmai.wdata  <=  r.wdata; --("000000001111111100000000");
