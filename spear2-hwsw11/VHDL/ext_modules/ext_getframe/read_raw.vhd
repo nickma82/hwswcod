@@ -50,22 +50,22 @@ end ;
 architecture rtl of read_raw is
 
 	-- Cam read raw Signals
-	type state_type is (reset, wait_getframe, wait_frame_valid, read_dot, next_line, wait_frame_invalid);
+	type state_type is (reset, wait_frame_valid,wait_frame_invalid, read_dot, done);
 	 
 	type readraw_reg_type is record
 		--intern
 		state		: state_type;
 		toggle_r	: std_logic;
-		toggle_c	: std_logic;
-		p_r      	: integer range 0 to CAM_H;
-		p_c      	: integer range 0 to CAM_W;
+		p_r      	: natural range 0 to CAM_H-1;
+		p_c      	: natural range 0 to CAM_W-1;
+		running		: std_logic;
+		start		: std_logic;
 		--rams
 		en_odd		: std_logic;
 		en_even		: std_logic;
 		data		: dot_type;
 		address		: dot_addr_type;
 		--cam
-		cm_trigger	: std_logic;
 		conv_line_rdy:std_logic;
 	end record;
 
@@ -74,8 +74,9 @@ architecture rtl of read_raw is
 	signal r : readraw_reg_type := 
 	(
 		state		=> reset,
+		running		=> '0',
+		start		=> '0',
 		toggle_r	=> '0',
-		toggle_c	=> '0',
 		p_r 		=> 0,
 		p_c 		=> 0,
 		
@@ -83,13 +84,11 @@ architecture rtl of read_raw is
 		en_even		=> '0',
 		data		=> (others => '0'),
 		address		=> (others => '0'),
-		cm_trigger 	=> '0',
 		conv_line_rdy	=> '0'
 	);	
 begin
 	read_raw : process(r, getframe, cm_d, cm_lval, cm_fval, rst)
 	variable v 				: readraw_reg_type;
-	--variable tmp_pixel		: integer range 4095 downto 0;
 	begin
 		v := r;
     	
@@ -97,96 +96,93 @@ begin
     	v.en_even := '0'; --disable every cycle
     	
 		------------------------
-		---	CCD Handler - FALLING EDGE PIXCLK sensitiv
+		---	CCD Handler - RISING EDGE PIXCLK sensitiv (inverted pixclk setting)
 		--- state_pixsync_cam_type
 		------------------------
 		case r.state is
 			when reset =>
-				v.state := wait_getframe;
-			when wait_getframe =>
-				if getframe = '1' then
-					v.state := wait_frame_invalid;
-				end if;
-			when wait_frame_valid =>
-				--@TODO trigger starten
-				if cm_fval = '1' then
-					v.conv_line_rdy := '0';
-					if cm_lval = '1' then
-						v.state := read_dot;
-					end if;
-				end if;
-			when read_dot =>
-				if r.p_c < CAM_W-1 then
-					v.state := read_dot;
-				else
-					--eol1 condition
-					v.state := next_line;
-				end if;
-			when next_line =>
-				if r.p_r > 0 then
-					v.conv_line_rdy := '1';
-				end if;
-				if r.p_r < CAM_H-1 then
-					v.state := wait_frame_valid;
-				else
-					v.state := wait_frame_invalid; --ganzes Bild gelesen
-				end if;
+				v.state := wait_frame_invalid;
+				v.p_r 		:=  0;
+				v.toggle_r	:= '0';
+				v.p_c 		:=  0;
+				v.start		:= '0';
+				v.running	:= '0';
+				
 			when wait_frame_invalid =>
 				if cm_lval = '0' and cm_fval = '0' then
 					v.state := wait_frame_valid;
 				end if;
-		end case;
-		
-		---logic: row & column counter
-		---logic: dot_valid
-		--takes care about PIX: p_c, p_r, toggle_c and toggle_r
-		case r.state is
-			when reset =>
-				null;
-			when wait_getframe =>
-				null;
+				
 			when wait_frame_valid =>
-				v.cm_trigger := '1';
-			when read_dot =>
-				v.cm_trigger := '0';
-				if r.toggle_r = '0' then
-					--odd
-					v.en_even := '1';
-				else
-					--even
-					v.en_odd := '1';
+				if cm_fval = '1' then
+					v.running := r.start; -- übertragung nur mit neuen bild starten
+					v.state := read_dot;
 				end if;
-				v.p_c := r.p_c + 1;
-				v.toggle_c := not r.toggle_c;
-				-- dot data logic
-				v.data := cm_d(11 downto 4);
-				--v.data := cm_d(7 downto 0); -- test
-			when next_line =>
-				--if r.p_r < CAM_H-1 then
-				v.p_r := r.p_r + 1;
-				v.toggle_r := not r.toggle_r;
-				v.p_c := 0;
-				v.toggle_c := '0';
-			when wait_frame_invalid =>
-				--nur hier nötig, weil jedes Mal zum Syncen hier sind
+			when read_dot =>
+				if cm_lval = '1' then
+					-- nur wenn zeile noch nicht fertig
+					if r.p_c < CAM_W-1 then
+						v.p_c := r.p_c + 1;
+					end if;
+					
+					-- aktiven ram festlegen
+					if r.toggle_r = '0' then
+						v.en_even := '1';
+					else
+						v.en_odd := '1';
+					end if;
+					
+					-- nach ersten pixel kann konvertierung gestartet werden
+					-- nach 4. pixel wieder abschalten
+					if r.p_c = 1 then
+						v.conv_line_rdy := '1';
+					elsif r.p_c = 4 then
+						v.conv_line_rdy := '0';
+					end if;
+				end if;
+				
+				if r.p_c = CAM_W-1 then
+					if r.p_r = CAM_H-1 then
+						v.state := done;
+					else
+						v.toggle_r := not r.toggle_r;
+						v.p_r := r.p_r + 1;
+						v.p_c := 0;	
+						v.address := (others=>'0');					
+					end if;
+				end if;
+				
+			when done =>
 				v.p_r 		:=  0;
 				v.toggle_r	:= '0';
 				v.p_c 		:=  0;
-				v.toggle_c	:= '0';
-				v.cm_trigger:= '0';
-			when others =>
-				null;
+				v.start		:= '0';
+				v.running	:= '0';
+				v.address	:= (others=>'0');
 		end case;
 		
+		-- running übernehmen
+		if getframe = '1' then
+			v.start := '1';
+		end if;
 		
-		wr_data		<= v.data;
-		wr_address	<= std_logic_vector(to_unsigned(r.p_c, DOT_ADDR_WIDTH)); --@TODO Grenzen der Counter angleichen
-		wr_en_odd	<= v.en_odd;
-		wr_en_even	<= v.en_even;
-		line_ready	<= v.conv_line_rdy;
+		-- daten übernehmen
+		v.data := cm_d(11 downto 4);
+		v.address := std_logic_vector(to_unsigned(r.p_c, DOT_ADDR_WIDTH));
 		
-		cm_trigger <= v.cm_trigger;
+		-- an ram übergeben
+		wr_data		<= r.data;
+		wr_address	<= r.address; --@TODO Grenzen der Counter angleichen
+		
+		-- daten nur übernehmen wenn gerade ein bild gecaptured werden soll
+		wr_en_odd	<= r.en_odd and r.running;
+		wr_en_even	<= r.en_even and r.running;
+		
+		line_ready	<= r.conv_line_rdy and r.running;
+		
+		cm_trigger <= '0';
     	cm_reset <= rst;
+
     	r_next <= v;
     end process;
     
@@ -196,7 +192,7 @@ begin
 	------------------------
     read_raw_reg : process(cm_pixclk)
 	begin
-		if falling_edge(cm_pixclk) then
+		if rising_edge(cm_pixclk) then
 			if rst = RST_ACT then
 				r.state <= reset;
 			else

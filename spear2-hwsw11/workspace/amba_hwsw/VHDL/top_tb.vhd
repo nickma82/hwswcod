@@ -148,13 +148,13 @@ begin
 
   clkgen : process
   begin
-    cm_pixclk <= '0';
-    wait for 2 ns;
-    clk <= '1';
+	clk <= '1';
+	wait for 2 ns;
+    cm_pixclk <= '1';    
     wait for 18 ns;
-    cm_pixclk <= '1';
+	clk <= '0';   
     wait for 2 ns;
-    clk <= '0'; 
+    cm_pixclk <= '0';
     wait for 18 ns;
   end process clkgen;
   
@@ -172,19 +172,23 @@ begin
   	
   	wait for 600*cc;
   	
+	wait until cm_pixclk = '0';
   	cm_fval <= '1';
 	wait for 21*cc;
 	wait for 10 ns;
   	for row_cnt in 1 to 480 loop
+		wait until cm_pixclk = '0';
   		cm_lval <= '1';
   		for col_cnt in 1 to 640 loop
   			--cm_d <= "111111111111";
-  			cm_d <= std_logic_vector(to_unsigned(col_cnt,12));
+  			cm_d <= std_logic_vector(to_unsigned(col_cnt,8)) & "0000";
   			wait for 2*cc;
   		end loop;
+		wait until cm_pixclk = '0';
   		cm_lval <= '0';
   		wait for 900*2*cc;
   	end loop;
+	wait until cm_pixclk = '0';
   	cm_fval <= '0';
   end process camgen;
   

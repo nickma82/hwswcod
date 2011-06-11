@@ -51,11 +51,30 @@ int main(int argc, char **argv)
 				
 		dis7seg_hex(0x01);
 		
+		// invert pixe clock
+		write_cam(0x0A, 0x8000);
+		
+		// column size
 		write_cam(0x04, 2559);
+		
+		// row size
 		write_cam(0x03, 1919);
+		
+		// shutter width lower
 		write_cam(0x09, 470);
+		
+		// row and column skiping => 640x480 res
 		write_cam(0x22, 3);
 		write_cam(0x23, 3);
+		
+		// restart cam
+		write_cam(0x0b, 0x01);
+		
+		dis7seg_hex(read_cam(0x0b));
+		
+		// wait for restart finished
+		while(read_cam(0x0b)&0x01)
+			asm("nop");
 		
 		dis7seg_hex(read_cam(0x04));
 		

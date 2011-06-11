@@ -52,6 +52,7 @@ architecture rtl of ext_getframe is
 		getframe	: std_logic;
 		frame_done	: std_logic;
 		return_pgm	: std_logic;
+		wait_gf		: natural range 0 to 10;
 	end record;
 	
 	signal r_next : reg_type;
@@ -60,7 +61,8 @@ architecture rtl of ext_getframe is
 		ifacereg 	=> (others => (others => '0')),
 		getframe 	=> '0',
 		frame_done	=> '0',
-		return_pgm	=> '0'
+		return_pgm	=> '0',
+		wait_gf		=> 0
 	);
 	
 	signal rstint : std_ulogic;
@@ -213,6 +215,7 @@ begin
     			when "001" =>
     				if ((exti.byte_en(0) = '1')) then
     					v.getframe := '1';
+						v.wait_gf := 0;
     					v.return_pgm := '0';
     					v.frame_done := '0';
     				end if;
@@ -277,10 +280,17 @@ begin
 			v.return_pgm := '1';
 		end if;
 		
+		
+		-- getframe 10 cycles high lassen um sicherzustellen, dass read_raw mit pixelclk es nicht verpasst
 		if r.getframe = '1' then
-			v.getframe := '0';
+			if r.wait_gf = 9 then
+				v.getframe := '0';
+				v.wait_gf := 0;
+			else
+				v.wait_gf := r.wait_gf + 1;	
+			end if;
 		end if;
-
+		
 		led_red <= (0=>line_ready, 1=>next_burst, 2=>frame_done, 3=>return_pgm, others=>'1');
 		r_next <= v;
     end process;    

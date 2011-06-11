@@ -150,15 +150,15 @@ architecture rtl of svgactrl is
   signal vfporch            : std_logic_vector(15 downto 0);
   signal vsyncpulse         : std_logic_vector(15 downto 0);
   signal vvideo             : std_logic_vector(15 downto 0);
-  signal write_pointer_clut : std_logic_vector(7 downto 0);
-  signal read_pointer_clut  : std_logic_vector(7 downto 0);
+  signal write_pointer_clut : std_logic_vector(7 downto 0) := (others =>'0');
+  signal read_pointer_clut  : std_logic_vector(7 downto 0) := (others =>'0');
   signal read_pointer_fifo  : std_logic_vector(9 downto 0);
   signal write_pointer_fifo : std_logic_vector(9 downto 0);
-  signal datain_clut        : std_logic_vector(23 downto 0);
-  signal dataout_clut       : std_logic_vector(23 downto 0);
+  signal datain_clut        : std_logic_vector(23 downto 0) := (others =>'0');
+  signal dataout_clut       : std_logic_vector(23 downto 0) := (others =>'0');
   signal dataout_fifo       : std_logic_vector(31 downto 0);
   signal datain_fifo        : std_logic_vector(31 downto 0);
-  signal write_en_clut, read_en_clut : std_logic;
+  signal write_en_clut, read_en_clut : std_logic := '0';
   signal vcc      : std_logic;
   signal read_en_fifo, write_en_fifo     : std_logic;
 
@@ -170,10 +170,10 @@ begin
   port map (vgaclk, read_en_fifo, read_pointer_fifo, dataout_fifo,clk, write_en_fifo,
 	write_pointer_fifo, datain_fifo);
 
-  clutram : syncram_2p generic map (tech => memtech, abits => 8, dbits => 24, 
-	sepclk => 1)
-  port map (vgaclk, read_en_clut, read_pointer_clut, dataout_clut, clk, write_en_clut, 
-	write_pointer_clut,datain_clut);
+  --clutram : syncram_2p generic map (tech => memtech, abits => 8, dbits => 24, 
+  --  sepclk => 1)
+  --port map (vgaclk, read_en_clut, read_pointer_clut, dataout_clut, clk, write_en_clut, 
+  --  write_pointer_clut,datain_clut);
 
   ahb_master : ahbmst generic map (hindex, hirq, VENDOR_GAISLER,
 	GAISLER_SVGACTRL, 0, 3, 1)

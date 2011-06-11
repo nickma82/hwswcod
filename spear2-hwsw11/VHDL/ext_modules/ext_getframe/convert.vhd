@@ -57,7 +57,7 @@ architecture rtl of convert is
 		pixel_data	: pix_type;
 		last_dot	: dot_type;
 		pixel_addr	: pix_addr_type;
-		b_cnt		: natural range 0 to BURST_PIXEL_COUNT;
+		b_cnt		: natural range 0 to BURST_PIXEL_COUNT-1;
 		next_burst	: std_logic;
 	end record;
 
@@ -182,27 +182,30 @@ read_raw : process(r, line_ready, rst, rd_data_even, rd_data_odd)
 					v.state := line_done;
 				else
 					v.col_cnt := r.col_cnt + 1;
-					if v.col_cnt < CAM_W then
+					if v.col_cnt < CAM_W-1 then
 						v.rd_address := r.rd_address + 1;
 					else
 						v.pixel_data := (others=>'1');
 					end if;
 				end if;
 				
-				
-				v.pixel_addr := r.pixel_addr + 1;
-				if r.pixel_addr = BURST_RAM_END_ADR then
-						v.pixel_addr := (others=> '0'); 
+				if r.col_cnt > 0 then
+					v.pixel_addr := r.pixel_addr + 1;
 				end if;
 				
-				v.b_cnt := r.b_cnt + 1;
+				if v.pixel_addr = BURST_RAM_END_ADR then
+					v.pixel_addr := (others=> '0'); 
+				end if;
 				
+			
 				if r.b_cnt = BURST_PIXEL_COUNT-1 then
 					v.next_burst := '1';
 					v.b_cnt := 0;
+				else
+					v.b_cnt := r.b_cnt + 1;
 				end if;
 			when line_done => 
-				v.row_cnt := r.row_cnt + 1;
+				
 				v.col_cnt := 0;
 				v.toggle_r := not r.toggle_r;
 				v.wr_enable := '0';
@@ -211,6 +214,7 @@ read_raw : process(r, line_ready, rst, rd_data_even, rd_data_odd)
 					v.state := frame_done;
 				else
 					v.state := wait_line_ready;
+					v.row_cnt := r.row_cnt + 1;
 				end if;
 			
 			when frame_done =>
@@ -221,6 +225,7 @@ read_raw : process(r, line_ready, rst, rd_data_even, rd_data_odd)
 				v.pixel_addr := (others=>'0');
 				v.b_cnt := 0;
 				v.state := wait_line_ready;
+				v.next_burst := '1';
 		end case;
 			
 		rd_address <= r.rd_address;
