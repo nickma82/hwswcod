@@ -177,8 +177,9 @@ begin
 		-- daten nur übernehmen wenn gerade ein bild gecaptured werden soll
 		wr_en_odd	<= r.en_odd and r.running;
 		wr_en_even	<= r.en_even and r.running;
-		
+
 		line_ready	<= r.conv_line_rdy and r.running;
+
 		
 		cm_trigger <= '0';
     	cm_reset <= rst;
