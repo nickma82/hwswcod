@@ -187,7 +187,7 @@ begin
 	------------------------
 	---	ASync Core Ext Interface Daten übernehmen und schreiben
 	------------------------
-	comb : process(r, exti, extsel, rstint,frame_done,return_pgm)
+	comb : process(r, exti, extsel, rstint,frame_done,return_pgm,line_ready, next_burst)
 	variable v 		: reg_type;
 	begin
     	v := r;

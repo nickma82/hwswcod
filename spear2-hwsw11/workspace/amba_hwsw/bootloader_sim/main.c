@@ -10,9 +10,12 @@
   #error "Unsupported target machine type"
 #endif
 
-#define WRITEFRAME_BASE 	(0xFFFFFEA0)
-#define WRITEFRAME_CMD		(*(volatile uint8_t *const)(WRITEFRAME_BASE+4))
-#define WRITEFRAME_COLOR	(*(volatile uint32_t *const)(WRITEFRAME_BASE+8))
+#define GETFRAME_BASE 		(0xFFFFFEA0)
+#define GETFRAME_START		(*(volatile uint8_t *const)(GETFRAME_BASE+4))
+#define GETFRAME_RETURN		(*(volatile uint8_t *const)(GETFRAME_BASE+5))
+#define GETFRAME_DONE		(*(volatile uint8_t *const)(GETFRAME_BASE+6))
+
+#define getframe_wait_return() while(!GETFRAME_RETURN) asm("nop")
 
 #define ALUEXT_BASE 		(0xFFFFFE80)
 
@@ -49,11 +52,9 @@ int main (int argc, char *argv[])
 	SVGA_DYN_CLOCK0 = 30000;
 	SVGA_STATUS = (1<<0) | (3<<4);*/
 	
-	WRITEFRAME_CMD = 1;
-	
-	while (WRITEFRAME_CMD) {
-
-	asm("nop");
+	while (1) {
+		GETFRAME_START = 1;
+		getframe_wait_return();
 	}
 	//}
 	//return WRITEFRAME_CMD;

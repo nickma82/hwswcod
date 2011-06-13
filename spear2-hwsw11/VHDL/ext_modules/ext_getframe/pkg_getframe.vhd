@@ -38,6 +38,9 @@ package pkg_getframe is
 	-- 	constante für burstlänge
 	constant BURST_LENGTH				: natural range 2 to 8 := 4;
 	
+	constant BURST_PIXEL_COUNT			: natural := 16;
+	
+	
 	-- DOT definitions
 	constant DOT_WIDTH					: natural := 8;
 	constant DOT_ADDR_WIDTH				: natural := 10;
@@ -47,14 +50,13 @@ package pkg_getframe is
 	
 	-- PIXEL definitions
 	constant PIXEL_WIDTH				: natural := 24; 
-	constant PIXEL_ADDR_WIDTH			: natural := 19; 
-	constant BURST_BUFFER_LENGTH		: natural := 34000;
+	constant PIXEL_ADDR_WIDTH			: natural := 10; 
+	constant BURST_BUFFER_LENGTH		: natural := (2**PIXEL_ADDR_WIDTH)/BURST_PIXEL_COUNT;
 	
 	subtype pix_type is std_logic_vector(PIXEL_WIDTH-1 downto 0);
 	subtype pix_addr_type is std_logic_vector(PIXEL_ADDR_WIDTH-1 downto 0);
 	
-	constant BURST_PIXEL_COUNT			: natural := 16;
-	constant BURST_RAM_END_ADR			: pix_addr_type := "1111111111111111000";
+	constant BURST_RAM_END_ADR			: pix_addr_type := (others=>'1');
 	
 	subtype row_count_type is integer range 0 to CAM_H-1;
 	

@@ -159,6 +159,7 @@ begin
 				v.start		:= '0';
 				v.running	:= '0';
 				v.address	:= (others=>'0');
+				v.state		:= wait_frame_invalid;
 		end case;
 		
 		-- running übernehmen

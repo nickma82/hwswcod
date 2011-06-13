@@ -187,14 +187,14 @@ read_raw : process(r, line_ready, rst, rd_data_even, rd_data_odd)
 					else
 						v.pixel_data := (others=>'1');
 					end if;
-				end if;
+				end if;			
 				
-				if r.col_cnt > 0 then
-					v.pixel_addr := r.pixel_addr + 1;
-				end if;
-				
-				if v.pixel_addr = BURST_RAM_END_ADR then
+				if r.pixel_addr = BURST_RAM_END_ADR then
 					v.pixel_addr := (others=> '0'); 
+				else
+					if r.col_cnt > 0 then
+						v.pixel_addr := r.pixel_addr + 1;
+					end if;
 				end if;
 				
 			

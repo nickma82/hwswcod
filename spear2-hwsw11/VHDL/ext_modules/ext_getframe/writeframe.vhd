@@ -57,6 +57,7 @@ architecture rtl of writeframe is
 		burst_count			: natural range 0 to 25600;
 		burst_done_count	: natural range 0 to 25600;
 		frame_done			: std_logic;
+		return_pgm			: std_logic;
 		rd_pointer			: pix_addr_type;
 		sent				: natural range 0 to 100;
 	end record;
@@ -74,6 +75,7 @@ architecture rtl of writeframe is
 		burst_count 	=> 0,
 		burst_done_count=> 0,
 		frame_done 		=> '0',
+		return_pgm		=> '0',
 		rd_pointer		=> (others => '0'),
 		sent			=> 0
 	);
@@ -94,7 +96,9 @@ begin
 	variable v 		: reg_type;
 	begin
     	v := r;   	
-
+    	
+    	v.frame_done := '0';
+    	v.return_pgm := '0';
 		------------------
 		--- Statemachine
 		------------------
@@ -113,8 +117,8 @@ begin
 				
 				if next_burst = '1' then
 					v.state := data;
-					v.start := '1';	
-					v.frame_done := '0';
+					v.start := '1';						
+					
 					-- addresse gleich auf 1 stellen um im nächsten zyklus die richtige addresse anzulegen
 					v.rd_pointer := (0 => '1', others => '0');
 				end if;
@@ -147,15 +151,19 @@ begin
 							v.cur_col := 0;
 						end if;							
 					end if;
-					-- pointer immer auf nächsten pixel erhöhen
-					v.rd_pointer := r.rd_pointer + 1;
+					
+					-- wenn letztes element gelesen wieder bei 0 anfangen
+					if r.rd_pointer = BURST_RAM_END_ADR then
+						v.rd_pointer := (others=> '0');
+					else
+						-- pointer auf nächsten pixel erhöhen
+						v.rd_pointer := r.rd_pointer + 1;
+					end if;
+					
 					v.sent := r.sent + 1;
 				end if;		
 				
-				-- wenn letztes element gelesen wieder bei 0 anfangen
-				if v.rd_pointer = BURST_RAM_END_ADR then
-					v.rd_pointer := (others=> '0');
-				end if;
+				
 			when start_next_burst =>
 				v.sent := 0;
 				if r.burst_count > r.burst_done_count then
@@ -164,6 +172,7 @@ begin
 				end if;
 			when done =>
 				v.frame_done := '1';
+				v.return_pgm := '1';
 				v.start := '0';
 				v.state := idle;
 
@@ -188,7 +197,7 @@ begin
 	    dmai.address  <= r.address;  
 	    
 	    frame_done <= r.frame_done;
-	    return_pgm <= '0';
+	    return_pgm <= r.return_pgm;
 	    
 	    rd_address_burst <= r.rd_pointer;
 	    
