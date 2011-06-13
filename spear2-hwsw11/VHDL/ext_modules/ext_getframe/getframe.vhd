@@ -53,7 +53,7 @@ architecture rtl of ext_getframe is
 		frame_done	: std_logic;
 		return_pgm	: std_logic;
 		wait_gf		: natural range 0 to 10;
-		burst_count	: natural range 0 to 25600;
+		pix_count	: natural range 0 to 2*CAM_PIXEL_COUNT;
 	end record;
 	
 	signal r_next : reg_type;
@@ -64,7 +64,7 @@ architecture rtl of ext_getframe is
 		frame_done	=> '0',
 		return_pgm	=> '0',
 		wait_gf		=> 0,
-		burst_count	=> 0
+		pix_count	=> 0
 	);
 	
 	signal rstint : std_ulogic;
@@ -85,7 +85,7 @@ architecture rtl of ext_getframe is
 	signal frame_done : std_logic;
 	signal return_pgm : std_logic;
 	
-	signal bla_next_burst : std_logic;
+	signal pix_count : std_logic_vector(19 downto 0);
 begin
 	
 	------------------------
@@ -161,7 +161,8 @@ begin
 		wr_en_even	=>  wr_en_even,
 		wr_data		=>  wr_data,		
 		wr_address	=>  wr_address,
-		led_red			 => led_red(17 downto 12)
+		led_red		=> led_red(17 downto 12),
+		last_px_cnt => pix_count
     );
     
     convert_unit : convert
@@ -225,7 +226,6 @@ begin
 						v.wait_gf := 0;
     					v.return_pgm := '0';
     					v.frame_done := '0';
-    					v.burst_count := 0;
     				end if;
     			
    			when others =>
@@ -249,6 +249,9 @@ begin
     				if ((exti.byte_en(2) = '1')) then
     					exto.data(23 downto 16) <= (16 => r.frame_done, others=>'0');
     				end if;
+    			when "010" =>
+    				exto.data(19 downto 0) <= pix_count(19 downto 0);
+    				exto.data(31 downto 20) <= (others =>'0');
 				when others =>
 					null;
 			end case;
@@ -288,29 +291,17 @@ begin
 			v.return_pgm := '1';
 		end if;
 		
-		bla_next_burst <= '0';
 		
-		--if r.getframe = '1' then
-		--	if r.burst_count < 25599 then
-		--		bla_next_burst <= '1';
-		--		v.burst_count := r.burst_count + 1;
-		--	else
-		--		v.frame_done := '1';
-		--		v.return_pgm := '1';
-		--		v.getframe := '0';
-		--	end if;
-		--end if;
-		
-		
+	
 		-- getframe 10 cycles high lassen um sicherzustellen, dass read_raw mit pixelclk es nicht verpasst
-		--if r.getframe = '1' then
-		--	if r.wait_gf = 9 then
-		--		v.getframe := '0';
-		--		v.wait_gf := 0;
-		--	else
-		--		v.wait_gf := r.wait_gf + 1;	
-		--	end if;
-		--end if;
+		if r.getframe = '1' then
+			if r.wait_gf = 9 then
+				v.getframe := '0';
+				v.wait_gf := 0;
+			else
+				v.wait_gf := r.wait_gf + 1;	
+			end if;
+		end if;
 		
 		getframe <= r.getframe;
 		r_next <= v;

@@ -100,7 +100,8 @@ package pkg_getframe is
 			wr_en_even	: out std_logic;
 			wr_data		: out dot_type;
 			wr_address	: out dot_addr_type;
-			led_red		: out 	std_logic_vector(5 downto 0)
+			led_red		: out 	std_logic_vector(5 downto 0);
+			last_px_cnt	: out std_logic_vector(19 downto 0)
 		);
 	end component;
 	

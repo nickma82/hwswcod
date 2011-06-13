@@ -44,7 +44,8 @@ entity read_raw is
 		wr_en_even	: out std_logic;
 		wr_data		: out dot_type;
 		wr_address	: out dot_addr_type;
-		led_red		: out 	std_logic_vector(5 downto 0)
+		led_red		: out std_logic_vector(5 downto 0);
+		last_px_cnt	: out std_logic_vector(19 downto 0)
     );
 end ;
 
@@ -68,6 +69,10 @@ architecture rtl of read_raw is
 		address		: dot_addr_type;
 		--cam
 		conv_line_rdy:std_logic;
+		
+		counter		: natural range 0 to 2*CAM_PIXEL_COUNT;
+		last_counter: natural range 0 to 2*CAM_PIXEL_COUNT;
+		inc_next	: std_logic;
 	end record;
 
 
@@ -85,7 +90,10 @@ architecture rtl of read_raw is
 		en_even		=> '0',
 		data		=> (others => '0'),
 		address		=> (others => '0'),
-		conv_line_rdy	=> '0'
+		conv_line_rdy	=> '0',
+		counter		=> 0,
+		last_counter=> 0,
+		inc_next	=> '1'
 	);	
 begin
 	read_raw : process(r, getframe, cm_d, cm_lval, cm_fval, rst)
@@ -101,99 +109,98 @@ begin
 		---	CCD Handler - RISING EDGE PIXCLK sensitiv (inverted pixclk setting)
 		--- state_pixsync_cam_type
 		------------------------
-		case r.state is
-			when reset =>
-				v.state := wait_frame_invalid;
-				v.p_r 		:=  0;
-				v.toggle_r	:= '0';
-				v.p_c 		:=  0;
-				v.start		:= '0';
-				v.running	:= '0';
-				
-			when wait_frame_invalid =>
-				if cm_lval = '0' and cm_fval = '0' then
-					v.state := wait_frame_valid;
-				end if;
-				led_red(0) <= '0';
-			when wait_frame_valid =>
-				if cm_fval = '1' then
-					v.running := r.start; -- übertragung nur mit neuen bild starten
-					v.state := read_dot;
-				end if;
-				led_red(1) <= '0';
-			when read_dot =>
-				if cm_fval = '1' and cm_lval = '1' then
-					-- nur wenn zeile noch nicht fertig
-					if r.p_c < CAM_W-1 then
-						v.p_c := r.p_c + 1;
-					end if;
-					
-					-- aktiven ram festlegen
-					if r.toggle_r = '0' then
-						v.en_even := '1';
-					else
-						v.en_odd := '1';
-					end if;
-					
-					-- nach ersten pixel kann konvertierung gestartet werden
-					-- nach 4. pixel wieder abschalten
-					if r.p_c = 1 then
-						v.conv_line_rdy := '1';
-					elsif r.p_c = 4 then
-						v.conv_line_rdy := '0';
-					end if;
-				end if;
-				
-				if cm_fval = '0' then
-					v.state := done;					
-				end if;
-				
-				if r.p_c = CAM_W-1 then
-					if r.p_r = CAM_H-1 then
-						v.state := done;
-						v.start	:= '0';
-					else
-						v.toggle_r := not r.toggle_r;
-						v.p_r := r.p_r + 1;
-						v.p_c := 0;	
-						v.address := (others=>'0');					
-					end if;
-				end if;
-				led_red(2) <= '0';
-			when done =>
-				v.p_r 		:=  0;
-				v.toggle_r	:= '0';
-				v.p_c 		:=  0;				
-				v.running	:= '0';
-				v.address	:= (others=>'0');
-				v.state		:= wait_frame_invalid;
-				led_red(3) <= '0';
-		end case;
 		
-		-- running übernehmen
-		if getframe = '1' then
-			v.start := '1';
+		if cm_fval ='1' and cm_lval = '1' then
+			-- nur wenn zeile noch nicht fertig
+			if r.p_c < CAM_W-1 then
+				v.p_c := r.p_c + 1;
+			end if;
+			
+			-- aktiven ram festlegen
+			if r.toggle_r = '0' then
+				v.en_even := '1';
+			else
+				v.en_odd := '1';
+			end if;
+			
+			-- nach ersten pixel kann konvertierung gestartet werden
+			-- nach 4. pixel wieder abschalten
+			if r.p_c = 2 then
+				v.conv_line_rdy := '1';
+			elsif r.p_c = 6 then
+				v.conv_line_rdy := '0';
+			end if;
+			
+			-- daten übernehmen
+			v.data := cm_d(11 downto 4);
+			v.address := std_logic_vector(to_unsigned(r.p_c, DOT_ADDR_WIDTH));
+			
+			v.start := '0';
+			v.inc_next := '0';
+			
+			v.counter := r.counter + 1;
+			led_red(0) <= '0';
+		-- neue zeile
+		elsif cm_fval = '1' and cm_lval = '0' then
+			if r.inc_next = '0' then
+				v.toggle_r := not r.toggle_r;
+				
+				if r.p_r < CAM_H-1 then
+					v.p_r := r.p_r + 1;
+				else
+					v.p_r := 0;
+				end if;
+				
+				v.p_c := 0;	
+				v.address := (others=>'0');	
+				v.inc_next := '1';
+			end if;
+			led_red(1) <= '0';
+		-- zwischen zwei frames
+		elsif cm_fval = '0' and cm_lval = '0' then
+			v.p_r 		:=  0;
+			v.p_c 		:=  0;
+			v.toggle_r	:= '0';
+			v.conv_line_rdy := '0';
+			v.address	:= (others => '0');
+			v.data		:= (others => '0');
+			v.last_counter := r.counter;
+			v.counter	:= 0;
+			v.inc_next := '0';
+			
+			if r.start = '1' and r.running = '0' then
+				v.running := '1';
+			elsif r.start = '0' and r.running = '1' then
+				v.running := '0';
+			end if;
+			
+			led_red(2) <= '0';
+		else
+			led_red(3) <= '0';
 		end if;
 		
-		-- daten übernehmen
-		v.data := cm_d(11 downto 4);
-		v.address := std_logic_vector(to_unsigned(r.p_c, DOT_ADDR_WIDTH));
+		
+		-- running übernehmen
+		if getframe = '1' and r.running = '0' then
+			v.start := '1';
+		end if;		
 		
 		-- an ram übergeben
 		wr_data		<= r.data;
-		wr_address	<= r.address; --@TODO Grenzen der Counter angleichen
+		wr_address	<= r.address; 
 		
 		-- daten nur übernehmen wenn gerade ein bild gecaptured werden soll
 		wr_en_odd	<= r.en_odd and r.running;
 		wr_en_even	<= r.en_even and r.running;
-
+		line_ready	<= r.conv_line_rdy and r.running;
+		
+		last_px_cnt <= std_logic_vector(to_unsigned(r.last_counter,20));
+		
 		led_red(4) <= r.running;
 		led_red(5) <= r.start;
-		line_ready	<= r.conv_line_rdy and r.running;
-
-		
+				
 		cm_trigger <= '0';
-    	cm_reset <= rst;
+    	cm_reset <= '1';
 
     	r_next <= v;
     end process;
@@ -207,6 +214,19 @@ begin
 		if rising_edge(cm_pixclk) then
 			if rst = RST_ACT then
 				r.state <= reset;
+				r.p_r 		<=  0;
+				r.toggle_r	<= '0';
+				r.p_c 		<=  0;
+				r.start		<= '0';
+				r.running	<= '0';
+				r.conv_line_rdy <= '0';
+				r.en_odd	<= '0';
+				r.en_even	<= '0';
+				r.address	<= (others => '0');
+				r.data		<= (others => '0');
+				r.last_counter <= 0;
+				r.counter	<= 0;
+				r.inc_next  <= '1';
 			else
 				r <= r_next;
 			end if;
