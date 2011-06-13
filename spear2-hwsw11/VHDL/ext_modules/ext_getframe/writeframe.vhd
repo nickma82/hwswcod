@@ -32,7 +32,8 @@ entity writeframe is
 		frame_done			: out std_logic;
 		return_pgm			: out std_logic;
 		rd_address_burst	: out pix_addr_type;
-		rd_data_burst		: in pix_type
+		rd_data_burst		: in pix_type;
+		led_red				: out 	std_logic_vector(11 downto 0)
     );
 end ;
 
@@ -178,7 +179,7 @@ begin
 		v.wdata := "00000000" & rd_data_burst;
 		
 		-- Werte auf Interface zu Bus legen
-		dmai.wdata  <=  r.wdata; --("000000001111111100000000");
+		dmai.wdata  <=  r.wdata; --"00000000000000001111111100000000";
 	    dmai.burst  <= '1';
 	    dmai.irq    <= '0';
 	    dmai.size   <= "10";
@@ -192,6 +193,7 @@ begin
 	    
 	    rd_address_burst <= r.rd_pointer;
 	    
+	    led_red(11 downto 0) <= std_logic_vector(to_unsigned(r.burst_count, 12));
 		r_next <= v;
     end process;    
     

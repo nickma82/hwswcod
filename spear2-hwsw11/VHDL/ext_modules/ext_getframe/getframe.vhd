@@ -53,6 +53,7 @@ architecture rtl of ext_getframe is
 		frame_done	: std_logic;
 		return_pgm	: std_logic;
 		wait_gf		: natural range 0 to 10;
+		burst_count	: natural range 0 to 25600;
 	end record;
 	
 	signal r_next : reg_type;
@@ -62,7 +63,8 @@ architecture rtl of ext_getframe is
 		getframe 	=> '0',
 		frame_done	=> '0',
 		return_pgm	=> '0',
-		wait_gf		=> 0
+		wait_gf		=> 0,
+		burst_count	=> 0
 	);
 	
 	signal rstint : std_ulogic;
@@ -77,10 +79,13 @@ architecture rtl of ext_getframe is
 	signal wr_address_burst, rd_address_burst : pix_addr_type;
 	signal wr_data_burst, rd_data_burst : pix_type;
 	
+	signal getframe	  : std_logic;
 	signal line_ready : std_logic;
 	signal next_burst : std_logic;
 	signal frame_done : std_logic;
 	signal return_pgm : std_logic;
+	
+	signal bla_next_burst : std_logic;
 begin
 	
 	------------------------
@@ -140,7 +145,7 @@ begin
       port map (
 		clk		=> clk,	
 		rst 	=> rstint,
-		getframe	=> r.getframe,
+		getframe	=> getframe,
 		
 		line_ready	=> line_ready,
 		
@@ -155,7 +160,8 @@ begin
 		wr_en_odd	=>  wr_en_odd,	
 		wr_en_even	=>  wr_en_even,
 		wr_data		=>  wr_data,		
-		wr_address	=>  wr_address
+		wr_address	=>  wr_address,
+		led_red			 => led_red(17 downto 12)
     );
     
     convert_unit : convert
@@ -182,7 +188,8 @@ begin
 		frame_done		 => frame_done,	
 		return_pgm		 => return_pgm,
 		rd_address_burst => rd_address_burst,
-		rd_data_burst	 => rd_data_burst	
+		rd_data_burst	 => rd_data_burst,
+		led_red			 => led_red(11 downto 0)
 	);
 	------------------------
 	---	ASync Core Ext Interface Daten übernehmen und schreiben
@@ -218,6 +225,7 @@ begin
 						v.wait_gf := 0;
     					v.return_pgm := '0';
     					v.frame_done := '0';
+    					v.burst_count := 0;
     				end if;
     			
    			when others =>
@@ -280,18 +288,31 @@ begin
 			v.return_pgm := '1';
 		end if;
 		
+		bla_next_burst <= '0';
+		
+		--if r.getframe = '1' then
+		--	if r.burst_count < 25599 then
+		--		bla_next_burst <= '1';
+		--		v.burst_count := r.burst_count + 1;
+		--	else
+		--		v.frame_done := '1';
+		--		v.return_pgm := '1';
+		--		v.getframe := '0';
+		--	end if;
+		--end if;
+		
 		
 		-- getframe 10 cycles high lassen um sicherzustellen, dass read_raw mit pixelclk es nicht verpasst
-		if r.getframe = '1' then
-			if r.wait_gf = 9 then
-				v.getframe := '0';
-				v.wait_gf := 0;
-			else
-				v.wait_gf := r.wait_gf + 1;	
-			end if;
-		end if;
+		--if r.getframe = '1' then
+		--	if r.wait_gf = 9 then
+		--		v.getframe := '0';
+		--		v.wait_gf := 0;
+		--	else
+		--		v.wait_gf := r.wait_gf + 1;	
+		--	end if;
+		--end if;
 		
-		led_red <= (0=>line_ready, 1=>next_burst, 2=>frame_done, 3=>return_pgm, others=>'1');
+		getframe <= r.getframe;
 		r_next <= v;
     end process;    
     

@@ -99,7 +99,8 @@ package pkg_getframe is
 			wr_en_odd	: out std_logic;
 			wr_en_even	: out std_logic;
 			wr_data		: out dot_type;
-			wr_address	: out dot_addr_type
+			wr_address	: out dot_addr_type;
+			led_red		: out 	std_logic_vector(5 downto 0)
 		);
 	end component;
 	
@@ -130,7 +131,8 @@ package pkg_getframe is
 			frame_done			: out std_logic;
 			return_pgm			: out std_logic;
 			rd_address_burst	: out pix_addr_type;
-			rd_data_burst		: in pix_type
+			rd_data_burst		: in pix_type;
+			led_red				: out 	std_logic_vector(11 downto 0)
 		);
 	end component;
 	

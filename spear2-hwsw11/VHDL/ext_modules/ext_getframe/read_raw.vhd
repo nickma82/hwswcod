@@ -43,7 +43,8 @@ entity read_raw is
 		wr_en_odd	: out std_logic;
 		wr_en_even	: out std_logic;
 		wr_data		: out dot_type;
-		wr_address	: out dot_addr_type
+		wr_address	: out dot_addr_type;
+		led_red		: out 	std_logic_vector(5 downto 0)
     );
 end ;
 
@@ -95,6 +96,7 @@ begin
     	v.en_odd := '0'; --disable every cycle
     	v.en_even := '0'; --disable every cycle
     	
+    	led_red <= (others => '1');
 		------------------------
 		---	CCD Handler - RISING EDGE PIXCLK sensitiv (inverted pixclk setting)
 		--- state_pixsync_cam_type
@@ -112,14 +114,15 @@ begin
 				if cm_lval = '0' and cm_fval = '0' then
 					v.state := wait_frame_valid;
 				end if;
-				
+				led_red(0) <= '0';
 			when wait_frame_valid =>
 				if cm_fval = '1' then
 					v.running := r.start; -- übertragung nur mit neuen bild starten
 					v.state := read_dot;
 				end if;
+				led_red(1) <= '0';
 			when read_dot =>
-				if cm_lval = '1' then
+				if cm_fval = '1' and cm_lval = '1' then
 					-- nur wenn zeile noch nicht fertig
 					if r.p_c < CAM_W-1 then
 						v.p_c := r.p_c + 1;
@@ -141,9 +144,14 @@ begin
 					end if;
 				end if;
 				
+				if cm_fval = '0' then
+					v.state := done;					
+				end if;
+				
 				if r.p_c = CAM_W-1 then
 					if r.p_r = CAM_H-1 then
 						v.state := done;
+						v.start	:= '0';
 					else
 						v.toggle_r := not r.toggle_r;
 						v.p_r := r.p_r + 1;
@@ -151,15 +159,15 @@ begin
 						v.address := (others=>'0');					
 					end if;
 				end if;
-				
+				led_red(2) <= '0';
 			when done =>
 				v.p_r 		:=  0;
 				v.toggle_r	:= '0';
-				v.p_c 		:=  0;
-				v.start		:= '0';
+				v.p_c 		:=  0;				
 				v.running	:= '0';
 				v.address	:= (others=>'0');
 				v.state		:= wait_frame_invalid;
+				led_red(3) <= '0';
 		end case;
 		
 		-- running übernehmen
@@ -179,6 +187,8 @@ begin
 		wr_en_odd	<= r.en_odd and r.running;
 		wr_en_even	<= r.en_even and r.running;
 
+		led_red(4) <= r.running;
+		led_red(5) <= r.start;
 		line_ready	<= r.conv_line_rdy and r.running;
 
 		

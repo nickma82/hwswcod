@@ -61,31 +61,37 @@ int main(int argc, char **argv)
 		write_cam(0x03, 1919);
 		
 		// shutter width lower
-		write_cam(0x09, 470);
+		//write_cam(0x09, 470);
 		
 		// row and column skiping => 640x480 res
 		write_cam(0x22, 3);
 		write_cam(0x23, 3);
 		
-		// restart cam
-		write_cam(0x0b, 0x01);
+		// testbild
+		//write_cam(0xA0,0x20);
 		
-		dis7seg_hex(read_cam(0x0b));
+		// restart cam
+		write_cam(0x0b, 0x01);		
 		
 		// wait for restart finished
 		while(read_cam(0x0b)&0x01)
 			asm("nop");
-		
+				
 		dis7seg_hex(read_cam(0x04));
+		i = 0;		
 		
-		i = 0;
-		while (i < 100000) {
+		while (i < 1000000) {
 
 			*reg = (1 << COUNTER_CLEAR_BIT);
 			*reg = (1 << COUNTER_COUNT_BIT);
 			
 			GETFRAME_START = 1;
-			getframe_wait_return();
+			
+			while(!GETFRAME_RETURN) {
+				//dis7seg_hex((*(volatile uint32_t *const)(GETFRAME_BASE+4)));
+				asm("nop");
+			}
+			
 			
 			fps_c = counter_getValue(&counterHandle);
 			
