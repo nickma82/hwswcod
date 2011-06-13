@@ -28,8 +28,8 @@ entity ext_getframe is
 		extsel    : in  std_ulogic;
 		exti      : in  module_in_type;
 		exto      : out module_out_type;
-		ahbi      : in  ahb_mst_in_type;
-		ahbo      : out ahb_mst_out_type;
+		dmai      : out  ahb_dma_in_type;
+		dmao      : in ahb_dma_out_type;
 		
 		cm_d		: in std_logic_vector(11 downto 0); --pixel data
 		cm_lval 	: in std_logic; 	--Line valid
@@ -176,8 +176,8 @@ begin
 	port map (
 		clk     		 => clk,     		
 		rst    			 => rstint,    			
-		ahbi    		 => ahbi,    		
-		ahbo    		 => ahbo,    		
+		dmai    		 => dmai,
+		dmao    		 => dmao, 		
 		next_burst		 => next_burst,		
 		frame_done		 => frame_done,	
 		return_pgm		 => return_pgm,

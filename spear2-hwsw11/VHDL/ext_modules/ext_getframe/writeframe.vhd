@@ -26,8 +26,8 @@ entity writeframe is
 	port (
 		clk     			: in  std_logic;
 		rst    				: in  std_logic;
-		ahbi    			: in  ahb_mst_in_type;
-		ahbo    			: out ahb_mst_out_type;
+		dmai    			: out  ahb_dma_in_type;
+		dmao    			: in   ahb_dma_out_type;
 		next_burst			: in std_logic;
 		frame_done			: out std_logic;
 		return_pgm			: out std_logic;
@@ -37,9 +37,7 @@ entity writeframe is
 end ;
 
 architecture rtl of writeframe is
-	-- AMBA Signale 
-	signal dmai               : ahb_dma_in_type;
-	signal dmao               : ahb_dma_out_type;
+	
   
 	-- Core Ext Signale
 	subtype BYTE is std_logic_vector(7 downto 0);
@@ -81,16 +79,9 @@ architecture rtl of writeframe is
 	);
 				
 begin
-	
+
 	------------------------
-	---	AHB Master
-	------------------------
-	ahb_master : ahbmst generic map (1, 0, VENDOR_WIR, WIR_WRITEFRAME, 0, 3, 1)
-	port map (rst, clk, dmai, dmao, ahbi, ahbo);
-	
-	
-	------------------------
-	---	ASync Core Ext Interface Daten übernehmen und schreiben
+	---	ASync Daten bursten
 	------------------------
 	comb : process(r,next_burst,dmao, rst,rd_data_burst)
 	variable v 		: reg_type;

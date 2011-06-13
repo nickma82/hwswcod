@@ -50,7 +50,7 @@ package pkg_getframe is
 	
 	-- PIXEL definitions
 	constant PIXEL_WIDTH				: natural := 24; 
-	constant PIXEL_ADDR_WIDTH			: natural := 10; 
+	constant PIXEL_ADDR_WIDTH			: natural := 11; 
 	constant BURST_BUFFER_LENGTH		: natural := (2**PIXEL_ADDR_WIDTH)/BURST_PIXEL_COUNT;
 	
 	subtype pix_type is std_logic_vector(PIXEL_WIDTH-1 downto 0);
@@ -66,8 +66,8 @@ package pkg_getframe is
 		extsel   	: in   std_ulogic;
 		exti     	: in  module_in_type;
 		exto     	: out module_out_type;
-		ahbi      	: in  ahb_mst_in_type;
-		ahbo      	: out ahb_mst_out_type;
+		dmai    	: out  ahb_dma_in_type;
+		dmao    	: in ahb_dma_out_type;
 		cm_d		: in std_logic_vector(11 downto 0);
 		cm_lval 	: in std_logic; 	--Line valid
 		cm_fval 	: in std_logic; 	--Frame valid
@@ -124,8 +124,8 @@ package pkg_getframe is
 		port (
 			clk     			: in  std_logic;
 			rst    				: in  std_logic;
-			ahbi    			: in  ahb_mst_in_type;
-			ahbo    			: out ahb_mst_out_type;
+			dmai    			: out  ahb_dma_in_type;
+			dmao    			: in   ahb_dma_out_type;
 			next_burst			: in std_logic;
 			frame_done			: out std_logic;
 			return_pgm			: out std_logic;

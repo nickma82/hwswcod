@@ -14,6 +14,7 @@ use work.pkg_camconfig.all;
 
 library grlib;
 use grlib.amba.all;
+use grlib.devices.all;
 
 library techmap;
 use techmap.gencomp.all;
@@ -99,6 +100,10 @@ architecture behaviour of top is
   -- signals for getframe extension module
   signal getframe_segsel : std_logic;
   signal getframe_exto : module_out_type;
+  
+  -- AMBA Signale 
+  signal dmai  : ahb_dma_in_type;
+  signal dmao  : ahb_dma_out_type;
 
   -- signals for aluext extension module
   signal aluext_segsel : std_logic;
@@ -375,7 +380,12 @@ begin
     ltm_den <= vgao.blank;
     ltm_grest <= '1';
     
-  
+  ------------------------
+  ---	AHB Master für Writeframe
+  ------------------------
+	ahb_master : ahbmst generic map (1, 0, VENDOR_WIR, WIR_WRITEFRAME, 0, 3, 1)
+	port map (rst, clk, dmai, dmao, grlib_ahbmi, getframe_ahbmo);    
+    
   -----------------------------------------------------------------------------
   -- Spear extension modules
   -----------------------------------------------------------------------------
@@ -417,8 +427,8 @@ begin
 		exti      => exti,
 		exto      => getframe_exto,
     
-		ahbi 		=> grlib_ahbmi,
-		ahbo 		=> getframe_ahbmo,
+		dmai 		=> dmai,
+		dmao 		=> dmao,
 		
 		cm_d		=> cm_d,
 		cm_lval 	=> cm_lval,
