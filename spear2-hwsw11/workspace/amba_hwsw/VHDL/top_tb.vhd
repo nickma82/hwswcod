@@ -5,7 +5,7 @@ use ieee.numeric_std.all;
 use work.spear_pkg.all;
 use work.pkg_dis7seg.all;
 
-use work.pkg_writeframe.all;
+use work.pkg_getframe.all;
 use work.pkg_aluext.all;
 
 use std.textio.all;
@@ -180,8 +180,8 @@ begin
 		wait until cm_pixclk = '0';
   		cm_lval <= '1';
   		for col_cnt in 1 to 640 loop
-  			--cm_d <= "111111111111";
-  			cm_d <= std_logic_vector(to_unsigned(col_cnt,8)) & "0000";
+  			cm_d <= "111100000000";
+  			--cm_d <= std_logic_vector(to_unsigned(col_cnt,8)) & "0000";
   			wait for 2*cc;
   		end loop;
 		wait until cm_pixclk = '0';

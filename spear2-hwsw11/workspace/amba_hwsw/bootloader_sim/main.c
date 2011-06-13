@@ -44,6 +44,7 @@
 
 int main (int argc, char *argv[])
 {
+	int i;
 	/*SVGA_VIDEO_LENGTH = ((SCREEN_HEIGHT-1)<<16) | (SCREEN_WIDTH-1);
 	SVGA_FRONT_PORCH = (10<<16) | 40;
 	SVGA_SYNC_LENGTH = (1<<16) | 1;
@@ -55,6 +56,9 @@ int main (int argc, char *argv[])
 	while (1) {
 		GETFRAME_START = 1;
 		getframe_wait_return();
+		i = 0;
+		while(i < 100)
+			i++;
 	}
 	//}
 	//return WRITEFRAME_CMD;

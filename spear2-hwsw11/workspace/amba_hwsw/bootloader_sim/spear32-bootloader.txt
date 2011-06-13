@@ -7,11 +7,11 @@ start address 0x40000000
 
 Program Header:
     LOAD off    0x00000054 vaddr 0x40000000 paddr 0xc0000000 align 2**0
-         filesz 0x00000188 memsz 0x00000188 flags r-x
+         filesz 0x0000017c memsz 0x0000017c flags r-x
 
 Sections:
 Idx Name          Size      VMA       LMA       File off  Algn  Flags
-  0 .text         00000188  40000000  c0000000  00000054  2**0  CONTENTS, ALLOC, LOAD, READONLY, CODE
+  0 .text         0000017c  40000000  c0000000  00000054  2**0  CONTENTS, ALLOC, LOAD, READONLY, CODE
 SYMBOL TABLE:
 no symbols
 
@@ -38,10 +38,9 @@ Contents of section .text:
  40000120 0f208fa1 0f200d10 2d208da1 0d208da1  . ... ..- ... ..
  40000130 0d20070f 7df5470f 7df50d12 0d208da1  . ..}.G.}.... ..
  40000140 0d208da1 cd2a0dee 01e00d12 0d208da1  . ...*....... ..
- 40000150 0d208da1 2d2c0dee 420ae21f 510ae11f  . ..-,..B...Q...
+ 40000150 0d208da1 cd2b0dee 420ae21f 510ae11f  . ...+..B...Q...
  40000160 130023f7 10f400b8 fc8f00fe 500ae01f  ..#.........P...
- 40000170 00f400b8 f68f00fe 500ae01f 00f400b8  ........P.......
- 40000180 f08ff4af 00feffaf                    ........        
+ 40000170 00f400b8 fb9ff5af 00feffaf           ............    
 
 Disassembly of section .text:
 
@@ -216,7 +215,7 @@ Disassembly of section .text:
 4000014e:	8d a1       	sli r13,0x8
 40000150:	0d 20       	ldliu r13,0x0
 40000152:	8d a1       	sli r13,0x8
-40000154:	2d 2c       	ldliu r13,0xc2
+40000154:	cd 2b       	ldliu r13,0xbc
 40000156:	0d ee       	jsr r13
 40000158:	42 0a       	ldli r2,-92
 4000015a:	e2 1f       	ldhi r2,-2
@@ -232,13 +231,7 @@ Disassembly of section .text:
 4000016e:	e0 1f       	ldhi r0,-2
 40000170:	00 f4       	ldbu r0,r0
 40000172:	00 b8       	cmpi_eq r0,0
-40000174:	f6 8f       	jmpi_cf -10
-40000176:	00 fe       	nop
-40000178:	50 0a       	ldli r0,-91
-4000017a:	e0 1f       	ldhi r0,-2
-4000017c:	00 f4       	ldbu r0,r0
-4000017e:	00 b8       	cmpi_eq r0,0
-40000180:	f0 8f       	jmpi_cf -16
-40000182:	f4 af       	jmpi -12
-40000184:	00 fe       	nop
-40000186:	ff af       	jmpi -1
+40000174:	fb 9f       	jmpi_ct -5
+40000176:	f5 af       	jmpi -11
+40000178:	00 fe       	nop
+4000017a:	ff af       	jmpi -1
