@@ -20,3 +20,4 @@ spear2-hwsw11/workspace/amba_hwsw/modelsim/**/*
 transcript
 *.dpf
 *.wlf
+spear2-hwsw11/workspace/amba_hwsw/modelsim/vsim.wlf
