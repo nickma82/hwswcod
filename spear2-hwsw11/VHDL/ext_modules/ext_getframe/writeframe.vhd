@@ -33,6 +33,8 @@ entity writeframe is
 		return_pgm			: out std_logic;
 		rd_address_burst	: out pix_addr_type;
 		rd_data_burst		: in pix_type;
+		clear_screen		: in std_logic;
+		clear_done			: out std_logic;
 		led_red				: out 	std_logic_vector(11 downto 0)
     );
 end ;
@@ -53,12 +55,13 @@ architecture rtl of writeframe is
 		state				: state_type;
 		cur_col				: natural range 0 to SCREEN_W-1;
 		cur_line			: natural range 0 to SCREEN_H-1;
-		burst_count			: natural range 0 to 25600;
-		burst_done_count	: natural range 0 to 25600;
+		burst_count			: natural range 0 to BURST_PER_FRAME_COUNT;
+		burst_done_count	: natural range 0 to BURST_PER_FRAME_COUNT;
 		frame_done			: std_logic;
 		return_pgm			: std_logic;
 		rd_pointer			: pix_addr_type;
 		sent				: natural range 0 to 100;
+		clear_running		: std_logic;
 	end record;
 
 	
@@ -75,6 +78,7 @@ architecture rtl of writeframe is
 		burst_done_count=> 0,
 		frame_done 		=> '0',
 		return_pgm		=> '0',
+		clear_running	=> '0',
 		rd_pointer		=> (others => '0'),
 		sent			=> 0
 	);
@@ -84,30 +88,35 @@ begin
 	------------------------
 	---	ASync Daten bursten
 	------------------------
-	comb : process(r,next_burst,dmao, rst,rd_data_burst)
+	comb : process(r,next_burst,dmao, rst,rd_data_burst,clear_screen)
 	variable v 		: reg_type;
+	variable tmp	: std_logic_vector(9 downto 0);
 	begin
     	v := r;   	
     	
     	v.frame_done := '0';
     	v.return_pgm := '0';
+    	clear_done <= '0';
+    	
+    	  	
 		------------------
 		--- Statemachine
 		------------------
 		case r.state is
 			when reset =>
 				v.state := idle;
-			when idle =>
-				v.address := FRAMEBUFFER_BASE_ADR;
 				v.cur_line := 0;
 				v.cur_col  := 0;
 				v.burst_count := 0;
 				v.burst_done_count := 0;
+			when idle =>
+				v.address := FRAMEBUFFER_BASE_ADR;
+				
 				-- sicherstellen, dass 0 tes element anliegt sobald verarbeitung startet
 				v.rd_pointer := (others => '0');
 				v.sent := 0;
 				
-				if next_burst = '1' then
+				if next_burst = '1' or r.clear_running = '1' then
 					v.state := data;
 					v.start := '1';						
 					
@@ -161,13 +170,22 @@ begin
 				if r.burst_count > r.burst_done_count then
 					v.start := '1';
 					v.state := data;
+				else
+					if r.cur_line = SCREEN_H-1 and r.cur_col = SCREEN_W-1 then
+						v.state := done;
+					end if;
 				end if;
 			when done =>
+				v.cur_line := 0;
+				v.cur_col  := 0;
+				v.burst_count := 0;
+				v.burst_done_count := 0;
 				v.frame_done := '1';
 				v.return_pgm := '1';
 				v.start := '0';
 				v.state := idle;
-
+				clear_done <= '1';
+				v.clear_running := '0';
 		end case;		
 
 		-- neue burts zählen
@@ -176,7 +194,26 @@ begin
 			assert (v.burst_count-r.burst_done_count) < 100	report "Burst Counter Overflow" severity error;
 		end if;
 		
-		v.wdata := "00000000" & rd_data_burst;
+		
+		-- ein burst über ganzen screen starten
+    	if clear_screen = '1' and r.clear_running = '0' then
+    		v.clear_running := '1';
+    		v.burst_count := BURST_PER_FRAME_COUNT;
+    	end if;
+		
+		-- wenn clear screen muster ausgeben
+		if r.clear_running = '1' then
+			-- gerade
+			tmp := std_logic_vector(to_unsigned(r.cur_line,10));
+			if tmp(0) = '0' then
+				v.wdata := "00000000111111110000000000000000";
+			-- ungerade
+			else
+				v.wdata := "00000000000000000000000011111111";
+			end if;
+		else
+			v.wdata := "00000000" & rd_data_burst;
+		end if;
 		
 		-- Werte auf Interface zu Bus legen
 		dmai.wdata  <=  r.wdata; --"00000000000000001111111100000000";
@@ -193,7 +230,8 @@ begin
 	    
 	    rd_address_burst <= r.rd_pointer;
 	    
-	    led_red(11 downto 0) <= std_logic_vector(to_unsigned(r.burst_count, 12));
+	    --led_red(11 downto 0) <= std_logic_vector(to_unsigned(r.burst_count, 12));
+	    led_red(11 downto 0) <= (0=> clear_screen, others => '1');
 		r_next <= v;
     end process;    
     

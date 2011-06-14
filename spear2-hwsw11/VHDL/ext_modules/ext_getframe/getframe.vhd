@@ -53,7 +53,8 @@ architecture rtl of ext_getframe is
 		frame_done	: std_logic;
 		return_pgm	: std_logic;
 		wait_gf		: natural range 0 to 10;
-		pix_count	: natural range 0 to 2*CAM_PIXEL_COUNT;
+		clear_screen: std_logic;
+		clear_done: std_logic;
 	end record;
 	
 	signal r_next : reg_type;
@@ -64,7 +65,8 @@ architecture rtl of ext_getframe is
 		frame_done	=> '0',
 		return_pgm	=> '0',
 		wait_gf		=> 0,
-		pix_count	=> 0
+		clear_screen=> '0',
+		clear_done	=> '0'
 	);
 	
 	signal rstint : std_ulogic;
@@ -84,6 +86,8 @@ architecture rtl of ext_getframe is
 	signal next_burst : std_logic;
 	signal frame_done : std_logic;
 	signal return_pgm : std_logic;
+	
+	signal int_clear_screen, clear_done	:std_logic;
 	
 	signal pix_count : std_logic_vector(19 downto 0);
 begin
@@ -190,12 +194,14 @@ begin
 		return_pgm		 => return_pgm,
 		rd_address_burst => rd_address_burst,
 		rd_data_burst	 => rd_data_burst,
+		clear_screen	 => int_clear_screen,
+		clear_done		 => clear_done,
 		led_red			 => led_red(11 downto 0)
 	);
 	------------------------
 	---	ASync Core Ext Interface Daten übernehmen und schreiben
 	------------------------
-	comb : process(r, exti, extsel, rstint,frame_done,return_pgm,line_ready, next_burst)
+	comb : process(r, exti, extsel, rstint,frame_done,return_pgm,line_ready, next_burst,clear_done,pix_count)
 	variable v 		: reg_type;
 	begin
     	v := r;
@@ -227,7 +233,9 @@ begin
     					v.return_pgm := '0';
     					v.frame_done := '0';
     				end if;
-    			
+    			when "011" =>
+    				v.clear_screen := '1';
+    				v.clear_done := '0';
    			when others =>
 					null;
 			end case;
@@ -252,6 +260,10 @@ begin
     			when "010" =>
     				exto.data(19 downto 0) <= pix_count(19 downto 0);
     				exto.data(31 downto 20) <= (others =>'0');
+    			when "011" =>
+    				if ((exti.byte_en(0) = '1')) then
+    					exto.data(7 downto 0) <= (0 => r.clear_done, others=>'0');
+    				end if;
 				when others =>
 					null;
 			end case;
@@ -291,7 +303,12 @@ begin
 			v.return_pgm := '1';
 		end if;
 		
+		int_clear_screen <= r.clear_screen;
 		
+		if r.clear_screen = '1' and clear_done = '1' then
+			v.clear_done := '1';
+			v.clear_screen := '0';
+		end if;
 	
 		-- getframe 10 cycles high lassen um sicherzustellen, dass read_raw mit pixelclk es nicht verpasst
 		if r.getframe = '1' then

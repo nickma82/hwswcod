@@ -39,7 +39,7 @@ package pkg_getframe is
 	constant BURST_LENGTH				: natural range 2 to 8 := 4;
 	
 	constant BURST_PIXEL_COUNT			: natural := 16;
-	
+	constant BURST_PER_FRAME_COUNT		: natural := PIXEL_COUNT/BURST_PIXEL_COUNT;
 	
 	-- DOT definitions
 	constant DOT_WIDTH					: natural := 8;
@@ -53,6 +53,7 @@ package pkg_getframe is
 	constant PIXEL_ADDR_WIDTH			: natural := 11; 
 	constant BURST_BUFFER_LENGTH		: natural := (2**PIXEL_ADDR_WIDTH)/BURST_PIXEL_COUNT;
 	
+		
 	subtype pix_type is std_logic_vector(PIXEL_WIDTH-1 downto 0);
 	subtype pix_addr_type is std_logic_vector(PIXEL_ADDR_WIDTH-1 downto 0);
 	
@@ -133,6 +134,8 @@ package pkg_getframe is
 			return_pgm			: out std_logic;
 			rd_address_burst	: out pix_addr_type;
 			rd_data_burst		: in pix_type;
+			clear_screen		: in std_logic;
+			clear_done			: out std_logic;
 			led_red				: out 	std_logic_vector(11 downto 0)
 		);
 	end component;

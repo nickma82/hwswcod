@@ -72,7 +72,8 @@ architecture rtl of read_raw is
 		
 		counter		: natural range 0 to 2*CAM_PIXEL_COUNT;
 		last_counter: natural range 0 to 2*CAM_PIXEL_COUNT;
-		inc_next	: std_logic;
+		last_fval	: std_logic;
+		last_lval	: std_logic;
 	end record;
 
 
@@ -93,7 +94,8 @@ architecture rtl of read_raw is
 		conv_line_rdy	=> '0',
 		counter		=> 0,
 		last_counter=> 0,
-		inc_next	=> '1'
+		last_fval	=> '0',
+		last_lval	=> '0'
 	);	
 begin
 	read_raw : process(r, getframe, cm_d, cm_lval, cm_fval, rst)
@@ -136,13 +138,13 @@ begin
 			v.address := std_logic_vector(to_unsigned(r.p_c, DOT_ADDR_WIDTH));
 			
 			v.start := '0';
-			v.inc_next := '0';
 			
 			v.counter := r.counter + 1;
 			led_red(0) <= '0';
 		-- neue zeile
 		elsif cm_fval = '1' and cm_lval = '0' then
-			if r.inc_next = '0' then
+			-- nach line valid zeile toggeln
+			if r.last_lval = '1' then
 				v.toggle_r := not r.toggle_r;
 				
 				if r.p_r < CAM_H-1 then
@@ -153,7 +155,6 @@ begin
 				
 				v.p_c := 0;	
 				v.address := (others=>'0');	
-				v.inc_next := '1';
 			end if;
 			led_red(1) <= '0';
 		-- zwischen zwei frames
@@ -164,14 +165,16 @@ begin
 			v.conv_line_rdy := '0';
 			v.address	:= (others => '0');
 			v.data		:= (others => '0');
-			v.last_counter := r.counter;
-			v.counter	:= 0;
-			v.inc_next := '0';
 			
-			if r.start = '1' and r.running = '0' then
-				v.running := '1';
-			elsif r.start = '0' and r.running = '1' then
+			v.counter	:= 0;
+			
+			if r.last_fval = '1' then
 				v.running := '0';
+				v.last_counter := r.counter;
+			else
+				if r.start = '1' then
+					v.running := '1';
+				end if;
 			end if;
 			
 			led_red(2) <= '0';
@@ -202,6 +205,9 @@ begin
 		cm_trigger <= '0';
     	cm_reset <= '1';
 
+    	v.last_lval := cm_lval;
+    	v.last_fval := cm_fval;
+    	
     	r_next <= v;
     end process;
     
@@ -226,7 +232,8 @@ begin
 				r.data		<= (others => '0');
 				r.last_counter <= 0;
 				r.counter	<= 0;
-				r.inc_next  <= '1';
+				r.last_lval  <= '0';
+				r.last_fval	<= '0';
 			else
 				r <= r_next;
 			end if;

@@ -138,7 +138,9 @@ read_raw : process(r, line_ready, rst, rd_data_even, rd_data_odd)
 					if r.row_cnt = 0 then
 						v.b_cnt := 1;
 					end if;
-					v.rd_address := (0 => '1', others => '0');
+					v.rd_address := r.rd_address + 1;					
+				else
+					v.rd_address := (others => '0');
 				end if;
 			when convert_line =>
 				-- bei rot muss blau der zeile darüber verwendet werden

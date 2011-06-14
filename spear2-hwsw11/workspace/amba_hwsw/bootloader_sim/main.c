@@ -15,6 +15,8 @@
 #define GETFRAME_RETURN		(*(volatile uint8_t *const)(GETFRAME_BASE+5))
 #define GETFRAME_DONE		(*(volatile uint8_t *const)(GETFRAME_BASE+6))
 
+#define GETFRAME_CLEAR		(*(volatile uint8_t *const)(GETFRAME_BASE+12))
+
 #define getframe_wait_return() while(!GETFRAME_RETURN) asm("nop")
 
 #define ALUEXT_BASE 		(0xFFFFFE80)
@@ -53,13 +55,18 @@ int main (int argc, char *argv[])
 	SVGA_DYN_CLOCK0 = 30000;
 	SVGA_STATUS = (1<<0) | (3<<4);*/
 	
-	while (1) {
+	GETFRAME_CLEAR = 1;
+	
+	while (!GETFRAME_CLEAR)
+		asm("nop");
+	
+	/*while (1) {
 		GETFRAME_START = 1;
 		getframe_wait_return();
 		i = 0;
 		while(i < 100)
 			i++;
-	}
+	}*/
 	//}
 	//return WRITEFRAME_CMD;
 	/*ALUEXT_RGB = (74 << 16) | (112 << 8) |  194;
