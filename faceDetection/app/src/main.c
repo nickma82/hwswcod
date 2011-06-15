@@ -23,7 +23,7 @@
 
 int main(int argc, char **argv)
 {	
-	uint32_t fps_c,i;
+	uint32_t fps_c,i,y,fps_mean;
 	
 	#ifdef __SPEAR32__
 		// initialize HW modules
@@ -76,23 +76,31 @@ int main(int argc, char **argv)
 		//write_cam(0x49,0x1A8);
 		
 		// row and column skiping => 640x480 res
-		write_cam(0x22, 0x33);
-		write_cam(0x23, 0x33);
+		write_cam(0x22, 0x03);
+		write_cam(0x23, 0x03);
 		
-		
-		//write_cam(0xA0,(8<<3)|(1));
-		// blank setzen um länger zeit zu haben
-		//write_cam(0x05,1000);
-		//write_cam(0x06,2000);
 		
 		// testbild
-		//write_cam(0xA0,0x20);
+		write_cam(0xA1,4095); // Grün
+		write_cam(0xA2,0); // Rot
+		write_cam(0xA3,0); // Blau
+		//write_cam(0xA0,(0<<3)|(1));
+		// Grün => Grün
+		// Rot => Blau
+		// Blau => Grün
 		
+		// Grün => Blaurot
+		// Rot => Blau
+		// Blau => Rot
+		
+		
+				
 		// mirror der rows
 		write_cam(0x20, (1<<15));
-		// restart cam
-		//write_cam(0x0b, 0x01);		
 		
+		
+		
+		// restart cam		
 		write_cam(0x0b,1);
 		
 		// wait for restart finished
@@ -105,7 +113,9 @@ int main(int argc, char **argv)
 		GETFRAME_CLEAR = 1;
 		while (!GETFRAME_CLEAR)
 			asm("nop");
-				
+		
+		y = 0;
+		fps_mean = 0;
 		while (1) {
 
 			*reg = (1 << COUNTER_CLEAR_BIT);
@@ -114,18 +124,25 @@ int main(int argc, char **argv)
 			GETFRAME_START = 1;
 			i = 0;	
 			while(!GETFRAME_RETURN && i < 60000) {
-				dis7seg_uint32(GETFRAME_COUNTER);
+				//dis7seg_uint32(GETFRAME_COUNTER);
 				i++;
-			}
+			}		
 			
-			
-			
-			fps_c = counter_getValue(&counterHandle);
-			
+			fps_c = counter_getValue(&counterHandle);		
 			fps_c *= CLKPERIOD * PRESCALER;
 			fps_c /= 1000000;
-			//dis7seg_uint32(1000 / fps_c);
-			i++;
+			
+			fps_mean += 1000/fps_c;
+			fps_mean /= 2;		
+			
+			if (y == 10) {
+				
+				dis7seg_uint32(fps_mean);
+				y = 0;
+			}
+			else
+				y++;
+				
 		}
 	#endif
 	dis7seg_hex(0xEEEEEEEE);

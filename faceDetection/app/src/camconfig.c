@@ -11,9 +11,14 @@ uint32_t read_cam(uint8_t address) {
 
 
 uint8_t write_cam(uint8_t address, uint16_t data){
+	
 	CAMCONFIG_WRITE = (CAM_ID_WRITE << 24) | (address << 16) | data;
 	while (!CAMCONFIG_STATUS){
 		asm("nop");
 	}
+	
+	/*if (read_cam(address) != data )
+		printf("%d falscher wert\n",address);*/
+	
 	return 0;
 }

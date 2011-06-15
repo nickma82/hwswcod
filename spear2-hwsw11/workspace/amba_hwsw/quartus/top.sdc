@@ -25,7 +25,7 @@
 
 create_clock -name "clock" -period 20ns [get_ports {db_clk}] -waveform {0.000ns 10.000ns}
 
-
+#create_clock -name "pixclock" --period 40ns [get_ports {CM_PIXCLK}] -waveform {0.000ns 20.000ns}
 # Automatically constrain PLL and other generated clocks
 derive_pll_clocks -create_base_clocks
 

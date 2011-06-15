@@ -131,6 +131,8 @@ read_raw : process(r, line_ready, rst, rd_data_even, rd_data_odd, frame_stop)
 				v.wr_enable := '0';
 				v.pixel_addr := (others=>'0');
 				v.b_cnt := 0;
+				v.toggle_r := '1';
+				
 			when wait_line_ready =>	
 				if line_ready = '1' then 
 					v.state := convert_line;
@@ -232,7 +234,7 @@ read_raw : process(r, line_ready, rst, rd_data_even, rd_data_odd, frame_stop)
 			when frame_done =>
 				v.row_cnt := 0;
 				v.col_cnt := 0;
-				v.toggle_r := '0';
+				v.toggle_r := '1';
 				v.rd_address := (others=>'0');
 				v.pixel_addr := (others=>'0');
 				v.b_cnt := 0;
