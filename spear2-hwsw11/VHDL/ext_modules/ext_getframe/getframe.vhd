@@ -87,7 +87,7 @@ architecture rtl of ext_getframe is
 	signal frame_done : std_logic;
 	signal return_pgm : std_logic;
 	
-	signal int_clear_screen, clear_done	:std_logic;
+	signal int_clear_screen, clear_done, frame_stop	:std_logic;
 	
 	signal pix_count : std_logic_vector(19 downto 0);
 begin
@@ -165,6 +165,7 @@ begin
 		wr_en_even	=>  wr_en_even,
 		wr_data		=>  wr_data,		
 		wr_address	=>  wr_address,
+		frame_stop	=> frame_stop,
 		led_red		=> led_red(17 downto 12),
 		last_px_cnt => pix_count
     );
@@ -180,7 +181,8 @@ begin
 		rd_data_odd		 =>  rd_data_odd,
 		wr_en_burst		 =>  wr_en_burst, 
 		wr_address_burst =>  wr_address_burst, 
-		wr_data_burst	 =>  wr_data_burst
+		wr_data_burst	 =>  wr_data_burst,
+		frame_stop		=> frame_stop
 	);
 	
 	writeframe_unit : writeframe
@@ -196,6 +198,7 @@ begin
 		rd_data_burst	 => rd_data_burst,
 		clear_screen	 => int_clear_screen,
 		clear_done		 => clear_done,
+		frame_stop		=> frame_stop,
 		led_red			 => led_red(11 downto 0)
 	);
 	------------------------

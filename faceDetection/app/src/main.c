@@ -64,8 +64,8 @@ int main(int argc, char **argv)
 		//write_cam(0x09, 470);
 		
 		// row and column skiping => 640x480 res
-		write_cam(0x22, 3);
-		write_cam(0x23, 3);
+		write_cam(0x22, 0x33);
+		write_cam(0x23, 0x33);
 		
 		// testbild
 		//write_cam(0xA0,0x20);
@@ -80,7 +80,11 @@ int main(int argc, char **argv)
 		dis7seg_hex(read_cam(0x04));
 		i = 0;		
 		
-		while (i < 1000000) {
+		GETFRAME_CLEAR = 1;
+		while (!GETFRAME_CLEAR)
+			asm("nop");
+		
+		/*while (1) {
 
 			*reg = (1 << COUNTER_CLEAR_BIT);
 			*reg = (1 << COUNTER_COUNT_BIT);
@@ -89,17 +93,22 @@ int main(int argc, char **argv)
 			
 			while(!GETFRAME_RETURN) {
 				//dis7seg_hex((*(volatile uint32_t *const)(GETFRAME_BASE+4)));
-				asm("nop");
+				dis7seg_uint32(GETFRAME_COUNTER);
+				//asm("nop");
 			}
+			for(i = 0; i < 10000000; i++)
+				asm("nop");
 			
+			//dis7seg_uint32(GETFRAME_COUNTER);
 			
+			printf("%d\n",(int)fps_c);
 			fps_c = counter_getValue(&counterHandle);
 			
 			fps_c *= CLKPERIOD * PRESCALER;
 			fps_c /= 1000000;
-			dis7seg_uint32(1000 / fps_c);
+			//dis7seg_uint32(1000 / fps_c);
 			i++;
-		}
+		}*/
 	#endif
 	dis7seg_hex(0xEEEEEEEE);
 	#ifdef __SPEAR32__

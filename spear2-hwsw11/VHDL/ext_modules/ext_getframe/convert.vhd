@@ -35,6 +35,7 @@ entity convert is
 		            		
 		wr_en_burst			: out std_logic;
 		wr_address_burst	: out pix_addr_type;
+		frame_stop			: in std_logic;
 		wr_data_burst		: out pix_type	
     );
 end ;
@@ -170,13 +171,17 @@ read_raw : process(r, line_ready, rst, rd_data_even, rd_data_odd)
 				
 				case r.dot_state is
 					when p_b =>
-						v.pixel_data := r.last_dot & other_dot  & cur_dot;
+						--v.pixel_data := r.last_dot & other_dot  & cur_dot;
+						v.pixel_data := "00000000" & "00000000"  & cur_dot;
 					when p_g2 =>
-						v.pixel_data := other_dot & cur_dot & r.last_dot;
+						--v.pixel_data := other_dot & cur_dot & r.last_dot;
+						v.pixel_data := "00000000" & cur_dot & "00000000";
 					when p_g1 =>
-						v.pixel_data := r.last_dot & cur_dot & other_dot;
+						--v.pixel_data := r.last_dot & cur_dot & other_dot;
+						v.pixel_data := "00000000" & cur_dot & "00000000";
 					when p_r =>
-						v.pixel_data := cur_dot & other_dot & r.last_dot;
+						--v.pixel_data := cur_dot & other_dot & r.last_dot;
+						v.pixel_data := cur_dot & "00000000" & "00000000";
 				end case;
 				
 				
@@ -236,6 +241,10 @@ read_raw : process(r, line_ready, rst, rd_data_even, rd_data_odd)
 		wr_address_burst <= r.pixel_addr;
 		wr_data_burst <= r.pixel_data;
 		next_burst <= r.next_burst;
+		
+		if frame_stop = '1' then
+			v.state := frame_done;
+		end if;
 		
     	r_next <= v;
     end process;

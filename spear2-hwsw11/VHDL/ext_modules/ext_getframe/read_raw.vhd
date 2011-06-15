@@ -45,6 +45,7 @@ entity read_raw is
 		wr_data		: out dot_type;
 		wr_address	: out dot_addr_type;
 		led_red		: out std_logic_vector(5 downto 0);
+		frame_stop	: out std_logic;
 		last_px_cnt	: out std_logic_vector(19 downto 0)
     );
 end ;
@@ -105,7 +106,7 @@ begin
     	
     	v.en_odd := '0'; --disable every cycle
     	v.en_even := '0'; --disable every cycle
-    	
+    	frame_stop <= '0';
     	led_red <= (others => '1');
 		------------------------
 		---	CCD Handler - RISING EDGE PIXCLK sensitiv (inverted pixclk setting)
@@ -137,7 +138,9 @@ begin
 			v.data := cm_d(11 downto 4);
 			v.address := std_logic_vector(to_unsigned(r.p_c, DOT_ADDR_WIDTH));
 			
-			v.start := '0';
+			if r.running = '1' then
+				v.start := '0';
+			end if;
 			
 			v.counter := r.counter + 1;
 			led_red(0) <= '0';
@@ -167,6 +170,7 @@ begin
 			v.data		:= (others => '0');
 			
 			v.counter	:= 0;
+			frame_stop <= '1';
 			
 			if r.last_fval = '1' then
 				v.running := '0';
@@ -184,7 +188,7 @@ begin
 		
 		
 		-- running übernehmen
-		if getframe = '1' and r.running = '0' then
+		if getframe = '1' then
 			v.start := '1';
 		end if;		
 		

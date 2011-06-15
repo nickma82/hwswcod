@@ -35,6 +35,7 @@ entity writeframe is
 		rd_data_burst		: in pix_type;
 		clear_screen		: in std_logic;
 		clear_done			: out std_logic;
+		frame_stop			: in std_logic;
 		led_red				: out 	std_logic_vector(11 downto 0)
     );
 end ;
@@ -232,6 +233,12 @@ begin
 	    
 	    --led_red(11 downto 0) <= std_logic_vector(to_unsigned(r.burst_count, 12));
 	    led_red(11 downto 0) <= (0=> clear_screen, others => '1');
+	    
+	    -- abbruch wenn keine daten von kamera mehr zu erwarten sind
+	    if frame_stop = '1' and r.clear_running = '0' and r.burst_count = r.burst_count_done then
+			v.state := done;
+		end if;
+		
 		r_next <= v;
     end process;    
     
