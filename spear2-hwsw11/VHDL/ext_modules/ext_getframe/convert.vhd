@@ -97,6 +97,8 @@ read_raw : process(r, line_ready, rst, rd_data_even, rd_data_odd)
 			other_dot := rd_data_even;
 		end if;
 		
+		led_red(5 downto 0) <= (others=>'0'); 
+		
     	---Next dot descision logic
 		if r.state = convert_line then
 			if r.toggle_r = '0' then
@@ -143,6 +145,7 @@ read_raw : process(r, line_ready, rst, rd_data_even, rd_data_odd)
 				else
 					v.rd_address := (others => '0');
 				end if;
+				led_red(0) <= '1';
 			when convert_line =>
 				-- bei rot muss blau der zeile darüber verwendet werden
 				-- => bei g1 muss blau auf last dot gespeichert werden
@@ -211,6 +214,7 @@ read_raw : process(r, line_ready, rst, rd_data_even, rd_data_odd)
 				else
 					v.b_cnt := r.b_cnt + 1;
 				end if;
+				led_red(1) <= '1';
 			when line_done => 
 				
 				v.col_cnt := 0;
@@ -223,7 +227,7 @@ read_raw : process(r, line_ready, rst, rd_data_even, rd_data_odd)
 					v.state := wait_line_ready;
 					v.row_cnt := r.row_cnt + 1;
 				end if;
-			
+				led_red(2) <= '1';
 			when frame_done =>
 				v.row_cnt := 0;
 				v.col_cnt := 0;
@@ -232,7 +236,8 @@ read_raw : process(r, line_ready, rst, rd_data_even, rd_data_odd)
 				v.pixel_addr := (others=>'0');
 				v.b_cnt := 0;
 				v.state := wait_line_ready;
-				v.next_burst := '1';
+				--v.next_burst := '1';
+				led_red(3) <= '1';
 		end case;
 			
 		rd_address <= r.rd_address;

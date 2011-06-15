@@ -63,6 +63,7 @@ architecture rtl of writeframe is
 		rd_pointer			: pix_addr_type;
 		sent				: natural range 0 to 100;
 		clear_running		: std_logic;
+		frame_stop			: std_logic;
 	end record;
 
 	
@@ -81,7 +82,8 @@ architecture rtl of writeframe is
 		return_pgm		=> '0',
 		clear_running	=> '0',
 		rd_pointer		=> (others => '0'),
-		sent			=> 0
+		sent			=> 0,
+		frame_stop		=> '0'
 	);
 				
 begin
@@ -89,7 +91,7 @@ begin
 	------------------------
 	---	ASync Daten bursten
 	------------------------
-	comb : process(r,next_burst,dmao, rst,rd_data_burst,clear_screen)
+	comb : process(r,next_burst,dmao, rst,rd_data_burst,clear_screen,frame_stop)
 	variable v 		: reg_type;
 	variable tmp	: std_logic_vector(9 downto 0);
 	begin
@@ -99,7 +101,7 @@ begin
     	v.return_pgm := '0';
     	clear_done <= '0';
     	
-    	  	
+    	led_red(5 downto 0) <= (others=>'0');  	
 		------------------
 		--- Statemachine
 		------------------
@@ -124,7 +126,7 @@ begin
 					-- addresse gleich auf 1 stellen um im nächsten zyklus die richtige addresse anzulegen
 					v.rd_pointer := (0 => '1', others => '0');
 				end if;
-				
+				led_red(0) <= '1';
 			when data =>
 				if dmao.ready = '1' then
 					if dmao.haddr = (9 downto 0 => '0') then
@@ -165,7 +167,7 @@ begin
 					v.sent := r.sent + 1;
 				end if;		
 				
-				
+				led_red(1) <= '1';
 			when start_next_burst =>
 				v.sent := 0;
 				if r.burst_count > r.burst_done_count then
@@ -176,6 +178,7 @@ begin
 						v.state := done;
 					end if;
 				end if;
+				led_red(2) <= '1';
 			when done =>
 				v.cur_line := 0;
 				v.cur_col  := 0;
@@ -187,12 +190,13 @@ begin
 				v.state := idle;
 				clear_done <= '1';
 				v.clear_running := '0';
+				led_red(3) <= '1';
 		end case;		
 
 		-- neue burts zählen
 		if next_burst = '1' then
 			v.burst_count := r.burst_count + 1;
-			assert (v.burst_count-r.burst_done_count) < 100	report "Burst Counter Overflow" severity error;
+			--assert (v.burst_count-r.burst_done_count) < 100	report "Burst Counter Overflow" severity error;
 		end if;
 		
 		
@@ -232,10 +236,17 @@ begin
 	    rd_address_burst <= r.rd_pointer;
 	    
 	    --led_red(11 downto 0) <= std_logic_vector(to_unsigned(r.burst_count, 12));
-	    led_red(11 downto 0) <= (0=> clear_screen, others => '1');
+	   
+	    led_red(4) <= r.frame_done;
+	    led_red(5) <: r.clear_running;
+	    
+	    if frame_stop = '1' then
+	    	v.frame_stop := '1';
+	    end if;
 	    
 	    -- abbruch wenn keine daten von kamera mehr zu erwarten sind
-	    if frame_stop = '1' and r.clear_running = '0' and r.burst_count = r.burst_count_done then
+	    if r.state /= idle and r.state /= done and r.frame_stop = '1' and r.clear_running = '0' and r.burst_count = r.burst_count_done then
+	    	v.frame_stop := '0';
 			v.state := done;
 		end if;
 		

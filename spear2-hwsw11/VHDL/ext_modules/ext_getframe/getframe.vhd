@@ -182,6 +182,7 @@ begin
 		wr_en_burst		 =>  wr_en_burst, 
 		wr_address_burst =>  wr_address_burst, 
 		wr_data_burst	 =>  wr_data_burst,
+		led_red			=> led_red(11 downto 6);
 		frame_stop		=> frame_stop
 	);
 	
@@ -199,7 +200,7 @@ begin
 		clear_screen	 => int_clear_screen,
 		clear_done		 => clear_done,
 		frame_stop		=> frame_stop,
-		led_red			 => led_red(11 downto 0)
+		led_red			 => led_red(5 downto 0)
 	);
 	------------------------
 	---	ASync Core Ext Interface Daten übernehmen und schreiben
@@ -252,20 +253,20 @@ begin
 					exto.data <= r.ifacereg(3) & r.ifacereg(2) & r.ifacereg(1) & r.ifacereg(0);
 				when "001" =>
 					if ((exti.byte_en(0) = '1')) then
-    					exto.data(7 downto 0) <= (0 => r.getframe, others=>'0');
+    					exto.data(7 downto 0) <=  "0000000" & r.getframe;
     				end if;
     				if ((exti.byte_en(1) = '1')) then
-    					exto.data(15 downto 8) <= (8 => r.return_pgm, others=>'0');
+    					exto.data(15 downto 8) <= "0000000" & r.return_pgm;
     				end if;
     				if ((exti.byte_en(2) = '1')) then
-    					exto.data(23 downto 16) <= (16 => r.frame_done, others=>'0');
+    					exto.data(23 downto 16) <=  "0000000" & r.frame_done;
     				end if;
     			when "010" =>
     				exto.data(19 downto 0) <= pix_count(19 downto 0);
     				exto.data(31 downto 20) <= (others =>'0');
     			when "011" =>
     				if ((exti.byte_en(0) = '1')) then
-    					exto.data(7 downto 0) <= (0 => r.clear_done, others=>'0');
+    					exto.data(7 downto 0) <= "0000000" & r.clear_done;
     				end if;
 				when others =>
 					null;

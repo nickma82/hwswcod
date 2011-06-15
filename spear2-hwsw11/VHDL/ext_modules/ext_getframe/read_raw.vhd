@@ -107,7 +107,7 @@ begin
     	v.en_odd := '0'; --disable every cycle
     	v.en_even := '0'; --disable every cycle
     	frame_stop <= '0';
-    	led_red <= (others => '1');
+    	led_red <= (others => '0');
 		------------------------
 		---	CCD Handler - RISING EDGE PIXCLK sensitiv (inverted pixclk setting)
 		--- state_pixsync_cam_type
@@ -135,7 +135,7 @@ begin
 			end if;
 			
 			-- daten übernehmen
-			v.data := cm_d(11 downto 4);
+			v.data := cm_d(7 downto 0);
 			v.address := std_logic_vector(to_unsigned(r.p_c, DOT_ADDR_WIDTH));
 			
 			if r.running = '1' then
@@ -143,7 +143,7 @@ begin
 			end if;
 			
 			v.counter := r.counter + 1;
-			led_red(0) <= '0';
+			led_red(0) <= '1';
 		-- neue zeile
 		elsif cm_fval = '1' and cm_lval = '0' then
 			-- nach line valid zeile toggeln
@@ -159,7 +159,7 @@ begin
 				v.p_c := 0;	
 				v.address := (others=>'0');	
 			end if;
-			led_red(1) <= '0';
+			led_red(1) <= '1';
 		-- zwischen zwei frames
 		elsif cm_fval = '0' and cm_lval = '0' then
 			v.p_r 		:=  0;
@@ -181,9 +181,9 @@ begin
 				end if;
 			end if;
 			
-			led_red(2) <= '0';
+			led_red(2) <= '1';
 		else
-			led_red(3) <= '0';
+			led_red(3) <= '1';
 		end if;
 		
 		
