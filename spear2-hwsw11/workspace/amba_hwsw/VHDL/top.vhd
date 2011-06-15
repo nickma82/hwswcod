@@ -430,17 +430,16 @@ begin
 		dmai 		=> dmai,
 		dmao 		=> dmao,
 		
-		cm_d		=> cm_d,
+		cm_d		=> cm_d(10 downto 3),
 		cm_lval 	=> cm_lval,
 		cm_fval 	=> cm_fval,
 		cm_pixclk	=> cm_pixclk,
-		cm_reset	=> cm_reset,
 		cm_trigger	=> cm_trigger,
 		cm_strobe	=> cm_strobe,
 		led_red	  => led_red
 	);
     
-
+	cm_reset <= rst;
 	gpio(4) <= cm_lval;
 	gpio(3) <= cm_fval;
 	gpio(5) <= cm_pixclk;

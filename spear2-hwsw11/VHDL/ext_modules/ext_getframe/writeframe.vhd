@@ -36,7 +36,7 @@ entity writeframe is
 		clear_screen		: in std_logic;
 		clear_done			: out std_logic;
 		frame_stop			: in std_logic;
-		led_red				: out 	std_logic_vector(11 downto 0)
+		led_red				: out 	std_logic_vector(5 downto 0)
     );
 end ;
 
@@ -112,6 +112,7 @@ begin
 				v.cur_col  := 0;
 				v.burst_count := 0;
 				v.burst_done_count := 0;
+				v.clear_running := '0';
 			when idle =>
 				v.address := FRAMEBUFFER_BASE_ADR;
 				
@@ -217,7 +218,11 @@ begin
 				v.wdata := "00000000000000000000000011111111";
 			end if;
 		else
-			v.wdata := "00000000" & rd_data_burst;
+			if r.cur_col <= CAM_W-1 then
+				v.wdata := "00000000" & rd_data_burst;
+			else
+				v.wdata := (others=>'1');
+			end if;
 		end if;
 		
 		-- Werte auf Interface zu Bus legen
@@ -238,14 +243,14 @@ begin
 	    --led_red(11 downto 0) <= std_logic_vector(to_unsigned(r.burst_count, 12));
 	   
 	    led_red(4) <= r.frame_done;
-	    led_red(5) <: r.clear_running;
+	    led_red(5) <= r.clear_running;
 	    
 	    if frame_stop = '1' then
 	    	v.frame_stop := '1';
 	    end if;
 	    
 	    -- abbruch wenn keine daten von kamera mehr zu erwarten sind
-	    if r.state /= idle and r.state /= done and r.frame_stop = '1' and r.clear_running = '0' and r.burst_count = r.burst_count_done then
+	    if r.state /= idle and r.state /= done and r.frame_stop = '1' and r.clear_running = '0' and r.burst_count = r.burst_done_count then
 	    	v.frame_stop := '0';
 			v.state := done;
 		end if;

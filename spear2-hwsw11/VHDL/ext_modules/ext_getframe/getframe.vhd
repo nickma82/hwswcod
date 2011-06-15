@@ -31,11 +31,10 @@ entity ext_getframe is
 		dmai      : out  ahb_dma_in_type;
 		dmao      : in ahb_dma_out_type;
 		
-		cm_d		: in std_logic_vector(11 downto 0); --pixel data
+		cm_d		: in std_logic_vector(7 downto 0); --pixel data
 		cm_lval 	: in std_logic; 	--Line valid
 		cm_fval 	: in std_logic; 	--Frame valid
 		cm_pixclk	: in std_logic; 	--pixel Clock
-		cm_reset	: out std_logic;	--D5M reset
 		cm_trigger	: out std_logic;	--Snapshot trigger
 		cm_strobe	: in std_logic; 	--Snapshot strobe
 		led_red		: out 	std_logic_vector(17 downto 0)
@@ -157,7 +156,6 @@ begin
 		cm_lval => cm_lval,
 		cm_fval => cm_fval,
 		cm_pixclk	=> cm_pixclk,
-		cm_reset	=> cm_reset,
 		cm_trigger	=> cm_trigger,
 		cm_strobe 	=> cm_strobe,
 			
@@ -182,7 +180,7 @@ begin
 		wr_en_burst		 =>  wr_en_burst, 
 		wr_address_burst =>  wr_address_burst, 
 		wr_data_burst	 =>  wr_data_burst,
-		led_red			=> led_red(11 downto 6);
+		led_red			=> led_red(11 downto 6),
 		frame_stop		=> frame_stop
 	);
 	

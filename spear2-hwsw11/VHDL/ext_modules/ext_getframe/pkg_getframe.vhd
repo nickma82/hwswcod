@@ -32,11 +32,11 @@ package pkg_getframe is
 	constant CAM_PIXEL_COUNT			: integer := CAM_W*CAM_H;
 	
 	constant PIXEL_COUNT				: integer := SCREEN_W*SCREEN_H;
-	constant FRAMEBUFFER_BASE_ADR : std_logic_vector(31 downto 0) := "11100000000000000000000000000100";
+	constant FRAMEBUFFER_BASE_ADR : std_logic_vector(31 downto 0) := "11100000000000000000000000000000";
 	constant FRAMEBUFFER_END_ADR	: std_logic_vector(31 downto 0) := FRAMEBUFFER_BASE_ADR+(PIXEL_COUNT*4);
 	
 	-- 	constante für burstlänge
-	constant BURST_LENGTH				: natural range 2 to 8 := 6;
+	constant BURST_LENGTH				: natural range 2 to 8 := 4;
 	
 	constant BURST_PIXEL_COUNT			: natural := 2**BURST_LENGTH;
 	constant BURST_PER_FRAME_COUNT		: natural := PIXEL_COUNT/BURST_PIXEL_COUNT;
@@ -69,11 +69,10 @@ package pkg_getframe is
 		exto     	: out module_out_type;
 		dmai    	: out  ahb_dma_in_type;
 		dmao    	: in ahb_dma_out_type;
-		cm_d		: in std_logic_vector(11 downto 0);
+		cm_d		: in std_logic_vector(7 downto 0);
 		cm_lval 	: in std_logic; 	--Line valid
 		cm_fval 	: in std_logic; 	--Frame valid
 		cm_pixclk	: in std_logic; 	--pixel Clock
-		cm_reset	: out std_logic;	--D5M reset
 		cm_trigger	: out std_logic;	--Snapshot trigger
 		cm_strobe	: in std_logic; 	--Snapshot strobe
 		
@@ -89,11 +88,10 @@ package pkg_getframe is
 			
 			line_ready	: out std_logic;
 			
-			cm_d		: in std_logic_vector(11 downto 0); --dot data
+			cm_d		: in std_logic_vector(7 downto 0); --dot data
 			cm_lval 	: in std_logic; 	--Line valid
 			cm_fval 	: in std_logic; 	--Frame valid
 			cm_pixclk	: in std_logic; 	--dot Clock
-			cm_reset	: out std_logic;	--D5M reset
 			cm_trigger	: out std_logic;	--Snapshot trigger
 			cm_strobe	: in std_logic; 	--Snapshot strobe
 			

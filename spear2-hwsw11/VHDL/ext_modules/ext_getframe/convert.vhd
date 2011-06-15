@@ -36,7 +36,8 @@ entity convert is
 		wr_en_burst			: out std_logic;
 		wr_address_burst	: out pix_addr_type;
 		frame_stop			: in std_logic;
-		wr_data_burst		: out pix_type	
+		wr_data_burst		: out pix_type;
+		led_red				: out 	std_logic_vector(5 downto 0)
     );
 end ;
 
@@ -49,7 +50,7 @@ architecture rtl of convert is
 		dot_state	: dot_state_type;
 		
 		toggle_r	: std_logic;
-		col_cnt    	: natural range 0 to SCREEN_W-1;
+		col_cnt    	: natural range 0 to SCREEN_W;
 		row_cnt    	: natural range 0 to SCREEN_H-1;
 				
 		rd_address	: dot_addr_type;
@@ -82,7 +83,7 @@ architecture rtl of convert is
 		next_burst	=> '0'
 	);
 begin
-read_raw : process(r, line_ready, rst, rd_data_even, rd_data_odd)
+read_raw : process(r, line_ready, rst, rd_data_even, rd_data_odd, frame_stop)
 	variable v 	: reg_type;
 	variable cur_dot,other_dot : dot_type;
 	begin
@@ -174,21 +175,21 @@ read_raw : process(r, line_ready, rst, rd_data_even, rd_data_odd)
 				
 				case r.dot_state is
 					when p_b =>
-						--v.pixel_data := r.last_dot & other_dot  & cur_dot;
-						v.pixel_data := "00000000" & "00000000"  & cur_dot;
+						v.pixel_data := r.last_dot & other_dot  & cur_dot;
+						--v.pixel_data := "00000000" & "00000000"  & cur_dot;
 					when p_g2 =>
-						--v.pixel_data := other_dot & cur_dot & r.last_dot;
-						v.pixel_data := "00000000" & cur_dot & "00000000";
+						v.pixel_data := other_dot & cur_dot & r.last_dot;
+						--v.pixel_data := "00000000" & cur_dot & "00000000";
 					when p_g1 =>
-						--v.pixel_data := r.last_dot & cur_dot & other_dot;
-						v.pixel_data := "00000000" & cur_dot & "00000000";
+						v.pixel_data := r.last_dot & cur_dot & other_dot;
+						--v.pixel_data := "00000000" & cur_dot & "00000000";
 					when p_r =>
-						--v.pixel_data := cur_dot & other_dot & r.last_dot;
-						v.pixel_data := cur_dot & "00000000" & "00000000";
+						v.pixel_data := cur_dot & other_dot & r.last_dot;
+						--v.pixel_data := cur_dot & "00000000" & "00000000";
 				end case;
 				
 				
-				if r.col_cnt = SCREEN_W-1 then
+				if r.col_cnt = SCREEN_W then
 					v.state := line_done;
 				else
 					v.col_cnt := r.col_cnt + 1;
@@ -246,6 +247,8 @@ read_raw : process(r, line_ready, rst, rd_data_even, rd_data_odd)
 		wr_address_burst <= r.pixel_addr;
 		wr_data_burst <= r.pixel_data;
 		next_burst <= r.next_burst;
+		
+		led_red(4) <= frame_stop;
 		
 		if frame_stop = '1' then
 			v.state := frame_done;

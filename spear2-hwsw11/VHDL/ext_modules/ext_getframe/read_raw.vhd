@@ -32,11 +32,10 @@ entity read_raw is
 		
 		line_ready	: out std_logic;
 		
-		cm_d		: in std_logic_vector(11 downto 0); --dot data
+		cm_d		: in std_logic_vector(7 downto 0); --dot data
 		cm_lval 	: in std_logic; 	--Line valid
 		cm_fval 	: in std_logic; 	--Frame valid
 		cm_pixclk	: in std_logic; 	--dot Clock
-		cm_reset	: out std_logic;	--D5M reset
 		cm_trigger	: out std_logic;	--Snapshot trigger
 		cm_strobe	: in std_logic; 	--Snapshot strobe
 		
@@ -128,14 +127,15 @@ begin
 			
 			-- nach ersten pixel kann konvertierung gestartet werden
 			-- nach 4. pixel wieder abschalten
-			if r.p_c = 2 then
+			if r.p_c = CAM_W-20 then
 				v.conv_line_rdy := '1';
-			elsif r.p_c = 6 then
+			elsif r.p_c = CAM_W-10 then
 				v.conv_line_rdy := '0';
 			end if;
 			
 			-- daten übernehmen
-			v.data := cm_d(7 downto 0);
+			v.data := cm_d;
+			
 			v.address := std_logic_vector(to_unsigned(r.p_c, DOT_ADDR_WIDTH));
 			
 			if r.running = '1' then
@@ -207,7 +207,6 @@ begin
 		led_red(5) <= r.start;
 				
 		cm_trigger <= '0';
-    	cm_reset <= '1';
 
     	v.last_lval := cm_lval;
     	v.last_fval := cm_fval;
