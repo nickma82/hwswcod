@@ -64,7 +64,7 @@ int main(int argc, char **argv)
 		write_cam(0x03, 1919);
 		
 		// shutter width lower
-		write_cam(0x09, 1200);
+		//write_cam(0x09, 1200);
 		
 		// GAIN
 		
@@ -74,10 +74,16 @@ int main(int argc, char **argv)
 		//write_cam(0x2D,0x19C);
 		//write_cam(0x2B,0x13);
 		//write_cam(0x2E,0x13);
-		write_cam(0x2B, (10<<8)|(0x0<<6)|(0x8)); //Green
-		write_cam(0x2E, (10<<8)|(0x0<<6)|(0x8)); //Green Reset
-		write_cam(0x2D, (50<<8)|(0<<6)|(0x9)); //Red Reset
-		write_cam(0x2C, (50<<8)|(0<<6)|(0x9)); //Blue Reset
+		
+		write_cam(0x2B, (0<<8)|(0<<6)|(0x13)); //Green
+		write_cam(0x2E, (0<<8)|(0<<6)|(0x13)); //Green Reset
+		write_cam(0x2D, (6<<8)|(0<<6)|(0xF)); //Red Reset
+		write_cam(0x2C, (5<<8)|(0<<6)|(0xF)); //Blue Reset
+		
+		// ganz gut: write_cam(0x2B, (0<<8)|(0<<6)|(0x13)); //Green
+		// ganz gut: write_cam(0x2E, (0<<8)|(0<<6)|(0x13)); //Green Reset
+		// ganz gut: write_cam(0x2D, (6<<8)|(0<<6)|(0xF)); //Red Reset
+		// ganz gut: write_cam(0x2C, (5<<8)|(0<<6)|(0xF)); //Blue Reset
 		
 		//write_cam(0x49,0x1A8);
 		
