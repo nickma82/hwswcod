@@ -32,7 +32,7 @@ entity read_raw is
 		
 		line_ready	: out std_logic;
 		
-		cm_d		: in std_logic_vector(7 downto 0); --dot data
+		cm_d		: in std_logic_vector(11 downto 0); --dot data
 		cm_lval 	: in std_logic; 	--Line valid
 		cm_fval 	: in std_logic; 	--Frame valid
 		cm_pixclk	: in std_logic; 	--dot Clock
@@ -134,7 +134,7 @@ begin
 			end if;
 			
 			-- daten übernehmen
-			v.data := cm_d;
+			v.data := cm_d(11 downto 4);
 			
 			v.address := std_logic_vector(to_unsigned(r.p_c, DOT_ADDR_WIDTH));
 			
@@ -170,7 +170,10 @@ begin
 			v.data		:= (others => '0');
 			
 			v.counter	:= 0;
+			
+			--if r.p_r < CAM_H-1 and r.p_c < CAM_W-10 then
 			frame_stop <= '1';
+			--end if;
 			
 			if r.last_fval = '1' then
 				v.running := '0';

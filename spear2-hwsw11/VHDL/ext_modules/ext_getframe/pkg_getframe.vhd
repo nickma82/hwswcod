@@ -69,7 +69,7 @@ package pkg_getframe is
 		exto     	: out module_out_type;
 		dmai    	: out  ahb_dma_in_type;
 		dmao    	: in ahb_dma_out_type;
-		cm_d		: in std_logic_vector(7 downto 0);
+		cm_d		: in std_logic_vector(11 downto 0);
 		cm_lval 	: in std_logic; 	--Line valid
 		cm_fval 	: in std_logic; 	--Frame valid
 		cm_pixclk	: in std_logic; 	--pixel Clock
@@ -88,7 +88,7 @@ package pkg_getframe is
 			
 			line_ready	: out std_logic;
 			
-			cm_d		: in std_logic_vector(7 downto 0); --dot data
+			cm_d		: in std_logic_vector(11 downto 0); --dot data
 			cm_lval 	: in std_logic; 	--Line valid
 			cm_fval 	: in std_logic; 	--Frame valid
 			cm_pixclk	: in std_logic; 	--dot Clock

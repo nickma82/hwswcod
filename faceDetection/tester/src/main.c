@@ -134,9 +134,9 @@ int main(int argc, char **argv)
 
   
   // send image file size
-  write(serialfd, &filesize, sizeof(filesize));
+  //write(serialfd, &filesize, sizeof(filesize));
   // send image data
-  write(serialfd, imageData, filesize);
+  //write(serialfd, imageData, filesize);
   free(imageData);
   
   options.c_lflag |= (ICANON);

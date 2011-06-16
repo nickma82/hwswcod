@@ -218,11 +218,7 @@ begin
 				v.wdata := "00000000000000000000000011111111";
 			end if;
 		else
-			if r.cur_col <= CAM_W-1 then
-				v.wdata := "00000000" & rd_data_burst;
-			else
-				v.wdata := (others=>'1');
-			end if;
+			v.wdata := "10111010" & rd_data_burst;
 		end if;
 		
 		-- Werte auf Interface zu Bus legen

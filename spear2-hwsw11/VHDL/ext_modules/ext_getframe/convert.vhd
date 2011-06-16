@@ -102,7 +102,7 @@ read_raw : process(r, line_ready, rst, rd_data_even, rd_data_odd, frame_stop)
 		
     	---Next dot descision logic
 		if r.state = convert_line then
-			if r.toggle_r = '0' then
+			if r.toggle_r = '1' then
 				case r.dot_state is
 					when p_g1 =>
 						v.dot_state := p_r;
@@ -131,12 +131,12 @@ read_raw : process(r, line_ready, rst, rd_data_even, rd_data_odd, frame_stop)
 				v.wr_enable := '0';
 				v.pixel_addr := (others=>'0');
 				v.b_cnt := 0;
-				v.toggle_r := '1';
+				v.toggle_r := '0';
 				
 			when wait_line_ready =>	
 				if line_ready = '1' then 
 					v.state := convert_line;
-					if r.toggle_r = '0' then
+					if r.toggle_r = '1' then
 						v.dot_state := p_g1;
 					else
 						v.dot_state := p_b;
@@ -175,6 +175,8 @@ read_raw : process(r, line_ready, rst, rd_data_even, rd_data_odd, frame_stop)
 						v.last_dot := other_dot;
 				end case;
 				
+				v.pixel_data := (others=>'0');
+				
 				case r.dot_state is
 					when p_b =>
 						v.pixel_data := r.last_dot & other_dot  & cur_dot;
@@ -198,7 +200,7 @@ read_raw : process(r, line_ready, rst, rd_data_even, rd_data_odd, frame_stop)
 					if v.col_cnt < CAM_W-1 then
 						v.rd_address := r.rd_address + 1;
 					else
-						v.pixel_data := (others=>'1');
+						v.pixel_data := (others=>'0'); --schwarz
 					end if;
 				end if;			
 				
@@ -234,7 +236,7 @@ read_raw : process(r, line_ready, rst, rd_data_even, rd_data_odd, frame_stop)
 			when frame_done =>
 				v.row_cnt := 0;
 				v.col_cnt := 0;
-				v.toggle_r := '1';
+				v.toggle_r := '0';
 				v.rd_address := (others=>'0');
 				v.pixel_addr := (others=>'0');
 				v.b_cnt := 0;

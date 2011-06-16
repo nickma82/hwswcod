@@ -185,15 +185,15 @@ begin
 			for col_cnt in 0 to 639 loop
 				if row_cnt mod 2 = 0 then
 					if col_cnt mod 2 = 0 then
-						cm_d <= "111100000000"; -- g1
+						cm_d <= "000000000000"; -- b
 					else
-						cm_d <= "000011110000"; -- r
+						cm_d <= "100011010000"; -- g2
 					end if;
 				else
 					if col_cnt mod 2 = 0 then
-						cm_d <= "001111000000"; -- b
+						cm_d <= "100011000000"; -- g1
 					else
-						cm_d <= "111000000000"; -- g2
+						cm_d <= "111111110000"; -- r
 					end if;
 				end if;
 				

@@ -430,7 +430,7 @@ begin
 		dmai 		=> dmai,
 		dmao 		=> dmao,
 		
-		cm_d		=> cm_d(11 downto 4),
+		cm_d		=> cm_d,
 		cm_lval 	=> cm_lval,
 		cm_fval 	=> cm_fval,
 		cm_pixclk	=> cm_pixclk,

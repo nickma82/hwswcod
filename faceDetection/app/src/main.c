@@ -64,14 +64,20 @@ int main(int argc, char **argv)
 		write_cam(0x03, 1919);
 		
 		// shutter width lower
-		//write_cam(0x09, 1984);
+		//write_cam(0x09, 1200);
 		
 		// green gain
-		write_cam(0x2B,0x13);
-		write_cam(0x2C,0x9A);
-		write_cam(0x2D,0x19C);
-		write_cam(0x2E,0x13);
 		
+		//write_cam(0x35,0x19C);
+		
+		//write_cam(0x2C,0x9A);
+		//write_cam(0x2D,0x19C);
+		//write_cam(0x2B,0x13);
+		//write_cam(0x2E,0x13);
+		write_cam(0x2B, 0x07); //Green Reset
+		write_cam(0x2E, 0x07); //Green Reset
+		write_cam(0x2D, 0x13); //Red Reset
+		write_cam(0x2C, 0x09); //Blue Reset
 		
 		//write_cam(0x49,0x1A8);
 		
@@ -79,12 +85,17 @@ int main(int argc, char **argv)
 		write_cam(0x22, 0x03);
 		write_cam(0x23, 0x03);
 		
-		
 		// testbild
-		write_cam(0xA1,4095); // Grün
-		write_cam(0xA2,0); // Rot
-		write_cam(0xA3,0); // Blau
-		//write_cam(0xA0,(0<<3)|(1));
+		write_cam(0xA1,123); // Grün
+		write_cam(0xA2,456); // Rot
+		write_cam(0xA3,4000); // Blau
+		//write_cam(0xA0,(0<<4)|(1));
+		
+		//write_cam(0xA4,123);
+		write_cam(0xA0,0);
+		
+		//write_cam(
+		
 		// Grün => Grün
 		// Rot => Blau
 		// Blau => Grün
@@ -97,7 +108,7 @@ int main(int argc, char **argv)
 				
 		// mirror der rows
 		write_cam(0x20, (1<<15));
-		
+		//write_cam(0x20, 0);
 		
 		
 		// restart cam		
@@ -108,13 +119,32 @@ int main(int argc, char **argv)
 			asm("nop");
 			
 		
-		dis7seg_hex(read_cam(0x04));
+		//dis7seg_hex(read_cam(0xA0));
 		
-		GETFRAME_CLEAR = 1;
-		while (!GETFRAME_CLEAR)
-			asm("nop");
+		/*y = 0;
+		while(1) {
+			*reg = (1 << COUNTER_CLEAR_BIT);
+			*reg = (1 << COUNTER_COUNT_BIT);
+			
+			GETFRAME_CLEAR = 1;
+			while (!GETFRAME_CLEAR)
+				asm("nop");
+			
+			fps_c = counter_getValue(&counterHandle);
+			fps_c *= CLKPERIOD * PRESCALER;
+			fps_c /= 1000000;
+			
+			if (y == 10) {
+				dis7seg_uint32(1000/fps_c);
+				y = 0;
+			}
+			else {
+				y++;
+			}
+		}*/
 		
 		y = 0;
+		i = 0;
 		fps_mean = 0;
 		while (1) {
 
@@ -122,10 +152,10 @@ int main(int argc, char **argv)
 			*reg = (1 << COUNTER_COUNT_BIT);
 			
 			GETFRAME_START = 1;
-			i = 0;	
-			while(!GETFRAME_RETURN && i < 60000) {
+			//i = 0;	
+			while(!GETFRAME_RETURN ) {
 				//dis7seg_uint32(GETFRAME_COUNTER);
-				i++;
+				asm("nop");
 			}		
 			
 			fps_c = counter_getValue(&counterHandle);		
@@ -142,8 +172,11 @@ int main(int argc, char **argv)
 			}
 			else
 				y++;
-				
+			i++;
 		}
+		
+		printFrameBuffer();
+		
 	#endif
 	dis7seg_hex(0xEEEEEEEE);
 	#ifdef __SPEAR32__

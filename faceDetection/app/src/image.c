@@ -2,6 +2,8 @@
 #include <stdio.h>
 #include <string.h>
 
+#include "sdram.h"
+#include "svga.h"
 #include "image.h"
 
 const uint8_t color_white = FOREGROUND_COLOR;
@@ -53,5 +55,16 @@ void image_paintRectangle(image_t *image, rect_t rectangle) {
 	for (i = rectangle.topLeftY; i < rectangle.bottomRightY; i++) {
 		image_setPixelValue(image, rectangle.topLeftX, i, cl);
 		image_setPixelValue(image, rectangle.bottomRightX, i, cl);
+	}
+}
+
+void printFrameBuffer() {
+	
+	uint32_t x,y;	
+	
+	for (y = 0; y < 50; y++) {
+		for (x = 0; x < SCREEN_WIDTH; x++) {
+			//printf("(%3u,%2u): %8X \n",(unsigned int)x,(unsigned int)y,(unsigned int)screenData[y*SCREEN_WIDTH+x]);			
+		}
 	}
 }

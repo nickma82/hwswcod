@@ -55,10 +55,14 @@ int main (int argc, char *argv[])
 	SVGA_DYN_CLOCK0 = 30000;
 	SVGA_STATUS = (1<<0) | (3<<4);*/
 	
-	GETFRAME_CLEAR = 1;
-	
-	while (!GETFRAME_CLEAR)
-		asm("nop");
+	while (1) {
+		GETFRAME_START = 1;
+		//i = 0;	
+		while(!GETFRAME_RETURN ) {
+			//dis7seg_uint32(GETFRAME_COUNTER);
+			asm("nop");
+		}	
+	}
 	
 	/*while (1) {
 		GETFRAME_START = 1;
