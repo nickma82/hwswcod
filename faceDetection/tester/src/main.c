@@ -162,7 +162,7 @@ int main(int argc, char **argv)
   
   
   //print out counters
-  printf("Durations:\n");
+  /*printf("Durations:\n");
   UART_read(serialfd, (char *)&counterSize, sizeof(counterSize));
   for(i=0; i< counterSize; i++) {
     UART_read(serialfd, (char *)&cycles, sizeof(cycles));
@@ -175,8 +175,8 @@ int main(int argc, char **argv)
   
   fps = 1000 / msecSum;
   printf("Sum: %.0f ms, %.3f fps\n", msecSum, fps);
-    
-  /*
+  */  
+  //Read image
   UART_read(serialfd, (char *)&filesize, sizeof(filesize));
 
   f = fopen(argv[3], "w");
@@ -193,7 +193,7 @@ int main(int argc, char **argv)
   }
   
   fclose(f);
-  */
+  
   close(serialfd);
 
   return 0;

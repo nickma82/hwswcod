@@ -55,7 +55,7 @@ void image_paintRectangle(image_t *image, rect_t rectangle);
 void bwimage_init(image_t *template, bwimage_t *image);
 void bwimage_free(bwimage_t *image);
 
-void printFrameBuffer();
+void printFrameBuffer(const char *targetPath);
 
 inline uint8_t bwimage_getPixelValue(bwimage_t *i, int x, int y) __attribute__((always_inline));
 

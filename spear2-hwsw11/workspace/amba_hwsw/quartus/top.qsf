@@ -172,7 +172,7 @@ set_location_assignment PIN_W4 -to sddqm[1]
 set_location_assignment PIN_U2 -to sddqm[0]
 set_location_assignment PIN_U6 -to sdrasn
 set_location_assignment PIN_V6 -to sdwen
-set_global_assignment -name RAPID_RECOMPILE_MODE OFF
+set_global_assignment -name RAPID_RECOMPILE_MODE ON
 set_global_assignment -name OUTPUT_IO_TIMING_ENDPOINT "NEAR END"
 set_instance_assignment -name IO_STANDARD "2.5 V" -to digits[0].SegA
 set_instance_assignment -name IO_STANDARD "2.5 V" -to digits[0].SegB

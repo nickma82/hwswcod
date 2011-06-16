@@ -179,17 +179,17 @@ read_raw : process(r, line_ready, rst, rd_data_even, rd_data_odd, frame_stop)
 				
 				case r.dot_state is
 					when p_b =>
-						v.pixel_data := r.last_dot & other_dot  & cur_dot;
-						--v.pixel_data := "00000000" & "00000000"  & cur_dot;
+						--v.pixel_data := r.last_dot & other_dot  & cur_dot;
+						v.pixel_data := "00000000" & "00000000"  & cur_dot;
 					when p_g2 =>
-						v.pixel_data := other_dot & cur_dot & r.last_dot;
-						--v.pixel_data := "00000000" & cur_dot & "00000000";
+						--v.pixel_data := other_dot & cur_dot & r.last_dot;
+						v.pixel_data := "00000000" & cur_dot & "00000000";
 					when p_g1 =>
-						v.pixel_data := r.last_dot & cur_dot & other_dot;
-						--v.pixel_data := "00000000" & cur_dot & "00000000";
+						--v.pixel_data := r.last_dot & cur_dot & other_dot;
+						v.pixel_data := "00000000" & cur_dot & "00000000";
 					when p_r =>
-						v.pixel_data := cur_dot & other_dot & r.last_dot;
-						--v.pixel_data := cur_dot & "00000000" & "00000000";
+						--v.pixel_data := cur_dot & other_dot & r.last_dot;
+						v.pixel_data := cur_dot & "00000000" & "00000000";
 				end case;
 				
 				

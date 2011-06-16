@@ -121,14 +121,17 @@ begin
 				v.sent := 0;
 				
 				if next_burst = '1' or r.clear_running = '1' then
-					v.state := data;
-					v.start := '1';						
+					v.state := data;					
 					
 					-- addresse gleich auf 1 stellen um im nächsten zyklus die richtige addresse anzulegen
-					v.rd_pointer := (0 => '1', others => '0');
+					-- v.rd_pointer := (0 => '1', others => '0');
 				end if;
 				led_red(0) <= '1';
 			when data =>
+				if r.start = '0' then
+					v.start := '1';
+				end if;
+				
 				if dmao.ready = '1' then
 					if dmao.haddr = (9 downto 0 => '0') then
 						v.address := (v.address(31 downto 10) + 1) & dmao.haddr;
@@ -172,7 +175,6 @@ begin
 			when start_next_burst =>
 				v.sent := 0;
 				if r.burst_count > r.burst_done_count then
-					v.start := '1';
 					v.state := data;
 				else
 					if r.cur_line = SCREEN_H-1 and r.cur_col = SCREEN_W-1 then
@@ -222,7 +224,7 @@ begin
 		end if;
 		
 		-- Werte auf Interface zu Bus legen
-		dmai.wdata  <=  r.wdata; --"00000000000000001111111100000000";
+		dmai.wdata  <=  v.wdata; --"00000000000000001111111100000000";
 	    dmai.burst  <= '1';
 	    dmai.irq    <= '0';
 	    dmai.size   <= "10";
