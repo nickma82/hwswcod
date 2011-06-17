@@ -53,23 +53,19 @@ int main(int argc, char **argv)
 		
 		//pause mode
 		write_cam(0x0B,1<<1|1);
-		
 		// invert pixe clock
 		write_cam(0x0A, (1<<15)|1);
-		
 		// column size
 		write_cam(0x04, 2559);
-		
 		// row size
 		write_cam(0x03, 1919);
 		
+		
 		// shutter width lower
-		//write_cam(0x09, 1200);
+		write_cam(0x09, 1200);
 		
 		// GAIN
-		
-		//write_cam(0x35,0x19C);
-		
+		//write_cam(0x35,0x19C); //global gain
 		//write_cam(0x2C,0x9A);
 		//write_cam(0x2D,0x19C);
 		//write_cam(0x2B,0x13);
