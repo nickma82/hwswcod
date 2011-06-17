@@ -6,19 +6,22 @@ EXEC_P, D_PAGED
 start address 0x40000000
 
 Program Header:
-    LOAD off    0x00000054 vaddr 0x40000000 paddr 0xc0000000 align 2**0
-         filesz 0x00000188 memsz 0x00000188 flags r-x
+    LOAD off    0x00000074 vaddr 0x0001fe00 paddr 0x0001fe00 align 2**2
+         filesz 0x00000000 memsz 0x00000008 flags rw-
+    LOAD off    0x00000074 vaddr 0x40000000 paddr 0xc0000000 align 2**0
+         filesz 0x000002bc memsz 0x000002bc flags r-x
 
 Sections:
 Idx Name          Size      VMA       LMA       File off  Algn  Flags
-  0 .text         00000188  40000000  c0000000  00000054  2**0  CONTENTS, ALLOC, LOAD, READONLY, CODE
+  0 .text         000002bc  40000000  c0000000  00000074  2**0  CONTENTS, ALLOC, LOAD, READONLY, CODE
+  1 .bss          00000008  0001fe00  0001fe00  00000074  2**2  ALLOC
 SYMBOL TABLE:
 no symbols
 
 
 Contents of section .text:
- 40000000 05100520 85a10520 85a10520 06100620  ... ... ... ... 
- 40000010 86a10620 86a10620 65b0069c 070057f5  ... ... e.....W.
+ 40000000 05100520 85a10520 85a10520 06101620  ... ... ... ... 
+ 40000010 86a1e62f 86a18620 65b0069c 070057f5  .../... e.....W.
  40000020 45a865b1 fd9f800e 0d100d20 8da10d20  E.e........ ... 
  40000030 8da10d20 0df5c00e 0d100d20 8da10d20  ... ....... ... 
  40000040 8da10d20 0df5000f 0d100d20 8da10d20  ... ....... ... 
@@ -38,10 +41,29 @@ Contents of section .text:
  40000120 0f208fa1 0f200d10 2d208da1 0d208da1  . ... ..- ... ..
  40000130 0d20070f 7df5470f 7df50d12 0d208da1  . ..}.G.}.... ..
  40000140 0d208da1 cd2a0dee 01e00d12 0d208da1  . ...*....... ..
- 40000150 0d208da1 2d2c0dee 420ae21f 510ae11f  . ..-,..B...Q...
- 40000160 130023f7 10f400b8 fc8f00fe 500ae01f  ..#.........P...
- 40000170 00f400b8 f68f00fe 500ae01f 00f400b8  ........P.......
- 40000180 f08ff4af 00feffaf                    ........        
+ 40000150 1d208da1 2d250dee fe5f070f 7df0fd5f  . ..-%..._..}.._
+ 40000160 470f7df0 070f7df5 00120020 80a10020  G.}...}.... ... 
+ 40000170 80a1802d 00ee0012 002080a1 002080a1  ...-..... ... ..
+ 40000180 e02e00ee 420ae21f 510ae11f 130023f7  ....B...Q.....#.
+ 40000190 10f400b8 fc8f00fe 500ae01f 00f400b8  ........P.......
+ 400001a0 f68f00fe 500ae01f 00f400b8 f08ff4af  ....P...........
+ 400001b0 f01f002f 80a10020 80a10020 2119812d  .../... ... !..-
+ 400001c0 81a11120 81a15128 01f50010 102080a1  ... ..Q(..... ..
+ 400001d0 e02f80a1 00200100 01f50ef8 fe5f070f  ./... ......._..
+ 400001e0 7df0fd5f 470f7df0 070f7df5 001f0020  }.._G.}...}.... 
+ 400001f0 80a11020 80a14020 1110f12d 81a13120  ... ..@ ...-..1 
+ 40000200 81a1f121 01f540a8 0210a220 82a10220  ...!..@.... ... 
+ 40000210 82a18222 02f540a8 04101420 84a10420  ..."..@.... ... 
+ 40000220 84a11420 04f540a8 2110e120 81a14120  ... ..@.!.. ..A 
+ 40000230 81a10122 01f5011e 012081a1 012081a1  ..."..... ... ..
+ 40000240 012040a8 01f540a8 02035217 02f5001f  . @...@...R.....
+ 40000250 002080a1 102080a1 00201403 04f50210  . ... ... ......
+ 40000260 122082a1 e22f82a1 02200310 732183a1  . .../... ..s!..
+ 40000270 032783a1 032020f0 30e120f5 00101020  .'...  .0. .... 
+ 40000280 80a1e02f 80a14020 01f50200 00120020  .../..@ ....... 
+ 40000290 80a11020 80a14025 00ee070f 0d4c7df5  ... ..@%.....L}.
+ 400002a0 0e4c0ef8 00feffaf 10e003b8 079c14e0  .L..............
+ 400002b0 13e142f7 14a834b0 fd8f0ef8           ..B...4.....    
 
 Disassembly of section .text:
 
@@ -53,11 +75,11 @@ Disassembly of section .text:
 40000008:	85 a1       	sli r5,0x8
 4000000a:	05 20       	ldliu r5,0x0
 4000000c:	06 10       	ldhi r6,0
-4000000e:	06 20       	ldliu r6,0x0
+4000000e:	16 20       	ldliu r6,0x1
 40000010:	86 a1       	sli r6,0x8
-40000012:	06 20       	ldliu r6,0x0
+40000012:	e6 2f       	ldliu r6,0xfe
 40000014:	86 a1       	sli r6,0x8
-40000016:	06 20       	ldliu r6,0x0
+40000016:	86 20       	ldliu r6,0x8
 40000018:	65 b0       	cmp_eq r5,r6
 4000001a:	06 9c       	jmpi_ct 6
 4000001c:	07 00       	ldli r7,0
@@ -214,31 +236,193 @@ Disassembly of section .text:
 4000014a:	0d 12       	ldhi r13,32
 4000014c:	0d 20       	ldliu r13,0x0
 4000014e:	8d a1       	sli r13,0x8
-40000150:	0d 20       	ldliu r13,0x0
+40000150:	1d 20       	ldliu r13,0x1
 40000152:	8d a1       	sli r13,0x8
-40000154:	2d 2c       	ldliu r13,0xc2
+40000154:	2d 25       	ldliu r13,0x52
 40000156:	0d ee       	jsr r13
-40000158:	42 0a       	ldli r2,-92
-4000015a:	e2 1f       	ldhi r2,-2
-4000015c:	51 0a       	ldli r1,-91
-4000015e:	e1 1f       	ldhi r1,-2
-40000160:	13 00       	ldli r3,1
-40000162:	23 f7       	stb r3,r2
-40000164:	10 f4       	ldbu r0,r1
-40000166:	00 b8       	cmpi_eq r0,0
-40000168:	fc 8f       	jmpi_cf -4
-4000016a:	00 fe       	nop
-4000016c:	50 0a       	ldli r0,-91
-4000016e:	e0 1f       	ldhi r0,-2
-40000170:	00 f4       	ldbu r0,r0
-40000172:	00 b8       	cmpi_eq r0,0
-40000174:	f6 8f       	jmpi_cf -10
-40000176:	00 fe       	nop
-40000178:	50 0a       	ldli r0,-91
-4000017a:	e0 1f       	ldhi r0,-2
-4000017c:	00 f4       	ldbu r0,r0
-4000017e:	00 b8       	cmpi_eq r0,0
-40000180:	f0 8f       	jmpi_cf -16
-40000182:	f4 af       	jmpi -12
-40000184:	00 fe       	nop
-40000186:	ff af       	jmpi -1
+40000158:	fe 5f       	stfpz_dec r14,-1
+4000015a:	07 0f       	ldli r7,-16
+4000015c:	7d f0       	ldw r13,r7
+4000015e:	fd 5f       	stfpz_dec r13,-1
+40000160:	47 0f       	ldli r7,-12
+40000162:	7d f0       	ldw r13,r7
+40000164:	07 0f       	ldli r7,-16
+40000166:	7d f5       	stw r13,r7
+40000168:	00 12       	ldhi r0,32
+4000016a:	00 20       	ldliu r0,0x0
+4000016c:	80 a1       	sli r0,0x8
+4000016e:	00 20       	ldliu r0,0x0
+40000170:	80 a1       	sli r0,0x8
+40000172:	80 2d       	ldliu r0,0xd8
+40000174:	00 ee       	jsr r0
+40000176:	00 12       	ldhi r0,32
+40000178:	00 20       	ldliu r0,0x0
+4000017a:	80 a1       	sli r0,0x8
+4000017c:	00 20       	ldliu r0,0x0
+4000017e:	80 a1       	sli r0,0x8
+40000180:	e0 2e       	ldliu r0,0xee
+40000182:	00 ee       	jsr r0
+40000184:	42 0a       	ldli r2,-92
+40000186:	e2 1f       	ldhi r2,-2
+40000188:	51 0a       	ldli r1,-91
+4000018a:	e1 1f       	ldhi r1,-2
+4000018c:	13 00       	ldli r3,1
+4000018e:	23 f7       	stb r3,r2
+40000190:	10 f4       	ldbu r0,r1
+40000192:	00 b8       	cmpi_eq r0,0
+40000194:	fc 8f       	jmpi_cf -4
+40000196:	00 fe       	nop
+40000198:	50 0a       	ldli r0,-91
+4000019a:	e0 1f       	ldhi r0,-2
+4000019c:	00 f4       	ldbu r0,r0
+4000019e:	00 b8       	cmpi_eq r0,0
+400001a0:	f6 8f       	jmpi_cf -10
+400001a2:	00 fe       	nop
+400001a4:	50 0a       	ldli r0,-91
+400001a6:	e0 1f       	ldhi r0,-2
+400001a8:	00 f4       	ldbu r0,r0
+400001aa:	00 b8       	cmpi_eq r0,0
+400001ac:	f0 8f       	jmpi_cf -16
+400001ae:	f4 af       	jmpi -12
+400001b0:	f0 1f       	ldhi r0,-1
+400001b2:	00 2f       	ldliu r0,0xf0
+400001b4:	80 a1       	sli r0,0x8
+400001b6:	00 20       	ldliu r0,0x0
+400001b8:	80 a1       	sli r0,0x8
+400001ba:	00 20       	ldliu r0,0x0
+400001bc:	21 19       	ldhi r1,-110
+400001be:	81 2d       	ldliu r1,0xd8
+400001c0:	81 a1       	sli r1,0x8
+400001c2:	11 20       	ldliu r1,0x1
+400001c4:	81 a1       	sli r1,0x8
+400001c6:	51 28       	ldliu r1,0x85
+400001c8:	01 f5       	stw r1,r0
+400001ca:	00 10       	ldhi r0,0
+400001cc:	10 20       	ldliu r0,0x1
+400001ce:	80 a1       	sli r0,0x8
+400001d0:	e0 2f       	ldliu r0,0xfe
+400001d2:	80 a1       	sli r0,0x8
+400001d4:	00 20       	ldliu r0,0x0
+400001d6:	01 00       	ldli r1,0
+400001d8:	01 f5       	stw r1,r0
+400001da:	0e f8       	rts
+400001dc:	fe 5f       	stfpz_dec r14,-1
+400001de:	07 0f       	ldli r7,-16
+400001e0:	7d f0       	ldw r13,r7
+400001e2:	fd 5f       	stfpz_dec r13,-1
+400001e4:	47 0f       	ldli r7,-12
+400001e6:	7d f0       	ldw r13,r7
+400001e8:	07 0f       	ldli r7,-16
+400001ea:	7d f5       	stw r13,r7
+400001ec:	00 1f       	ldhi r0,-16
+400001ee:	00 20       	ldliu r0,0x0
+400001f0:	80 a1       	sli r0,0x8
+400001f2:	10 20       	ldliu r0,0x1
+400001f4:	80 a1       	sli r0,0x8
+400001f6:	40 20       	ldliu r0,0x4
+400001f8:	11 10       	ldhi r1,1
+400001fa:	f1 2d       	ldliu r1,0xdf
+400001fc:	81 a1       	sli r1,0x8
+400001fe:	31 20       	ldliu r1,0x3
+40000200:	81 a1       	sli r1,0x8
+40000202:	f1 21       	ldliu r1,0x1f
+40000204:	01 f5       	stw r1,r0
+40000206:	40 a8       	addi r0,4
+40000208:	02 10       	ldhi r2,0
+4000020a:	a2 20       	ldliu r2,0xa
+4000020c:	82 a1       	sli r2,0x8
+4000020e:	02 20       	ldliu r2,0x0
+40000210:	82 a1       	sli r2,0x8
+40000212:	82 22       	ldliu r2,0x28
+40000214:	02 f5       	stw r2,r0
+40000216:	40 a8       	addi r0,4
+40000218:	04 10       	ldhi r4,0
+4000021a:	14 20       	ldliu r4,0x1
+4000021c:	84 a1       	sli r4,0x8
+4000021e:	04 20       	ldliu r4,0x0
+40000220:	84 a1       	sli r4,0x8
+40000222:	14 20       	ldliu r4,0x1
+40000224:	04 f5       	stw r4,r0
+40000226:	40 a8       	addi r0,4
+40000228:	21 10       	ldhi r1,2
+4000022a:	e1 20       	ldliu r1,0xe
+4000022c:	81 a1       	sli r1,0x8
+4000022e:	41 20       	ldliu r1,0x4
+40000230:	81 a1       	sli r1,0x8
+40000232:	01 22       	ldliu r1,0x20
+40000234:	01 f5       	stw r1,r0
+40000236:	01 1e       	ldhi r1,-32
+40000238:	01 20       	ldliu r1,0x0
+4000023a:	81 a1       	sli r1,0x8
+4000023c:	01 20       	ldliu r1,0x0
+4000023e:	81 a1       	sli r1,0x8
+40000240:	01 20       	ldliu r1,0x0
+40000242:	40 a8       	addi r0,4
+40000244:	01 f5       	stw r1,r0
+40000246:	40 a8       	addi r0,4
+40000248:	02 03       	ldli r2,48
+4000024a:	52 17       	ldhi r2,117
+4000024c:	02 f5       	stw r2,r0
+4000024e:	00 1f       	ldhi r0,-16
+40000250:	00 20       	ldliu r0,0x0
+40000252:	80 a1       	sli r0,0x8
+40000254:	10 20       	ldliu r0,0x1
+40000256:	80 a1       	sli r0,0x8
+40000258:	00 20       	ldliu r0,0x0
+4000025a:	14 03       	ldli r4,49
+4000025c:	04 f5       	stw r4,r0
+4000025e:	02 10       	ldhi r2,0
+40000260:	12 20       	ldliu r2,0x1
+40000262:	82 a1       	sli r2,0x8
+40000264:	e2 2f       	ldliu r2,0xfe
+40000266:	82 a1       	sli r2,0x8
+40000268:	02 20       	ldliu r2,0x0
+4000026a:	03 10       	ldhi r3,0
+4000026c:	73 21       	ldliu r3,0x17
+4000026e:	83 a1       	sli r3,0x8
+40000270:	03 27       	ldliu r3,0x70
+40000272:	83 a1       	sli r3,0x8
+40000274:	03 20       	ldliu r3,0x0
+40000276:	20 f0       	ldw r0,r2
+40000278:	30 e1       	add r0,r3
+4000027a:	20 f5       	stw r0,r2
+4000027c:	00 10       	ldhi r0,0
+4000027e:	10 20       	ldliu r0,0x1
+40000280:	80 a1       	sli r0,0x8
+40000282:	e0 2f       	ldliu r0,0xfe
+40000284:	80 a1       	sli r0,0x8
+40000286:	40 20       	ldliu r0,0x4
+40000288:	01 f5       	stw r1,r0
+4000028a:	02 00       	ldli r2,0
+4000028c:	00 12       	ldhi r0,32
+4000028e:	00 20       	ldliu r0,0x0
+40000290:	80 a1       	sli r0,0x8
+40000292:	10 20       	ldliu r0,0x1
+40000294:	80 a1       	sli r0,0x8
+40000296:	40 25       	ldliu r0,0x54
+40000298:	00 ee       	jsr r0
+4000029a:	07 0f       	ldli r7,-16
+4000029c:	0d 4c       	ldfpz_inc r13,0
+4000029e:	7d f5       	stw r13,r7
+400002a0:	0e 4c       	ldfpz_inc r14,0
+400002a2:	0e f8       	rts
+400002a4:	00 fe       	nop
+400002a6:	ff af       	jmpi -1
+400002a8:	10 e0       	mov r0,r1
+400002aa:	03 b8       	cmpi_eq r3,0
+400002ac:	07 9c       	jmpi_ct 7
+400002ae:	14 e0       	mov r4,r1
+400002b0:	13 e1       	add r3,r1
+400002b2:	42 f7       	stb r2,r4
+400002b4:	14 a8       	addi r4,1
+400002b6:	34 b0       	cmp_eq r4,r3
+400002b8:	fd 8f       	jmpi_cf -3
+400002ba:	0e f8       	rts
+
+Disassembly of section .bss:
+
+0001fe00 <.bss>:
+   1fe00:	00 00       	ldli r0,0
+   1fe02:	00 00       	ldli r0,0
+   1fe04:	00 00       	ldli r0,0
+   1fe06:	00 00       	ldli r0,0

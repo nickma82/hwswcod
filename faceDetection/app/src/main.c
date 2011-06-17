@@ -94,7 +94,7 @@ int main(int argc, char **argv)
 		//write_cam(0xA0,(0<<4)|(1));
 		
 		//write_cam(0xA4,123);
-		write_cam(0xA0,0);
+		write_cam(0xA0,0); //Test pattern contrl
 		
 		//write_cam(
 		

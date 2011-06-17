@@ -10,6 +10,8 @@
   #error "Unsupported target machine type"
 #endif
 
+#include "svga.h"
+
 #define GETFRAME_BASE 		(0xFFFFFEA0)
 #define GETFRAME_START		(*(volatile uint8_t *const)(GETFRAME_BASE+4))
 #define GETFRAME_RETURN		(*(volatile uint8_t *const)(GETFRAME_BASE+5))
@@ -54,6 +56,9 @@ int main (int argc, char *argv[])
 	SVGA_FRAME_BUFFER = SDRAM_BASE;
 	SVGA_DYN_CLOCK0 = 30000;
 	SVGA_STATUS = (1<<0) | (3<<4);*/
+	
+	sdram_init();
+	svga_init();
 	
 	while (1) {
 		GETFRAME_START = 1;
