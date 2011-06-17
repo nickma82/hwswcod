@@ -67,6 +67,7 @@ int main(int argc, char **argv)
 		bwimage_init(&image, &temp);
 		bwimage_init(&image, &temp2);
 		rect_t face;
+		//GETFRAME_CLEAR=1;
 		while (1) {
 
 			*reg = (1 << COUNTER_CLEAR_BIT);
