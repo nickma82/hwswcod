@@ -13,7 +13,6 @@ const uint8_t color_black = BACKGROUND_COLOR;
 void bwimage_init(image_t *template, bwimage_t *image) {
 	image->width = template->width/SCALE;
 	image->height = template->height/SCALE;
-	memset((void *)image->data, 0, sizeof(image->data));
 }
 
 void image_setPixelValue(image_t *i, int x, int y, rgb_color_t cl) {

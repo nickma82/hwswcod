@@ -36,9 +36,12 @@
 		cnt++; \
 	} \
 	} while (0)
-#else
-	#define benchmark_messure(callable) callable
 #endif // __SPEAR32__
+
+#ifndef TEST
+	#undef benchmark_messure
+	#define benchmark_messure(callable) callable
+#endif 
 
 void test_init(void);
 void test_release(void);

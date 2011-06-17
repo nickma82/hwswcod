@@ -30,152 +30,84 @@ int main(int argc, char **argv)
 		
 	#endif
 	
+	image_t image;
+	bwimage_t temp,temp2;
+	
 	#ifdef TEST
-		{
-			image_t image;
-			
-			test_receiveImage(&image, argv[1]);
-			svga_outputImage(&image);
-			
-			svga_paintRectangle(faceDetection(&image));
-			
-			test_sendImage(&image, argv[2]);
-			
-		}
+		test_receiveImage(&image, argv[1]);
+		
+		bwimage_init(&image, &temp);
+		bwimage_init(&image, &temp2);
+		memset((void *)temp.data, 0, sizeof(temp.data));
+		memset((void *)temp2.data, 0, sizeof(temp2.data));
+		
+		svga_outputImage(&image);
+		
+		printf("Starting computation.\n");
+		
+		svga_paintRectangle(faceDetection(&image, &temp, &temp2));
+		
+		printf("Computation completed.\n");
+		
+		test_sendImage(&image, argv[2]);
 	#else
 		uint32_t fps_c,i,y,fps_mean;
 		
 		dis7seg_hex(0x01);
 		
-		//pause mode
-		write_cam(0x0B,1<<1|1);
-		// invert pixe clock
-		write_cam(0x0A, (1<<15)|1);
-		// column size
-		write_cam(0x04, 2559);
-		// row size
-		write_cam(0x03, 1919);
-		
-		
-		// shutter width lower
-		write_cam(0x09, 1200);
-		
-		// GAIN
-		//write_cam(0x35,0x19C); //global gain
-		//write_cam(0x2C,0x9A);
-		//write_cam(0x2D,0x19C);
-		//write_cam(0x2B,0x13);
-		//write_cam(0x2E,0x13);
-		
-		write_cam(0x2B, (0<<8)|(0<<6)|(0x13)); //Green
-		write_cam(0x2E, (0<<8)|(0<<6)|(0x13)); //Green Reset
-		write_cam(0x2D, (6<<8)|(0<<6)|(0xF)); //Red Reset
-		write_cam(0x2C, (5<<8)|(0<<6)|(0xF)); //Blue Reset
-		
-		// ganz gut: write_cam(0x2B, (0<<8)|(0<<6)|(0x13)); //Green
-		// ganz gut: write_cam(0x2E, (0<<8)|(0<<6)|(0x13)); //Green Reset
-		// ganz gut: write_cam(0x2D, (6<<8)|(0<<6)|(0xF)); //Red Reset
-		// ganz gut: write_cam(0x2C, (5<<8)|(0<<6)|(0xF)); //Blue Reset
-		
-		//write_cam(0x49,0x1A8);
-		
-		// row and column skiping => 640x480 res
-		write_cam(0x22, 0x03);
-		write_cam(0x23, 0x03);
-		
-		// testbild
-		write_cam(0xA1,123); // Grün
-		write_cam(0xA2,456); // Rot
-		write_cam(0xA3,4000); // Blau
-		//write_cam(0xA0,(0<<4)|(1));
-		
-		//write_cam(0xA4,123);
-		write_cam(0xA0,0); //Test pattern contrl
-		
-		//write_cam(
-		
-		// Grün => Grün
-		// Rot => Blau
-		// Blau => Grün
-		
-		// Grün => Blaurot
-		// Rot => Blau
-		// Blau => Rot
-		
-		
-				
-		// mirror der rows
-		write_cam(0x20, (1<<15));
-		//write_cam(0x20, 0);
-		
-		
-		// restart cam		
-		write_cam(0x0b,1);
-		
-		// wait for restart finished
-		while(read_cam(0x0b)&0x01)
-			asm("nop");
-			
-		
-		//dis7seg_hex(read_cam(0xA0));
-		
-		/*y = 0;
-		while(1) {
-			*reg = (1 << COUNTER_CLEAR_BIT);
-			*reg = (1 << COUNTER_COUNT_BIT);
-			
-			GETFRAME_CLEAR = 1;
-			while (!GETFRAME_CLEAR)
-				asm("nop");
-			
-			fps_c = counter_getValue(&counterHandle);
-			fps_c *= CLKPERIOD * PRESCALER;
-			fps_c /= 1000000;
-			
-			if (y == 10) {
-				dis7seg_uint32(1000/fps_c);
-				y = 0;
-			}
-			else {
-				y++;
-			}
-		}*/
+		setup_cam();
 		
 		y = 0;
 		i = 0;
 		fps_mean = 0;
+		image.width = IMAGE_WIDTH;
+		image.height = IMAGE_HEIGHT;
+		image.dataLength = 4 * IMAGE_WIDTH * IMAGE_HEIGHT;
+		image.data = (unsigned char *)(SDRAM_BASE);
+		bwimage_init(&image, &temp);
+		bwimage_init(&image, &temp2);
+		rect_t face;
 		while (1) {
 
 			*reg = (1 << COUNTER_CLEAR_BIT);
-			*reg = (1 << COUNTER_COUNT_BIT);
+			*reg = (1  << COUNTER_COUNT_BIT);
 			
 			GETFRAME_START = 1;
-			//i = 0;	
-			while(!GETFRAME_RETURN ) {
-				//dis7seg_uint32(GETFRAME_COUNTER);
-				asm("nop");
-			}		
+			while(!GETFRAME_RETURN) {
+				memset((void *)temp.data, 0, sizeof(temp.data));
+				memset((void *)temp2.data, 0, sizeof(temp2.data));
+			}
+			
+			if (!i)
+				face = faceDetection(&image, &temp, &temp2);
+			if (i >= 5)
+				i = 0;
+				
+			
+			svga_paintRectangle(face);
+			
+			*reg = 0;
 			
 			fps_c = counter_getValue(&counterHandle);		
 			fps_c *= CLKPERIOD * PRESCALER;
-			fps_c /= 1000000;
+			fps_c = 1000000000 / fps_c;
 			
-			fps_mean += 1000/fps_c;
-			fps_mean /= 2;		
+			//fps_mean += 1000/fps_c;
+			//fps_mean /= 2;
+			dis7seg_uint32(fps_c);
 			
-			if (y == 10) {
-				
-				dis7seg_uint32(fps_mean);
-				y = 0;
-			}
-			else
-				y++;
-			i++;
+			
+			for (y = 0; y<1000; y++)
+				asm("nop");
+			
+			
 		}
 		
 		printFrameBuffer(argv[2]);
 	#endif
+	
 	dis7seg_hex(0xEEEEEEEE);
+	
 	#ifdef __SPEAR32__
 		test_release();
 		dis7seg_release();

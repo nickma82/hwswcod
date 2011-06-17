@@ -220,7 +220,7 @@ begin
 				v.wdata := "00000000000000000000000011111111";
 			end if;
 		else
-			v.wdata := "10111010" & rd_data_burst;
+			v.wdata := "00000000" & rd_data_burst;
 		end if;
 		
 		-- Werte auf Interface zu Bus legen

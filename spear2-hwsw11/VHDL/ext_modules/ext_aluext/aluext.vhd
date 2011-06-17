@@ -91,14 +91,14 @@ begin
     				end if;
 				-- op_a übernehmen
     			when "001" =>
-    				if ((exti.byte_en(0) = '1')) then
-			    		v.r(8 downto 0) := "0" & exti.data(7 downto 0);
+    				if ((exti.byte_en(2) = '1')) then
+			    		v.r(8 downto 0) := "0" & exti.data(23 downto 16);
 			    	end if;
 			    	if ((exti.byte_en(1) = '1')) then
 			    		v.g(8 downto 0) := "0" & exti.data(15 downto 8);
 			    	end if;
-			    	if ((exti.byte_en(2) = '1')) then
-			    		v.b(8 downto 0) := "0" & exti.data(23 downto 16);
+			    	if ((exti.byte_en(0) = '1')) then
+			    		v.b(8 downto 0) := "0" & exti.data(7 downto 0);
 			    	end if;
 			    --when "011" =>
 			    --	v.op_a(31 downto 0) := UNSIGNED(exti.data(31 downto 0));

@@ -3,6 +3,9 @@
 
 #include <stdint.h>
 
+#define IMAGE_WIDTH		640
+#define IMAGE_HEIGHT	480
+
 #define IMAGE_DATA_MAXVAL	31
 #define IMAGE_DATA_BITS		5
 

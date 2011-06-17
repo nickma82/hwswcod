@@ -54,9 +54,9 @@ void svga_outputImage(image_t *image) {
 				color.g = image->data[pIndex+1];
 				color.r = image->data[pIndex+2];
 			} else {
-				color.b = 0;
-				color.g = 0xCC;
-				color.r = 0xCC;
+				color.b = 0xff;
+				color.g = 0;
+				color.r = 0xff;
 			}
 			screenData[y*SCREEN_WIDTH+x] = (color.r << 16) | (color.g << 8) | color.b;
 		}

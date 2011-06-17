@@ -17,6 +17,7 @@
 
 uint32_t read_cam(uint8_t address);
 uint8_t write_cam(uint8_t address, uint16_t data);
+void setup_cam();
 
 #endif // __camconfig_h__
 

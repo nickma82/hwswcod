@@ -6,6 +6,7 @@
 #include "aluext.h"
 #include "dis7seg.h"
 #include "test.h"
+#include "svga.h"
 
 #define WINDOW_LENGTH 3
 #define WINDOW_OFFSET ((WINDOW_LENGTH-1)/2)
@@ -18,11 +19,22 @@ void skinFilter(image_t *inputImage, bwimage_t *outputImage) {
 		
 	for (y = 0; y < inputImage->height; y+=SCALE) {
 		for (x = 0; x < inputImage->width; x+=SCALE) {
-			int pIndex;
 			uint32_t p,pp;
 			
-			pIndex = (inputImage->width * y + x)*3;
-			ALUEXT_RGB = (inputImage->data[pIndex] << 16) | (inputImage->data[pIndex+1] << 8) | inputImage->data[pIndex+2];
+			#ifdef TEST
+				int pIndex = (inputImage->width * y + x)*3;
+				//				red										green								blue
+				ALUEXT_RGB = (inputImage->data[pIndex+2] << 16) | (inputImage->data[pIndex+1] << 8) | (inputImage->data[pIndex]);
+			#else
+			
+/*				rgb_color_t c;
+				c.r = (screenData[SCREEN_WIDTH * y + x] & 0x00ff00 ) >> 8;
+				c.g = (screenData[SCREEN_WIDTH * y + x] & 0xff0000 ) >> 16;
+				c.b = (screenData[SCREEN_WIDTH * y + x] & 0x0000ff );
+				ALUEXT_RGB = (c.r << 16) | (c.g << 8) | (c.b);*/
+				ALUEXT_RGB = screenData[SCREEN_WIDTH * y + x];
+				//printf("%8X\n",(unsigned int)screenData[SCREEN_WIDTH * y + x]);
+			#endif
 			
 			p = x >> SCALE_SHIFT;
 			pp = 1 << (IMAGE_DATA_MAXVAL - (p & IMAGE_DATA_MAXVAL)); // pixelposition

@@ -12,28 +12,20 @@
 int getIndexBelowThreshold(int *hist, int histLen, int start, int step, int threshold);
 rect_t detectFace(bwimage_t *faceMask);
 
-rect_t faceDetection(image_t* inputImage) {
-	bwimage_t temp,temp2;
+rect_t faceDetection(image_t* inputImage, bwimage_t* temp, bwimage_t* temp2) {
 	rect_t face;
-		
-	printf("Starting computation.\n");
-	
-	bwimage_init(inputImage, &temp);
-	bwimage_init(inputImage, &temp2);
 	
 	// perform face detection
-	benchmark_messure(skinFilter(inputImage, &temp));
-	benchmark_messure(erodeFilter(&temp, &temp2));
-	benchmark_messure(dilateFilter(&temp2, &temp));
-	benchmark_messure(face = detectFace(&temp));
+	skinFilter(inputImage, temp);
+	erodeFilter(temp, temp2);
+	dilateFilter(temp2, temp);
+	face = detectFace(temp);
 	
 	face.bottomRightX *= SCALE;
 	face.bottomRightY *= SCALE;
 	face.topLeftX *= SCALE;
 	face.topLeftY *= SCALE;
 	
-	printf("Computation completed.\n");
-
 	return face;
 }
 
