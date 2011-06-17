@@ -20,9 +20,7 @@
 #define PRESCALER 1
 
 int main(int argc, char **argv)
-{	
-	uint32_t fps_c,i,y,fps_mean;
-	
+{		
 	#ifdef __SPEAR32__
 		// initialize HW modules
 		dis7seg_init();
@@ -45,6 +43,8 @@ int main(int argc, char **argv)
 			
 		}
 	#else
+		uint32_t fps_c,i,y,fps_mean;
+		
 		dis7seg_hex(0x01);
 		
 		//pause mode
