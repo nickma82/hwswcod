@@ -64,18 +64,19 @@ void test_sendImage(image_t *inputImage, const char *targetPath) {
 		printf("\x04\n");
 		
 		// send elapsed time for computation
-		UART_write(1, (char *)&counterSize, sizeof(counterSize));
+		/*UART_write(1, (char *)&counterSize, sizeof(counterSize));
 		for(i = 0; i < counterSize; i++) {
 			uint32_t cycles = counterValues[i];
 			UART_write(1, (char *)&cycles, sizeof(cycles));
-		}
-		/*
+		}*/
+		
 		// send length of whole image file
 		UART_write(1, (char *)&imageLen, sizeof(imageLen));
 		// send image header
 		UART_write(1, tgaHeader, sizeof(tgaHeader));
 		// send image data
-		UART_write(1, (char *)inputImage->data, inputImage->dataLength); */	
+		//UART_write(1, (char *)inputImage->data, inputImage->dataLength);
+		UART_write(1, (char *)inputImage->data, inputImage->dataLength);
 	#else
 		FILE *f = fopen(targetPath, "w");
 		if (!f) {

@@ -133,9 +133,9 @@ int main(int argc, char **argv)
 
   
   // send image file size
-  write(serialfd, &filesize, sizeof(filesize));
+  //write(serialfd, &filesize, sizeof(filesize));
   // send image data
-  write(serialfd, imageData, filesize);
+  //write(serialfd, imageData, filesize);
   free(imageData);
   
   options.c_lflag |= (ICANON);
@@ -174,8 +174,9 @@ int main(int argc, char **argv)
   
   fps = 1000 / msecSum;
   printf("Sum: %.0f ms, %.3f fps\n", msecSum, fps);
-    
+  
   /*
+  //Read image
   UART_read(serialfd, (char *)&filesize, sizeof(filesize));
 
   f = fopen(argv[3], "w");
@@ -195,6 +196,7 @@ int main(int argc, char **argv)
   fclose(f);
   */
   close(serialfd);
+  
 
   return 0;
 }

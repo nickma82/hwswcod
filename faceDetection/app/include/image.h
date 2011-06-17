@@ -51,5 +51,6 @@ void image_setPixelValue(image_t *i, int x, int y, rgb_color_t cl);
 void image_paintRectangle(image_t *image, rect_t rectangle);
 
 void bwimage_init(image_t *template, bwimage_t *image);
+void printFrameBuffer(const char *targetPath);
 
 #endif // _image_h_

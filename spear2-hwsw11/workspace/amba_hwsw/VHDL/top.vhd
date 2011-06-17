@@ -8,12 +8,13 @@ use work.spear_pkg.all;
 use work.spear_amba_pkg.all;
 use work.pkg_dis7seg.all;
 use work.pkg_counter.all;
-use work.pkg_writeframe.all;
+use work.pkg_getframe.all;
 use work.pkg_aluext.all;
 use work.pkg_camconfig.all;
 
 library grlib;
 use grlib.amba.all;
+use grlib.devices.all;
 
 library techmap;
 use techmap.gencomp.all;
@@ -96,9 +97,13 @@ architecture behaviour of top is
   signal counter_segsel : std_logic;
   signal counter_exto : module_out_type;
   
-  -- signals for writeframe extension module
-  signal writeframe_segsel : std_logic;
-  signal writeframe_exto : module_out_type;
+  -- signals for getframe extension module
+  signal getframe_segsel : std_logic;
+  signal getframe_exto : module_out_type;
+  
+  -- AMBA Signale 
+  signal dmai  : ahb_dma_in_type;
+  signal dmao  : ahb_dma_out_type;
 
   -- signals for aluext extension module
   signal aluext_segsel : std_logic;
@@ -133,8 +138,8 @@ architecture behaviour of top is
   signal vga_clk_sel    : std_logic_vector(1 downto 0);
   signal svga_ahbmo     : ahb_mst_out_type;
   
-  -- signals for writeframe AMBA Master
-  signal writeframe_ahbmo : ahb_mst_out_type;
+  -- signals for getframe AMBA Master
+  signal getframe_ahbmo : ahb_mst_out_type;
   
   component altera_pll IS
     PORT
@@ -209,7 +214,7 @@ begin
       );
 
 
-  process(grlib_ahbmi, spear_ahbmo, svga_ahbmo, writeframe_ahbmo)
+  process(grlib_ahbmi, spear_ahbmo, svga_ahbmo, getframe_ahbmo)
   begin  -- process
     ahbmi.hgrant  <=  grlib_ahbmi.hgrant(0);
     ahbmi.hready  <=  grlib_ahbmi.hready;
@@ -234,7 +239,7 @@ begin
     grlib_ahbmo(0).hconfig  <=  AMBA_MASTER_CONFIG;
     grlib_ahbmo(0).hindex   <=  0;
     
-    grlib_ahbmo(1)			<=  writeframe_ahbmo;
+    grlib_ahbmo(1)			<=  getframe_ahbmo;
     
     grlib_ahbmo(2)          <=  svga_ahbmo;
     
@@ -375,7 +380,12 @@ begin
     ltm_den <= vgao.blank;
     ltm_grest <= '1';
     
-  
+  ------------------------
+  ---	AHB Master für Writeframe
+  ------------------------
+	ahb_master : ahbmst generic map (1, 0, VENDOR_WIR, WIR_WRITEFRAME, 0, 3, 1)
+	port map (rst, clk, dmai, dmao, grlib_ahbmi, getframe_ahbmo);    
+    
   -----------------------------------------------------------------------------
   -- Spear extension modules
   -----------------------------------------------------------------------------
@@ -401,6 +411,7 @@ begin
 		sdata_out_en => cam_sdata_out_en
 	);
 	
+	cm_sclk <= cam_sclk;
 	--sdata_out_en 0=input 1=output
 	cm_sdata <= cam_sdata_out when cam_sdata_out_en = '1' else 'Z';
 	
@@ -409,27 +420,26 @@ begin
 	--gpio(2) <= cm_sdata;
 	
 
-	writeframe_unit: ext_writeframe
+	getframe_unit: ext_getframe
   	port map(
 		clk       => clk,
-		extsel    => writeframe_segsel,
+		extsel    => getframe_segsel,
 		exti      => exti,
-		exto      => writeframe_exto,
-
-		ahbi 		=> grlib_ahbmi,
-		ahbo 		=> writeframe_ahbmo,
+		exto      => getframe_exto,
+    
+		dmai 		=> dmai,
+		dmao 		=> dmao,
 		
 		cm_d		=> cm_d,
 		cm_lval 	=> cm_lval,
 		cm_fval 	=> cm_fval,
 		cm_pixclk	=> cm_pixclk,
-		cm_reset	=> cm_reset,
 		cm_trigger	=> cm_trigger,
 		cm_strobe	=> cm_strobe,
 		led_red	  => led_red
 	);
     
-
+	cm_reset <= rst;
 	gpio(4) <= cm_lval;
 	gpio(3) <= cm_fval;
 	gpio(5) <= cm_pixclk;
@@ -459,7 +469,7 @@ begin
 	    exto       => counter_exto
 	  );
   
-	comb : process(spearo, debugo_if, D_RxD, dis7segexto, counter_exto, writeframe_exto,aluext_exto,camconfig_exto)  --extend!
+	comb : process(spearo, debugo_if, D_RxD, dis7segexto, counter_exto, getframe_exto,aluext_exto,camconfig_exto)  --extend!
 	  variable extdata : std_logic_vector(31 downto 0);
 	begin   
 		exti.reset    <= spearo.reset;
@@ -470,7 +480,7 @@ begin
 		
 		dis7segsel <= '0';
 		counter_segsel <= '0';
-		writeframe_segsel <= '0';
+		getframe_segsel <= '0';
 		aluext_segsel <= '0';
 		camconfig_segsel <= '0';
 		if spearo.extsel = '1' then
@@ -483,7 +493,7 @@ begin
 		      counter_segsel <= '1';
 		    when "1111110101" =>
 		    	--Writeframe Module
-		    	writeframe_segsel <= '1';
+		    	getframe_segsel <= '1';
 			-- auf 0xFFFFFE80
 			when "1111110100" =>
 				aluext_segsel <= '1';
@@ -503,7 +513,7 @@ begin
 		
 		extdata := (others => '0');
 		for i in extdata'left downto extdata'right loop
-		  extdata(i) := dis7segexto.data(i) or counter_exto.data(i) or writeframe_exto.data(i) or aluext_exto.data(i) or camconfig_exto.data(i); 
+		  extdata(i) := dis7segexto.data(i) or counter_exto.data(i) or getframe_exto.data(i) or aluext_exto.data(i) or camconfig_exto.data(i); 
 		end loop;
 		
 		speari.data <= (others => '0');

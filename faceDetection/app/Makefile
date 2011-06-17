@@ -12,7 +12,6 @@ SOURCES=src/main.c \
 	src/image.c \
 	src/sdram.c \
 	src/svga.c \
-	src/writeframe.c \
 	src/camconfig.c \
 	src/test.c 
 

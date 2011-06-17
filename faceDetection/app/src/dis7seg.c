@@ -17,3 +17,9 @@ void dis7seg_release(void) {
 void dis7seg_hex(uint32_t value) {
 	dis7seg_displayHexUInt32(&dispHandle, 0, value);
 }
+
+
+void dis7seg_uint32(uint32_t value) {
+	dis7seg_displayUInt32(&dispHandle, 0, value);
+}
+
