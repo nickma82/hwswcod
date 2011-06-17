@@ -4,7 +4,7 @@ JedecChain;
 	DefaultMfr(6E);
 
 	P ActionCode(Cfg)
-		Device PartName(EP4CE115F29) Path("/homes/c0726101/Desktop/hwswcod/spear2-hwsw11/workspace/amba_hwsw/quartus/") File("top.sof") MfrSpec(OpMask(1));
+		Device PartName(EP4CE115F29) Path("/homes/c0616782/hwswcod/spear2-hwsw11/workspace/amba_hwsw/quartus/") File("top.sof") MfrSpec(OpMask(1));
 
 ChainEnd;
 

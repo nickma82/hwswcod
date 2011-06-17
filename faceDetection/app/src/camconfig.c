@@ -28,14 +28,14 @@ void setup_cam() {
 	//pause mode
 	write_cam(0x0B,1<<1|1);
 	// invert pixe clock
-	write_cam(0x0A, (1<<15)|1);
+	write_cam(0x0A, (1<<15)|0);
 	// column size
 	write_cam(0x04, 2559);
 	// row size
 	write_cam(0x03, 1919);
 		
 	// shutter width lower
-	write_cam(0x09, 1000);
+	write_cam(0x09, 1100);
 	
 	// GAIN
 
@@ -71,6 +71,8 @@ void setup_cam() {
 	write_cam(0x20, (1<<15));
 	//write_cam(0x20, 0);
 	
+	
+	write_cam(0x06,500);
 	// restart cam		
 	write_cam(0x0b,1);
 	
