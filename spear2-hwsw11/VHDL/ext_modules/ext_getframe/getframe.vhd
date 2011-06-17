@@ -53,7 +53,11 @@ architecture rtl of ext_getframe is
 		return_pgm	: std_logic;
 		wait_gf		: natural range 0 to 10;
 		clear_screen: std_logic;
-		clear_done: std_logic;
+		clear_done	: std_logic;
+		tx			: natural range 0 to CAM_W-1;
+		ty			: natural range 0 to CAM_H-1;
+		bx			: natural range 0 to CAM_W-1;
+		by			: natural range 0 to CAM_H-1;
 	end record;
 	
 	signal r_next : reg_type;
@@ -65,7 +69,11 @@ architecture rtl of ext_getframe is
 		return_pgm	=> '0',
 		wait_gf		=> 0,
 		clear_screen=> '0',
-		clear_done	=> '0'
+		clear_done	=> '0',
+		tx			=> 0,
+		ty			=> 0,
+		bx			=> 0,
+		by			=> 0
 	);
 	
 	signal rstint : std_ulogic;
@@ -186,19 +194,23 @@ begin
 	
 	writeframe_unit : writeframe
 	port map (
-		clk     		 => clk,     		
-		rst    			 => rstint,    			
-		dmai    		 => dmai,
-		dmao    		 => dmao, 		
-		next_burst		 => next_burst,		
-		frame_done		 => frame_done,	
-		return_pgm		 => return_pgm,
-		rd_address_burst => rd_address_burst,
-		rd_data_burst	 => rd_data_burst,
-		clear_screen	 => int_clear_screen,
-		clear_done		 => clear_done,
-		frame_stop		=> frame_stop,
-		led_red			 => led_red(5 downto 0)
+		clk     			=> clk,     		
+		rst    				=> rstint,    			
+		dmai    			=> dmai,
+		dmao    			=> dmao, 		
+		next_burst			=> next_burst,		
+		frame_done			=> frame_done,	
+		return_pgm			=> return_pgm,
+		rd_address_burst	=> rd_address_burst,
+		rd_data_burst		=> rd_data_burst,
+		clear_screen		=> int_clear_screen,
+		clear_done			=> clear_done,
+		frame_stop			=> frame_stop,
+		tx					=> r.tx,
+		ty					=> r.ty,
+		bx					=> r.bx,
+		by					=> r.by,
+		led_red			 	=> led_red(5 downto 0)
 	);
 	------------------------
 	---	ASync Core Ext Interface Daten übernehmen und schreiben
@@ -235,9 +247,15 @@ begin
     					v.return_pgm := '0';
     					v.frame_done := '0';
     				end if;
+				when "010" =>
+					v.tx := to_integer(unsigned(exti.data(31 downto 16)))-1;
+					v.ty := to_integer(unsigned(exti.data(15 downto 0)))-1;
     			when "011" =>
     				v.clear_screen := '1';
     				v.clear_done := '0';
+				when "100" =>
+					v.bx := to_integer(unsigned(exti.data(31 downto 16)))-1;
+					v.by := to_integer(unsigned(exti.data(15 downto 0)))-1;
    			when others =>
 					null;
 			end case;

@@ -73,19 +73,15 @@ int main(int argc, char **argv)
 			*reg = (1 << COUNTER_CLEAR_BIT);
 			*reg = (1  << COUNTER_COUNT_BIT);
 			
-			GETFRAME_START = 1;
-			while(!GETFRAME_RETURN) {
-				memset((void *)temp.data, 0, sizeof(temp.data));
-				memset((void *)temp2.data, 0, sizeof(temp2.data));
-			}
+			memset((void *)temp.data, 0, sizeof(temp.data));
+			memset((void *)temp2.data, 0, sizeof(temp2.data));
 			
-			if (!i)
-				face = faceDetection(&image, &temp, &temp2);
-			if (i >= 5)
-				i = 0;
-				
+			face = faceDetection(&image, &temp, &temp2);
 			
-			svga_paintRectangle(face);
+			GETFRAME_R1 = (face.topLeftX << 16) | face.topLeftY;
+			GETFRAME_R2 = (face.bottomRightX<<16) | face.bottomRightY;
+			
+			getframe_wait_return();
 			
 			*reg = 0;
 			
@@ -93,14 +89,7 @@ int main(int argc, char **argv)
 			fps_c *= CLKPERIOD * PRESCALER;
 			fps_c = 1000000000 / fps_c;
 			
-			//fps_mean += 1000/fps_c;
-			//fps_mean /= 2;
 			dis7seg_uint32(fps_c);
-			
-			
-			for (y = 0; y<2000; y++)
-				asm("nop");
-			
 			
 		}
 		

@@ -36,6 +36,10 @@ entity writeframe is
 		clear_screen		: in std_logic;
 		clear_done			: out std_logic;
 		frame_stop			: in std_logic;
+		tx					: in natural range 0 to CAM_W-1;
+		ty					: in natural range 0 to CAM_H-1;
+		bx					: in natural range 0 to CAM_W-1;
+		by					: in natural range 0 to CAM_H-1;
 		led_red				: out 	std_logic_vector(5 downto 0)
     );
 end ;
@@ -220,7 +224,12 @@ begin
 				v.wdata := "00000000000000000000000011111111";
 			end if;
 		else
-			v.wdata := "00000000" & rd_data_burst;
+			-- rahmen ausgeben
+			if (r.cur_line = ty or r.cur_line = by) and (r.cur_col >= tx and r.cur_col < bx) then
+				v.wdata := "00000000000000001111111100000000";
+			else
+				v.wdata := "00000000" & rd_data_burst;
+			end if;
 		end if;
 		
 		-- Werte auf Interface zu Bus legen

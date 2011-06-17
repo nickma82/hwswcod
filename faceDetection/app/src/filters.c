@@ -26,14 +26,7 @@ void skinFilter(image_t *inputImage, bwimage_t *outputImage) {
 				//				red										green								blue
 				ALUEXT_RGB = (inputImage->data[pIndex+2] << 16) | (inputImage->data[pIndex+1] << 8) | (inputImage->data[pIndex]);
 			#else
-			
-/*				rgb_color_t c;
-				c.r = (screenData[SCREEN_WIDTH * y + x] & 0x00ff00 ) >> 8;
-				c.g = (screenData[SCREEN_WIDTH * y + x] & 0xff0000 ) >> 16;
-				c.b = (screenData[SCREEN_WIDTH * y + x] & 0x0000ff );
-				ALUEXT_RGB = (c.r << 16) | (c.g << 8) | (c.b);*/
 				ALUEXT_RGB = screenData[SCREEN_WIDTH * y + x];
-				//printf("%8X\n",(unsigned int)screenData[SCREEN_WIDTH * y + x]);
 			#endif
 			
 			p = x >> SCALE_SHIFT;

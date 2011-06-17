@@ -4,7 +4,7 @@
 #include "detectFace.h"
 #include "filters.h"
 #include "test.h"
-
+#include "getframe.h"
 #include "svga.h"
 
 #define STEP_SIZE 10
@@ -17,6 +17,12 @@ rect_t faceDetection(image_t* inputImage, bwimage_t* temp, bwimage_t* temp2) {
 	
 	// perform face detection
 	skinFilter(inputImage, temp);
+	
+	// nächste frame von der kamera holen
+	#ifndef TEST
+		GETFRAME_START = 1;
+	#endif
+	
 	erodeFilter(temp, temp2);
 	dilateFilter(temp2, temp);
 	face = detectFace(temp);

@@ -138,6 +138,10 @@ package pkg_getframe is
 			clear_screen		: in std_logic;
 			clear_done			: out std_logic;
 			frame_stop			: in std_logic;
+			tx					: in natural range 0 to CAM_W-1;
+			ty					: in natural range 0 to CAM_H-1;
+			bx					: in natural range 0 to CAM_W-1;
+			by					: in natural range 0 to CAM_H-1;
 			led_red				: out 	std_logic_vector(5 downto 0)
 		);
 	end component;
