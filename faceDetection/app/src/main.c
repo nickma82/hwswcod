@@ -97,7 +97,7 @@ int main(int argc, char **argv)
 			dis7seg_uint32(fps_c);
 			
 			
-			for (y = 0; y<1000; y++)
+			for (y = 0; y<2000; y++)
 				asm("nop");
 			
 			

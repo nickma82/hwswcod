@@ -35,7 +35,7 @@ void setup_cam() {
 	write_cam(0x03, 1919);
 		
 	// shutter width lower
-	write_cam(0x09, 1100);
+	write_cam(0x09, 1000);
 	
 	// GAIN
 
