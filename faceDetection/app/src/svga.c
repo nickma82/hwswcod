@@ -23,6 +23,7 @@ void svga_init(void) {
 }
 
 void svga_paintRectangle(rect_t rectangle) {
+	#ifdef TEST
 	int i;
 	uint32_t cl = 0x0000FF00;
 	
@@ -38,9 +39,11 @@ void svga_paintRectangle(rect_t rectangle) {
 		screenData[i*SCREEN_WIDTH + rectangle.topLeftX] = cl;
 		screenData[i*SCREEN_WIDTH + rectangle.bottomRightX] = cl;
 	}
+	#endif
 }
 
 void svga_outputImage(image_t *image) {
+	#ifdef TEST
 	int x, y;
 	int pIndex;
 	rgb_color_t color;
@@ -61,9 +64,11 @@ void svga_outputImage(image_t *image) {
 			screenData[y*SCREEN_WIDTH+x] = (color.r << 16) | (color.g << 8) | color.b;
 		}
 	}
+	#endif
 }
 
 void svga_outputBwImage(bwimage_t *image) {
+	#ifdef TEST
 	int x, y;
 	rgb_color_t color;
 	uint32_t p,pp;
@@ -86,5 +91,6 @@ void svga_outputBwImage(bwimage_t *image) {
 			screenData[y*SCREEN_WIDTH+x] = (color.r << 16) | (color.g << 8) | color.b;
 		}
 	}
+	#endif
 }
 

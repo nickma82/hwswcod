@@ -78,8 +78,13 @@ int main(int argc, char **argv)
 			
 			face = faceDetection(&image, &temp, &temp2);
 			
-			GETFRAME_R1 = (face.topLeftX << 16) | face.topLeftY;
-			GETFRAME_R2 = (face.bottomRightX<<16) | face.bottomRightY;
+			if (i == 10) {
+				GETFRAME_R1 = (face.topLeftX << 16) | face.topLeftY;
+				GETFRAME_R2 = (face.bottomRightX<<16) | face.bottomRightY;
+				i = 0;
+			}
+			else
+				i++;
 			
 			getframe_wait_return();
 			

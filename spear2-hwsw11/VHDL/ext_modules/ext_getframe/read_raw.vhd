@@ -44,19 +44,15 @@ entity read_raw is
 		wr_data		: out dot_type;
 		wr_address	: out dot_addr_type;
 		led_red		: out std_logic_vector(5 downto 0);
-		frame_stop	: out std_logic;
-		last_px_cnt	: out std_logic_vector(19 downto 0)
+		frame_stop	: out std_logic
     );
 end ;
 
 architecture rtl of read_raw is
 
-	-- Cam read raw Signals
-	type state_type is (reset, wait_frame_valid,wait_frame_invalid, read_dot, done);
-	 
+
 	type readraw_reg_type is record
 		--intern
-		state		: state_type;
 		toggle_r	: std_logic;
 		p_r      	: natural range 0 to CAM_H-1;
 		p_c      	: natural range 0 to CAM_W-1;
@@ -69,9 +65,6 @@ architecture rtl of read_raw is
 		address		: dot_addr_type;
 		--cam
 		conv_line_rdy:std_logic;
-		
-		counter		: natural range 0 to 2*CAM_PIXEL_COUNT;
-		last_counter: natural range 0 to 2*CAM_PIXEL_COUNT;
 		last_fval	: std_logic;
 		last_lval	: std_logic;
 	end record;
@@ -80,7 +73,6 @@ architecture rtl of read_raw is
 	signal r_next : readraw_reg_type;
 	signal r : readraw_reg_type := 
 	(
-		state		=> reset,
 		running		=> '0',
 		start		=> '0',
 		toggle_r	=> '0',
@@ -92,8 +84,6 @@ architecture rtl of read_raw is
 		data		=> (others => '0'),
 		address		=> (others => '0'),
 		conv_line_rdy	=> '0',
-		counter		=> 0,
-		last_counter=> 0,
 		last_fval	=> '0',
 		last_lval	=> '0'
 	);	
@@ -142,7 +132,6 @@ begin
 				v.start := '0';
 			end if;
 			
-			v.counter := r.counter + 1;
 			led_red(0) <= '1';
 		-- neue zeile
 		elsif cm_fval = '1' and cm_lval = '0' then
@@ -169,15 +158,11 @@ begin
 			v.address	:= (others => '0');
 			v.data		:= (others => '0');
 			
-			v.counter	:= 0;
-			
-			--if r.p_r < CAM_H-1 and r.p_c < CAM_W-10 then
 			frame_stop <= '1';
-			--end if;
+		
 			
 			if r.last_fval = '1' then
 				v.running := '0';
-				v.last_counter := r.counter;
 			else
 				if r.start = '1' then
 					v.running := '1';
@@ -203,9 +188,7 @@ begin
 		wr_en_odd	<= r.en_odd and r.running;
 		wr_en_even	<= r.en_even and r.running;
 		line_ready	<= r.conv_line_rdy and r.running;
-		
-		last_px_cnt <= std_logic_vector(to_unsigned(r.last_counter,20));
-		
+			
 		led_red(4) <= r.running;
 		led_red(5) <= r.start;
 				
@@ -225,7 +208,6 @@ begin
 	begin
 		if rising_edge(cm_pixclk) then
 			if rst = RST_ACT then
-				r.state <= reset;
 				r.p_r 		<=  0;
 				r.toggle_r	<= '0';
 				r.p_c 		<=  0;
@@ -236,8 +218,6 @@ begin
 				r.en_even	<= '0';
 				r.address	<= (others => '0');
 				r.data		<= (others => '0');
-				r.last_counter <= 0;
-				r.counter	<= 0;
 				r.last_lval  <= '0';
 				r.last_fval	<= '0';
 			else

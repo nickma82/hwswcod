@@ -42,6 +42,7 @@ void test_release(void) {
 }
 
 void test_sendImage(image_t *inputImage, const char *targetPath) {
+	#ifdef TEST
 	uint32_t imageLen;
 	char tgaHeader[18];
 	
@@ -94,9 +95,11 @@ void test_sendImage(image_t *inputImage, const char *targetPath) {
 	#ifdef __SPEAR32__
 		sdramBytesAllocated -= inputImage->dataLength;
 	#endif
+	#endif
 }
 
 void test_receiveImage(image_t *inputImage, const char *sourcePath) {
+	#ifdef TEST
 	uint32_t imageLen;
 	char tgaHeader[18];
 	
@@ -136,5 +139,6 @@ void test_receiveImage(image_t *inputImage, const char *sourcePath) {
 		UART_read(0, (char *)inputImage->data, inputImage->dataLength);
 		
 		printf("TEST: Image received.\n\n");
+	#endif
 	#endif
 }

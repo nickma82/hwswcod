@@ -23,6 +23,7 @@ void image_setPixelValue(image_t *i, int x, int y, rgb_color_t cl) {
 }
 
 void image_paintRectangle(image_t *image, rect_t rectangle) {
+	#ifdef TEST
 	int i;
 	rgb_color_t cl = {0,0xFF,0};
 	
@@ -42,6 +43,7 @@ void image_paintRectangle(image_t *image, rect_t rectangle) {
 		image_setPixelValue(image, rectangle.topLeftX, i, cl);
 		image_setPixelValue(image, rectangle.bottomRightX, i, cl);
 	}
+	#endif
 }
 
 void printFrameBuffer(const char *targetPath) {

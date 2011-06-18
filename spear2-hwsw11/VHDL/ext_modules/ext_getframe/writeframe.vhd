@@ -65,7 +65,6 @@ architecture rtl of writeframe is
 		frame_done			: std_logic;
 		return_pgm			: std_logic;
 		rd_pointer			: pix_addr_type;
-		sent				: natural range 0 to 100;
 		clear_running		: std_logic;
 		frame_stop			: std_logic;
 	end record;
@@ -86,7 +85,6 @@ architecture rtl of writeframe is
 		return_pgm		=> '0',
 		clear_running	=> '0',
 		rd_pointer		=> (others => '0'),
-		sent			=> 0,
 		frame_stop		=> '0'
 	);
 				
@@ -95,7 +93,7 @@ begin
 	------------------------
 	---	ASync Daten bursten
 	------------------------
-	comb : process(r,next_burst,dmao, rst,rd_data_burst,clear_screen,frame_stop)
+	comb : process(r,next_burst,dmao, rst,rd_data_burst,clear_screen,frame_stop,tx,ty,bx,by)
 	variable v 		: reg_type;
 	variable tmp	: std_logic_vector(9 downto 0);
 	begin
@@ -122,7 +120,6 @@ begin
 				
 				-- sicherstellen, dass 0 tes element anliegt sobald verarbeitung startet
 				v.rd_pointer := (others => '0');
-				v.sent := 0;
 				
 				if next_burst = '1' or r.clear_running = '1' then
 					v.state := data;					
@@ -135,7 +132,6 @@ begin
 				if r.start = '0' then
 					v.start := '1';
 				end if;
-				
 				if dmao.ready = '1' then
 					if dmao.haddr = (9 downto 0 => '0') then
 						v.address := (v.address(31 downto 10) + 1) & dmao.haddr;
@@ -172,12 +168,11 @@ begin
 						v.rd_pointer := r.rd_pointer + 1;
 					end if;
 					
-					v.sent := r.sent + 1;
+					
 				end if;		
 				
 				led_red(1) <= '1';
-			when start_next_burst =>
-				v.sent := 0;
+			when start_next_burst =>				
 				if r.burst_count > r.burst_done_count then
 					v.state := data;
 				else
@@ -225,7 +220,8 @@ begin
 			end if;
 		else
 			-- rahmen ausgeben
-			if (r.cur_line = ty or r.cur_line = by) and (r.cur_col >= tx and r.cur_col < bx) then
+			if 	((r.cur_line = ty or r.cur_line = by) and (r.cur_col >= tx and r.cur_col < bx)) or
+				((r.cur_col = tx or r.cur_col = bx) and (r.cur_line >= ty and r.cur_line < by)) then
 				v.wdata := "00000000000000001111111100000000";
 			else
 				v.wdata := "00000000" & rd_data_burst;

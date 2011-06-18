@@ -172,8 +172,7 @@ begin
 		wr_data		=>  wr_data,		
 		wr_address	=>  wr_address,
 		frame_stop	=> frame_stop,
-		led_red		=> led_red(17 downto 12),
-		last_px_cnt => pix_count
+		led_red		=> led_red(17 downto 12)
     );
     
     convert_unit : convert
