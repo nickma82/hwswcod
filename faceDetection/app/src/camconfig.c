@@ -91,10 +91,8 @@ void adjust_gain(gain_t *current_gain,uint8_t current_color,uint8_t desired_colo
 
 void calibrate_cam() {
 	int x,y,i;
-	uint32_t rgb;
+	uint32_t rgb,r,g,b;
 	uint8_t tmp,white;
-	
-	rgb_color_t c;
 
 	white = 255;
 
@@ -104,38 +102,22 @@ void calibrate_cam() {
 		getframe_wait_return();
 	}
 	
+	i = 0;
 	// Für 50x50 Pixel großes Feld durchschnittliche Farbe pro Kanal berechnen
 	for (y = CAM_CAL_START_Y; y <= CAM_CAL_END_Y; y++) {
 		for(x = CAM_CAL_START_X; x <= CAM_CAL_END_X; x++) {
-			rgb = screenData[y*SCREEN_WIDTH+x];
-			
-			tmp = (uint8_t)((rgb&0x00FF0000)>>16);
-			if (y == CAM_CAL_START_Y && x == CAM_CAL_START_X) {
-				c.r = tmp;
-			} else {
-				c.r = (tmp + c.r)>>2;
-			}
-			
-			tmp = (uint8_t)((rgb&0x0000FF00)>>8);
-			if (y == CAM_CAL_START_Y && x == CAM_CAL_START_X) {
-				c.g = tmp;
-			} else {
-				c.g = (tmp + c.g)>>2;
-			}
-			
-			tmp = (uint8_t)((rgb&0x000000FF));
-			if (y == CAM_CAL_START_Y && x == CAM_CAL_START_X) {
-				c.b = tmp;
-			} else {
-				c.b = (tmp + c.b)>>2;
-			}
+			i++;			
+			rgb = screenData[y*SCREEN_WIDTH+x];			
+			r += ((rgb&0x00FF0000)>>16);
+			g += ((rgb&0x0000FF00)>>8);
+			b += ((rgb&0x000000FF));
 		}
 	}
-	
+		
 	// Farbgain anpassen
-	adjust_gain(&gain_r,c.r,white);
-	adjust_gain(&gain_g,c.g,white);
-	adjust_gain(&gain_b,c.b,white);
+	adjust_gain(&gain_r,(uint8_t)(r/i),white);
+	adjust_gain(&gain_g,(uint8_t)(g/i),white);
+	adjust_gain(&gain_b,(uint8_t)(b/i),white);
 	
 	write_gain();	
 	restart_cam();
