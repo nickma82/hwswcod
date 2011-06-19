@@ -1,4 +1,15 @@
 #include "camconfig.h"
+#include "svga.h"
+#include "image.h"
+#include "getframe.h"
+
+gain_t gain_r,gain_g,gain_b;
+
+void restart_cam();
+void write_gain();
+float calculate_gain(gain_t *gain);
+void adjust_gain(gain_t *current_gain,uint8_t current_color,uint8_t desired_color);
+void calibrate_cam();
 
 uint32_t read_cam(uint8_t address) {
 	CAMCONFIG_READ = (CAM_ID_WRITE << 24) | (CAM_ID_READ<<16) | (address << 8);
@@ -10,21 +21,139 @@ uint32_t read_cam(uint8_t address) {
 }
 
 
-uint8_t write_cam(uint8_t address, uint16_t data){
-	
+uint8_t write_cam(uint8_t address, uint16_t data){	
 	CAMCONFIG_WRITE = (CAM_ID_WRITE << 24) | (address << 16) | data;
 	while (!CAMCONFIG_STATUS){
 		asm("nop");
-	}
-	
-	/*if (read_cam(address) != data )
-		printf("%d falscher wert\n",address);*/
-	
+	}	
 	return 0;
 }
 
 
+void restart_cam() {
+	// restart cam		
+	write_cam(0x0b,1);
+	
+	// wait for restart finished
+	while(read_cam(0x0b)&0x01)
+		asm("nop");
+}
+
+void write_gain() {
+	// GAIN
+
+	//write_cam(0x2C,0x9A);
+	//write_cam(0x2D,0x19C);
+	//write_cam(0x2B,0x13);
+	//write_cam(0x2E,0x13);
+	
+	// ganz gut: write_cam(0x2B, (0<<8)|(0<<6)|(0x13)); //Green
+	// ganz gut: write_cam(0x2E, (0<<8)|(0<<6)|(0x13)); //Green Reset
+	// ganz gut: write_cam(0x2D, (6<<8)|(0<<6)|(0xF)); //Red Reset
+	// ganz gut: write_cam(0x2C, (5<<8)|(0<<6)|(0xF)); //Blue Reset
+	
+	write_cam(0x2B, (gain_g.dg<<8) | (gain_g.am<<6) | (gain_g.ag)); //Green1 GAIN
+	write_cam(0x2E, (gain_g.dg<<8) | (gain_g.am<<6) | (gain_g.ag)); //Green2 GAIN
+	write_cam(0x2D, (gain_r.dg<<8) | (gain_r.am<<6) | (gain_r.ag)); //Red GAIN
+	write_cam(0x2C, (gain_b.dg<<8) | (gain_b.am<<6) | (gain_b.ag)); //Blue GAIN
+}
+
+float calculate_gain(gain_t *gain) {
+	return (float)((1+gain->am)*(gain->ag/8)*(1+(gain->dg/8)));
+}
+
+void adjust_gain(gain_t *current_gain,uint8_t current_color,uint8_t desired_color) {
+	// Gain Faktoren anpassen
+	float cur_gain,new_gain;
+	
+	cur_gain = calculate_gain(current_gain);
+	new_gain = (float)(cur_gain*desired_color/current_color);
+	
+	// Werte laut Empfehlungen von Tablle im Datenblatt Seite 47
+	if (new_gain <= 4.0f) {
+		current_gain->am = 0;
+		current_gain->dg = 0;
+		current_gain->ag = (uint8_t)(new_gain*8);
+	}
+	else if (new_gain > 4.0f && new_gain <= 8.0f) {
+		current_gain->dg = 0;
+		current_gain->am = 1;
+		current_gain->ag = (uint8_t)(new_gain/2*8);
+	}
+	else {
+		current_gain->dg = (uint8_t)(((new_gain/8)-1)*8);
+		current_gain->am = 1;
+		current_gain->ag = 32;
+	}
+	
+	printf("neue gain werte am=%u ,ag=%u ,dg=%u\n",(unsigned int)current_gain->am,(unsigned int)current_gain->ag,(unsigned int)current_gain->dg);
+}
+
+void calibrate_cam() {
+	int x,y,i;
+	uint32_t rgb;
+	uint8_t tmp,white;
+	
+	rgb_color_t c;
+
+	white = 255;
+
+	// 100 Frames einlesen
+	for (i = 0; i < 100; i++) {
+		GETFRAME_START = 1;
+		getframe_wait_return();
+	}
+	
+	// Für 50x50 Pixel großes Feld durchschnittliche Farbe pro Kanal berechnen
+	for (y = CAM_CAL_START_Y; y <= CAM_CAL_END_Y; y++) {
+		for(x = CAM_CAL_START_X; x <= CAM_CAL_END_X; x++) {
+			rgb = screenData[y*SCREEN_WIDTH+x];
+			
+			tmp = (uint8_t)((rgb&0x00FF0000)>>16);
+			if (y == CAM_CAL_START_Y && x == CAM_CAL_START_X) {
+				c.r = tmp;
+			} else {
+				c.r = (tmp + c.r)>>2;
+			}
+			
+			tmp = (uint8_t)((rgb&0x0000FF00)>>8);
+			if (y == CAM_CAL_START_Y && x == CAM_CAL_START_X) {
+				c.g = tmp;
+			} else {
+				c.g = (tmp + c.g)>>2;
+			}
+			
+			tmp = (uint8_t)((rgb&0x000000FF));
+			if (y == CAM_CAL_START_Y && x == CAM_CAL_START_X) {
+				c.b = tmp;
+			} else {
+				c.b = (tmp + c.b)>>2;
+			}
+		}
+	}
+	
+	// Farbgain anpassen
+	adjust_gain(&gain_r,c.r,white);
+	adjust_gain(&gain_g,c.g,white);
+	adjust_gain(&gain_b,c.b,white);
+	
+	write_gain();	
+	restart_cam();
+}
+
 void setup_cam() {
+	gain_r.am = 0;
+	gain_r.ag = 26;
+	gain_r.dg = 0;
+	
+	gain_g.am = 0;
+	gain_g.ag = 19;
+	gain_g.dg = 0;
+	
+	gain_b.am = 0;
+	gain_b.ag = 24;
+	gain_b.dg = 0;
+	
 	//pause mode
 	write_cam(0x0B,1<<1|1);
 	// invert pixe clock
@@ -37,22 +166,7 @@ void setup_cam() {
 	// shutter width lower
 	write_cam(0x09, 1100);
 	
-	// GAIN
-
-	//write_cam(0x2C,0x9A);
-	//write_cam(0x2D,0x19C);
-	//write_cam(0x2B,0x13);
-	//write_cam(0x2E,0x13);
-	
-	write_cam(0x2B, (0<<8)|(0<<6)|(0x13)); //Green
-	write_cam(0x2E, (0<<8)|(0<<6)|(0x13)); //Green Reset
-	write_cam(0x2D, (6<<8)|(0<<6)|(0xF)); //Red Reset
-	write_cam(0x2C, (5<<8)|(0<<6)|(0xF)); //Blue Reset
-	
-	// ganz gut: write_cam(0x2B, (0<<8)|(0<<6)|(0x13)); //Green
-	// ganz gut: write_cam(0x2E, (0<<8)|(0<<6)|(0x13)); //Green Reset
-	// ganz gut: write_cam(0x2D, (6<<8)|(0<<6)|(0xF)); //Red Reset
-	// ganz gut: write_cam(0x2C, (5<<8)|(0<<6)|(0xF)); //Blue Reset
+	write_gain();
 		
 	// row and column skiping => 640x480 res
 	write_cam(0x22, 0x03);
@@ -68,17 +182,11 @@ void setup_cam() {
 	write_cam(0xA0,0); //Test pattern contrl
 					
 	// mirror der rows
-	write_cam(0x20, (1<<15));
-	//write_cam(0x20, 0);
+	write_cam(0x20, (1<<15));	
 	
+	restart_cam();
 	
-	write_cam(0x06,500);
-	// restart cam		
-	write_cam(0x0b,1);
-	
-	// wait for restart finished
-	while(read_cam(0x0b)&0x01)
-		asm("nop");
+	calibrate_cam();
 	
 	return;
 }
