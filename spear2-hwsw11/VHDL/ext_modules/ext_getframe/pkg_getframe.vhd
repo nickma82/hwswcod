@@ -63,11 +63,12 @@ package pkg_getframe is
 	
 	component ext_getframe
 	  port (
-		clk      	: IN  std_logic;
-		extsel   	: in   std_ulogic;
-		exti     	: in  module_in_type;
+		clk      	: in std_logic;
+		reset		: in std_logic;
+		extsel   	: in std_ulogic;
+		exti     	: in module_in_type;
 		exto     	: out module_out_type;
-		dmai    	: out  ahb_dma_in_type;
+		dmai    	: out ahb_dma_in_type;
 		dmao    	: in ahb_dma_out_type;
 		cm_d		: in std_logic_vector(11 downto 0);
 		cm_lval 	: in std_logic; 	--Line valid

@@ -423,6 +423,7 @@ begin
 	getframe_unit: ext_getframe
   	port map(
 		clk       => clk,
+		reset	  => rst,
 		extsel    => getframe_segsel,
 		exti      => exti,
 		exto      => getframe_exto,

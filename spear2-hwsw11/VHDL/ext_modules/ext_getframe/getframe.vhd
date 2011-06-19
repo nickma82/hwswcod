@@ -25,6 +25,7 @@ use work.pkg_getframe.all;
 entity ext_getframe is
 	port (
 		clk       : in  std_logic;
+		reset	  : in  std_logic;
 		extsel    : in  std_ulogic;
 		exti      : in  module_in_type;
 		exto      : out module_out_type;
@@ -95,8 +96,7 @@ architecture rtl of ext_getframe is
 	signal return_pgm : std_logic;
 	
 	signal int_clear_screen, clear_done, frame_stop	:std_logic;
-	
-	signal pix_count : std_logic_vector(19 downto 0);
+
 begin
 	
 	------------------------
@@ -155,7 +155,7 @@ begin
 	read_raw_unit : read_raw
       port map (
 		clk		=> clk,	
-		rst 	=> rstint,
+		rst 	=> reset,
 		getframe	=> getframe,
 		
 		line_ready	=> line_ready,
@@ -178,7 +178,7 @@ begin
     convert_unit : convert
     port map (
     	clk       		 =>  clk,
-		rst				 =>  rstint, 	
+		rst				 =>  reset, 	
 		line_ready		 =>  line_ready,
 		next_burst		 =>  next_burst,
 		rd_address		 =>  rd_address,
@@ -194,7 +194,7 @@ begin
 	writeframe_unit : writeframe
 	port map (
 		clk     			=> clk,     		
-		rst    				=> rstint,    			
+		rst    				=> reset,    			
 		dmai    			=> dmai,
 		dmao    			=> dmao, 		
 		next_burst			=> next_burst,		

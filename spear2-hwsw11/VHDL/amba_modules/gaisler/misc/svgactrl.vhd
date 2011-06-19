@@ -83,7 +83,7 @@ architecture rtl of svgactrl is
     lock              : std_logic;
     index             : std_logic_vector(1 downto 0);
     mem_index         : integer;
-    read_pointer_clut : std_logic_vector(7 downto 0);
+    --read_pointer_clut : std_logic_vector(7 downto 0);
     hcounter          : std_logic_vector(15 downto 0);
     vcounter          : std_logic_vector(15 downto 0);
     fifo_ren          : std_logic;
@@ -105,9 +105,9 @@ architecture rtl of svgactrl is
     reset              : std_logic;
     sync_c             : std_logic_vector(2 downto 0);
     sync_w             : std_logic_vector(2 downto 0);
-    write_pointer_clut : std_logic_vector(7 downto 0);
-    datain_clut        : std_logic_vector(23 downto 0);
-    write_en_clut      : std_logic;
+    --write_pointer_clut : std_logic_vector(7 downto 0);
+    --datain_clut        : std_logic_vector(23 downto 0);
+    --write_en_clut      : std_logic;
     adress             : std_logic_vector(31 downto 0);
     start              : std_logic;
     write_pointer      : integer range 0 to length;
@@ -150,15 +150,15 @@ architecture rtl of svgactrl is
   signal vfporch            : std_logic_vector(15 downto 0);
   signal vsyncpulse         : std_logic_vector(15 downto 0);
   signal vvideo             : std_logic_vector(15 downto 0);
-  signal write_pointer_clut : std_logic_vector(7 downto 0) := (others =>'0');
-  signal read_pointer_clut  : std_logic_vector(7 downto 0) := (others =>'0');
+  --signal write_pointer_clut : std_logic_vector(7 downto 0) := (others =>'0');
+  --signal read_pointer_clut  : std_logic_vector(7 downto 0) := (others =>'0');
   signal read_pointer_fifo  : std_logic_vector(9 downto 0);
   signal write_pointer_fifo : std_logic_vector(9 downto 0);
-  signal datain_clut        : std_logic_vector(23 downto 0) := (others =>'0');
-  signal dataout_clut       : std_logic_vector(23 downto 0) := (others =>'0');
+  --signal datain_clut        : std_logic_vector(23 downto 0) := (others =>'0');
+  --signal dataout_clut       : std_logic_vector(23 downto 0) := (others =>'0');
   signal dataout_fifo       : std_logic_vector(31 downto 0);
   signal datain_fifo        : std_logic_vector(31 downto 0);
-  signal write_en_clut, read_en_clut : std_logic := '0';
+  --signal write_en_clut, read_en_clut : std_logic := '0';
   signal vcc      : std_logic;
   signal read_en_fifo, write_en_fifo     : std_logic;
 
@@ -193,7 +193,9 @@ begin
 
   begin
   
-    v := r; v.write_en_clut := '0'; rdata := (others =>'0');
+    v := r; 
+    --v.write_en_clut := '0'; 
+    rdata := (others =>'0');
     mem_sel := conv_integer(apbi.paddr(5 downto 2)); we_fifo := '0';
 
 --   Control part. This part handles the apb-accesses and stores the internal registers
@@ -213,11 +215,12 @@ begin
       rdata(9 downto 0) := r.vpolarity  & r.hpolarity & r.clk_sel & 
 	r.func & fifo_en & '0' & r.reset & r.enable;
     when "1010" =>
-      if apbwrite = '1' then
-        v.datain_clut := apbi.pwdata(23 downto 0);
-        v.write_pointer_clut := apbi.pwdata(31 downto 24);
-        v.write_en_clut := '1';
-      end if;
+      --if apbwrite = '1' then
+        --v.datain_clut := apbi.pwdata(23 downto 0);
+        --v.write_pointer_clut := apbi.pwdata(31 downto 24);
+        --v.write_en_clut := '1';
+      --end if;
+      null;
     when "0001" => 
       if apbwrite = '1' then v.int_reg(1) := apbi.pwdata; end if;
       rdata := r.int_reg(1);
@@ -364,16 +367,16 @@ begin
     dmai.start    <= r.start and r.enable;
     dmai.address  <= r.adress;
     write_pointer_fifo <= conv_std_logic_vector(v.ram_address,10);
-    write_pointer_clut <= r.write_pointer_clut;
+    --write_pointer_clut <= r.write_pointer_clut;
     datain_fifo   <= v.data;
-    datain_clut <= r.datain_clut;
-    write_en_clut <= r.write_en_clut;
+    --datain_clut <= r.datain_clut;
+    --write_en_clut <= r.write_en_clut;
     clk_sel <= r.clk_sel;
     write_en_fifo <= we_fifo;
     
   end process;
 
-  read_proc : process(t,res_mod,en_mod,write_status,dataout_fifo,sync_rb,dataout_clut,
+  read_proc : process(t,res_mod,en_mod,write_status,dataout_fifo,sync_rb,
     vmax, hmax, hvideo, hfporch, hsyncpulse, vvideo, vfporch, vsyncpulse, sync_ra, r)
 
   variable v : read_type;
@@ -488,19 +491,19 @@ begin
         case r.func is
         when "01" =>
           if t.index = "00" then
-            v.read_pointer_clut := dataout_fifo(31 downto 24);
+            --v.read_pointer_clut := dataout_fifo(31 downto 24);
             v.index := "01";
           elsif t.index = "01" then
-            v.read_pointer_clut := dataout_fifo(23 downto 16);
+            --v.read_pointer_clut := dataout_fifo(23 downto 16);
             v.index := "10";
           elsif t.index = "10" then
-            v.read_pointer_clut := dataout_fifo(15 downto 8);
+            --v.read_pointer_clut := dataout_fifo(15 downto 8);
             v.index := "11";
           else
-            v.read_pointer_clut := dataout_fifo(7 downto 0);
+            --v.read_pointer_clut := dataout_fifo(7 downto 0);
             v.index := "00"; inc_pointer := '1';
           end if;
-          v.data_out := dataout_clut; 
+          --v.data_out := dataout_clut; 
         when "10" =>
           if t.index = "00" then
             v.data_out := dataout_fifo(31 downto 27) & "000"  &
@@ -546,7 +549,7 @@ begin
       v.data_out := (others => '0');
       v.lock := '1';
       v.index := "00";
-      v.read_pointer_clut := (others => '0');
+      --v.read_pointer_clut := (others => '0');
     end if;                           ------------------------------------------
 
     tin <= v;
@@ -555,10 +558,10 @@ begin
     read_status  <= sync_ra.s3;
     write_en     <= sync_rb.s3(2);
     fifo_en      <= t.fifo_en;
-    read_pointer_clut <= v.read_pointer_clut;
+    --read_pointer_clut <= v.read_pointer_clut;
     read_pointer_fifo <= conv_std_logic_vector(v.read_pointer_out,10);
     read_en_fifo  <= not v.fifo_ren;
-    read_en_clut  <= not v.fifo_ren and not r.func(1) and r.func(0); 
+    --read_en_clut  <= not v.fifo_ren and not r.func(1) and r.func(0); 
     vgao.video_out_r <= t.data_out(23 downto 16);
     vgao.video_out_g <= t.data_out(15 downto 8);
     vgao.video_out_b <= t.data_out(7 downto 0);

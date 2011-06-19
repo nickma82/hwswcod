@@ -1,3 +1,4 @@
+#include <stdio.h>
 #include "camconfig.h"
 #include "svga.h"
 #include "image.h"
@@ -92,10 +93,12 @@ void adjust_gain(gain_t *current_gain,uint8_t current_color,uint8_t desired_colo
 void calibrate_cam() {
 	int x,y,i;
 	uint32_t rgb,r,g,b;
-	uint8_t tmp,white;
+	uint8_t white;
 
 	white = 255;
 
+	r = g = b = 0;
+	
 	// 100 Frames einlesen
 	for (i = 0; i < 100; i++) {
 		GETFRAME_START = 1;
