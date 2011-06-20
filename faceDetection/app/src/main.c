@@ -78,13 +78,11 @@ int main(int argc, char **argv)
 			
 			face = faceDetection(&image, &temp, &temp2);
 			
-			if (i == 10) {
-				GETFRAME_R1 = (face.topLeftX << 16) | face.topLeftY;
-				GETFRAME_R2 = (face.bottomRightX<<16) | face.bottomRightY;
-				i = 0;
-			}
-			else
-				i++;
+			
+			GETFRAME_R1 = (face.topLeftX << 16) | face.topLeftY;
+			GETFRAME_R2 = (face.bottomRightX<<16) | face.bottomRightY;
+			
+			
 			
 			getframe_wait_return();
 			
@@ -95,6 +93,8 @@ int main(int argc, char **argv)
 			fps_c = 1000000000 / fps_c;
 			
 			dis7seg_uint32(fps_c);
+			//printf("%i\n",fps_c);
+			i++;
 			
 		}
 		

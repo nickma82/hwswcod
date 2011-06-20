@@ -20,6 +20,7 @@ rect_t faceDetection(image_t* inputImage, bwimage_t* temp, bwimage_t* temp2) {
 	
 	// nächste frame von der kamera holen
 	#ifndef TEST
+		//getframe_wait_return();
 		GETFRAME_START = 1;
 	#endif
 	

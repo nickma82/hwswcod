@@ -99,6 +99,9 @@ void calibrate_cam() {
 
 	r = g = b = 0;
 	
+	GETFRAME_R1 = (CAM_CAL_START_X << 16) | CAM_CAL_START_Y;
+	GETFRAME_R2 = (CAM_CAL_END_X<<16) | CAM_CAL_END_Y;
+	
 	// 100 Frames einlesen
 	for (i = 0; i < 100; i++) {
 		GETFRAME_START = 1;
@@ -149,7 +152,7 @@ void setup_cam() {
 	write_cam(0x03, 1919);
 		
 	// shutter width lower
-	write_cam(0x09, 1100);
+	write_cam(0x09, 800);
 	
 	write_gain();
 		
