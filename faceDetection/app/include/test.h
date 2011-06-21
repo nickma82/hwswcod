@@ -11,7 +11,7 @@
 	module_handle_t counterHandle;
 	unsigned short counterSize;
 	int cnt;
-	
+
 	#define benchmark_messure(callable) \
 	do { \
 	*reg = (1 << COUNTER_CLEAR_BIT); \
@@ -23,7 +23,7 @@
 		counterSize++; \
 	} \
 	} while (0)
-		
+
 	#define benchmark_messure2(callable) \
 	do { \
 	*reg = (1 << COUNTER_CLEAR_BIT); \
@@ -40,8 +40,10 @@
 
 #ifndef TEST
 	#undef benchmark_messure
+	#undef benchmark_messure2
 	#define benchmark_messure(callable) callable
-#endif 
+	#define benchmark_messure2(callable) callable
+#endif
 
 void test_init(void);
 void test_release(void);
@@ -49,3 +51,4 @@ void test_receiveImage(image_t *inputImage, const char *sourcePath);
 void test_sendImage(image_t *inputImage, const char *targetPath);
 
 #endif // _test_h_
+

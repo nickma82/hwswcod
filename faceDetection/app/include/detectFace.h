@@ -6,3 +6,4 @@
 rect_t faceDetection(image_t* inputImage, bwimage_t* temp, bwimage_t* temp2);
 
 #endif // _detectFace_h_
+

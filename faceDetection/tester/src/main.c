@@ -1,206 +1,198 @@
-
-#include <stdio.h>   
-#include <string.h>  
+#include <stdio.h>
+#include <string.h>
 #include <unistd.h>
 #include <stdint.h>
 #include <stdlib.h>
-#include <fcntl.h> 
-#include <errno.h> 
-#include <termios.h> 
+#include <fcntl.h>
+#include <errno.h>
+#include <termios.h>
 #include <signal.h>
 
 #define ARRAY_SIZE(a) (sizeof(a) / sizeof(a[0]))
 
 #define CLKPERIOD 20
 #define PRESCALER 1
-static const char* counterNames[]={	
-	"SkinFilter",
-	"Erode",
-	"Dilate",
-	"DetectFace"
-};
 
-int open_port(void)
-{
-  int fd;                                   /* File descriptor for the port */
+#ifdef TEST
+	static const char* counterNames[] = {
+		"SkinFilter",
+		"Erode",
+		"Dilate",
+		"DetectFace"
+	};
+#endif //TEST
 
-  fd = open("/dev/ttyS0", O_RDWR | O_NOCTTY);
-  if (fd == -1) {                                              /* Could not open the port */
-    fprintf(stderr, "open_port: Unable to open /dev/ttyS0 - %s\n",
-	    strerror(errno));
-  }
+int open_port(void) {
+	int fd;                                   /* File descriptor for the port */
 
-  return (fd);
+	fd = open("/dev/ttyS0", O_RDWR | O_NOCTTY);
+	if (fd == -1) {                                              /* Could not open the port */
+		fprintf(stderr, "open_port: Unable to open /dev/ttyS0 - %s\n", strerror(errno));
+	}
+
+	return (fd);
 }
 
 void UART_read(int fd, char *buf, int size) {
-  int bytesToRead = size;
-  int readBytes;
-  while (bytesToRead > 0) {
-    readBytes = read(fd, buf, bytesToRead);
-    buf += readBytes;
-    bytesToRead -= readBytes;
-  }
+	int bytesToRead = size;
+	int readBytes;
+	while (bytesToRead > 0) {
+		readBytes = read(fd, buf, bytesToRead);
+		buf += readBytes;
+		bytesToRead -= readBytes;
+	}
 }
 
 void usage() {
-  printf("Usage: ");
-  printf("programmer <program.srec> <image_in.tga> <image_out.tga>\n");
-  exit(0);
+	printf("Usage: ");
+	printf("programmer <program.srec> <image_in.tga> <image_out.tga>\n");
+	exit(0);
 }
 
-int main(int argc, char **argv)
-{
-  int serialfd=0;                                            /* File descriptor */
-  struct termios options;
-  FILE *f;
-  uint32_t filesize = 0;
-  unsigned char *imageData;
-  int ret;
-  int32_t cycles;
-  unsigned short counterSize;
-  float mseconds, msecSum=0, fps;
-  char buffer[64];
-  int i;
+int main(int argc, char **argv) {
+	int serialfd = 0;                                            /* File descriptor */
+	struct termios options;
+	FILE *f;
+	uint32_t filesize = 0;
+	unsigned char *imageData;
+	int ret;
+	char buffer[64];
+	
 
-  if (argc != 4) {
-    usage();
-  }
+	if (argc != 4) {
+		usage();
+	}
 
+	serialfd = open_port();
 
+	//fcntl(serialfd, F_SETFL, FNDELAY);                  /* Configure port reading */
+	// 115200, 8E1, no flow control
+	bzero(&options, sizeof(options));
+	cfsetispeed(&options, B115200);
+	cfsetospeed(&options, B115200);
 
-  serialfd = open_port();
+	/* Enable the receiver and set local mode */
+	options.c_cflag |= (CLOCAL | CREAD);
+	options.c_cflag |= PARENB;
+	options.c_cflag &= ~CSIZE;
+	options.c_cflag |=  CS8;
+	options.c_cflag &= ~CRTSCTS;
 
-  //fcntl(serialfd, F_SETFL, FNDELAY);                  /* Configure port reading */
-  // 115200, 8E1, no flow control
-  bzero(&options, sizeof(options));
-  cfsetispeed(&options, B115200);
-  cfsetospeed(&options, B115200);
+	options.c_cc[VMIN] = 1;
+	options.c_cc[VEOF] = 0;
 
-  /* Enable the receiver and set local mode */
-  options.c_cflag |= (CLOCAL | CREAD);
-  options.c_cflag |= PARENB; 
-  options.c_cflag &= ~CSIZE;
-  options.c_cflag |=  CS8;   
-  options.c_cflag &= ~CRTSCTS;
+	/* Enable data to be processed as raw input */
+	options.c_lflag &= ~(ICANON | ECHO | ISIG);
 
-  options.c_cc[VMIN]     = 1; 
-  options.c_cc[VEOF]     = 0;
- 
-  /* Enable data to be processed as raw input */
-  options.c_lflag &= ~(ICANON | ECHO | ISIG);
+	options.c_iflag &= ~(IXOFF | IXON | IXANY);
 
-  options.c_iflag &= ~(IXOFF | IXON | IXANY);
+	//options.c_lflag = ICANON;
 
-  //options.c_lflag = ICANON;
+	tcflush(serialfd, TCIFLUSH);
+	/* Set the new options for the port */
+	tcsetattr(serialfd, TCSANOW, &options);
 
-  tcflush(serialfd, TCIFLUSH);       
-  /* Set the new options for the port */
+	// downloading program
+	f = fopen(argv[1], "r");
+	fseek(f, 0, SEEK_END);
+	filesize = ftell(f);
+	fseek(f, 0, SEEK_SET);
+	imageData = (unsigned char *)malloc(filesize);
+	filesize = fread(imageData, 1, filesize, f);
+	fclose(f);
+	printf("Downloading program, filesize: %d bytes.\n", filesize);
+	filesize = write(serialfd, imageData, filesize);
+	free(imageData);
 
+	// downloading image
+	f = fopen(argv[2], "r");
+	if (!f) {
+		printf("Image file <%s> not found\n", argv[2]);
+		exit(1);
+	}
+	fseek(f, 0, SEEK_END);
+	filesize = ftell(f);
+	fseek(f, 0, SEEK_SET);
+	imageData = (unsigned char *)malloc(filesize);
+	fread(imageData, 1, filesize, f);
+	fclose(f);
 
-  tcsetattr(serialfd, TCSANOW, &options);
+	// wait until program has been started on target
+	sleep(2);
 
-  // downloading program
-  f = fopen(argv[1], "r");
-  fseek(f, 0, SEEK_END);
-  filesize = ftell(f);
-  fseek(f, 0, SEEK_SET);
-  imageData = (unsigned char *)malloc(filesize);
-  filesize = fread(imageData, 1, filesize, f);
-  fclose(f);
-  printf("Downloading program, filesize: %d bytes.\n", filesize);
-  filesize = write(serialfd, imageData, filesize);
-  free(imageData);
+	printf("Downloading image \"%s\", filesize: %d bytes.\n", argv[2], filesize);
 
-  
-  // downloading image
-  f = fopen(argv[2], "r");
-  if (!f) {
-    printf("Image file <%s> not found\n", argv[2]);
-    exit(1);
-  }
-  fseek(f, 0, SEEK_END);
-  filesize = ftell(f);
-  fseek(f, 0, SEEK_SET);
-  imageData = (unsigned char *)malloc(filesize);
-  fread(imageData, 1, filesize, f);
-  fclose(f);
+	#ifdef TEST
+		// send image file size
+		write(serialfd, &filesize, sizeof(filesize));
+		// send image data
+		write(serialfd, imageData, filesize);
+	#endif
+	free(imageData);
 
-  // wait until program has been started on target
-  sleep(2);
+	options.c_lflag |= (ICANON);
+	options.c_cc[VMIN] = 0;
+	tcsetattr(serialfd, TCSANOW, &options);
 
-  printf("Downloading image \"%s\", filesize: %d bytes.\n", argv[2], filesize);
+	printf("\n====== Debug messages of your program ======\n");
+	// print debug messages
+	while (1) {
+		ret = read(serialfd, buffer, sizeof(buffer));
+		if (buffer[0] == 4) {
+			// EOT
+			break;
+		}
+		buffer[ret]=0;
+		printf("%s", buffer);
+	}
+	printf("============================================\n\n");
 
-  
-  #ifdef TEST
-	  // send image file size
-	  write(serialfd, &filesize, sizeof(filesize));
-	  // send image data
-	  write(serialfd, imageData, filesize);
-  #endif
-  free(imageData);
-  
-  options.c_lflag |= (ICANON);
-  options.c_cc[VMIN]     = 0;
-  tcsetattr(serialfd, TCSANOW, &options);
+	options.c_lflag &= ~ICANON;
+	options.c_cc[VMIN] = 1;
+	tcsetattr(serialfd, TCSANOW, &options);
 
-  printf("\n====== Debug messages of your program ======\n");
-  // print debug messages
-  while (1) {
-    ret = read(serialfd, buffer, sizeof(buffer));            
-    if (buffer[0] == 4) {
-      // EOT
-      break;
-    }
-    buffer[ret]=0;
-    printf("%s", buffer);
-  }
-  printf("============================================\n\n");
-  
-  options.c_lflag &= ~ICANON;
-  options.c_cc[VMIN]     = 1;
-  tcsetattr(serialfd, TCSANOW, &options);
-  
-  #ifdef TEST
-  //print out counters
-  printf("Durations:\n");
-  UART_read(serialfd, (char *)&counterSize, sizeof(counterSize));
-  for(i=0; i< counterSize; i++) {
-    UART_read(serialfd, (char *)&cycles, sizeof(cycles));
-    mseconds = cycles;
-    mseconds *= CLKPERIOD * PRESCALER;
-    mseconds /= 1000000;
-    msecSum += mseconds;
-    printf("  %s, %.3f ms\n", counterNames[i], mseconds);
-  }
-  
-  fps = 1000 / msecSum;
-  printf("Sum: %.0f ms, %.3f fps\n", msecSum, fps);
-  #endif
-  
-  
-  //Read image
-  UART_read(serialfd, (char *)&filesize, sizeof(filesize));
+	#ifdef TEST
+		int32_t cycles;
+		unsigned short counterSize;
+		float mseconds, fps, msecSum = 0;
+		int i;
+		//print out counters
+		printf("Durations:\n");
+		UART_read(serialfd, (char *)&counterSize, sizeof(counterSize));
+		for(i=0; i< counterSize; i++) {
+			UART_read(serialfd, (char *)&cycles, sizeof(cycles));
+			mseconds = cycles;
+			mseconds *= CLKPERIOD * PRESCALER;
+			mseconds /= 1000000;
+			msecSum += mseconds;
+			printf("  %s, %.3f ms\n", counterNames[i], mseconds);
+		}
 
-  f = fopen(argv[3], "w");
-  if (!f) {
-    printf("Image file <%s> couldn't be opened", argv[3]);
-    exit(1);
-  }
-    
-  while (filesize > 0) {
-  	unsigned char imageDataBlock[1024];
-    int bytesToRead = ((filesize > 1024) ? 1024 : filesize);
-    UART_read(serialfd, (char *)imageDataBlock, bytesToRead);
-    fwrite(imageDataBlock, 1, bytesToRead, f);
-    filesize -= bytesToRead;      
-  }
-  
-  fclose(f);
-  
-  close(serialfd);
-  
+		fps = 1000 / msecSum;
+		printf("Sum: %.0f ms, %.3f fps\n", msecSum, fps);
+	#endif
 
-  return 0;
+	//Read image
+	UART_read(serialfd, (char *)&filesize, sizeof(filesize));
+
+	f = fopen(argv[3], "w");
+	if (!f) {
+		printf("Image file <%s> couldn't be opened", argv[3]);
+		exit(1);
+	}
+
+	while (filesize > 0) {
+		unsigned char imageDataBlock[1024];
+		int bytesToRead = ((filesize > 1024) ? 1024 : filesize);
+		UART_read(serialfd, (char *)imageDataBlock, bytesToRead);
+		fwrite(imageDataBlock, 1, bytesToRead, f);
+		filesize -= bytesToRead;
+	}
+
+	fclose(f);
+
+	close(serialfd);
+
+	return 0;
 }
 

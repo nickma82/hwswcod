@@ -15,7 +15,7 @@ endif
 
 all: $(SOURCES) $(PROGRAM)
 
-$(PROGRAM): $(OBJECTS) 
+$(PROGRAM): $(OBJECTS)
 	$(CC) $(OBJECTS) -o $@
 
 .c.o:

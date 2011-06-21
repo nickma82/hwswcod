@@ -1,7 +1,7 @@
 /*
  * Project: SDRAM for SPEAR2
  * Author : Martin Luipersbeck
- * 
+ *
  * Description: defines and macros for usage of memory controller SDCTRL.
  *
  */
@@ -26,12 +26,12 @@
 
 /* timing parameters */
 #define SDRAM_REFRESH_EN        (1<<31)
-#define SDRAM_TRP	        (1<<30)
-#define SDRAM_TCD	        (1<<26)
+#define SDRAM_TRP               (1<<30)
+#define SDRAM_TCD               (1<<26)
 #define SDRAM_TRFC(value)       (value<<27)
 
 /* bank size */
-#define SDRAM_BANKSIZE_8MB	(1<<23)
+#define SDRAM_BANKSIZE_8MB		(1<<23)
 #define SDRAM_BANKSIZE_16MB     (2<<23)
 #define SDRAM_BANKSIZE_32MB     (3<<23)
 #define SDRAM_BANKSIZE_64MB     (4<<23)
@@ -39,7 +39,7 @@
 #define SDRAM_BANKSIZE_256MB    (6<<23)
 
 /* column size */
-#define SDRAM_COLSIZE_256	(0<<21)
+#define SDRAM_COLSIZE_256		(0<<21)
 #define SDRAM_COLSIZE_512       (1<<21)
 #define SDRAM_COLSIZE_1024      (2<<21)
 #define SDRAM_COLSIZE_2048_4096 (3<<21) /* bank size decides colsize, (banksize = 256) => 4096 else 2048 */
@@ -50,13 +50,15 @@
 #define SDRAM_D64_EN	        (1<<15) /* read only */
 
 /* commands */
-#define SDRAM_CMD			(7<<18)
+#define SDRAM_CMD		            	(7<<18)
 #define SDRAM_CMD_PRE_CHARGE	        (2<<18)
 #define SDRAM_CMD_AUTO_REFRESH	        (4<<18)
 #define SDRAM_CMD_LOAD_CMD_REG	        (6<<18)
 #define SDRAM_CMD_LOAD_EXT_CMD_REG      (7<<18)
 
 uint32_t sdramBytesAllocated;
+
 void sdram_init(void);
 
 #endif // __SDRAM_H__
+

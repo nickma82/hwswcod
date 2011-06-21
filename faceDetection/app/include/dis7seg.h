@@ -7,3 +7,4 @@ void dis7seg_hex(uint32_t value);
 void dis7seg_uint32(uint32_t value);
 
 #endif // _dis7seg_h_
+

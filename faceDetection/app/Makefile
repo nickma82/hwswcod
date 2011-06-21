@@ -6,14 +6,14 @@ LDFLAGS=-Wl,--nmagic,--no-check-sections,--strip-all,-Tspear32-de2-115.ld
 LIBS=-lspeardrivers
 
 SOURCES=src/main.c \
+	src/camconfig.c \
 	src/detectFace.c \
 	src/dis7seg.c \
 	src/filters.c \
 	src/image.c \
 	src/sdram.c \
 	src/svga.c \
-	src/camconfig.c \
-	src/test.c 
+	src/test.c
 
 OBJECTS=$(SOURCES:.c=.o)
 PROGRAM=main
@@ -35,7 +35,7 @@ endif
 
 all: $(SOURCES) $(PROGRAM)
 
-$(PROGRAM): $(OBJECTS) 
+$(PROGRAM): $(OBJECTS)
 	$(CC) $(LDFLAGS) $(OBJECTS) $(LIBS) -o $@
 	$(OBJCOPY) -O srec $(PROGRAM) $(PROGRAM).srec
 	$(OBJDUMP) -DGlrswxz $(PROGRAM) > $(PROGRAM).txt
