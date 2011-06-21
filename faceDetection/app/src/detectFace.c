@@ -17,15 +17,17 @@ rect_t faceDetection(image_t* inputImage, bwimage_t* temp, bwimage_t* temp2) {
 	
 	// perform face detection
 	skinFilter(inputImage, temp);
-	
+	//svga_outputBwImage(temp,640,0);
 	// nächste frame von der kamera holen
-	#ifndef TEST
-		//getframe_wait_return();
-		GETFRAME_START = 1;
-	#endif
+	//#ifndef TEST
+	//	//getframe_wait_return();
+	//	GETFRAME_START = 1;
+	//#endif
 	
 	erodeFilter(temp, temp2);
+	//svga_outputBwImage(temp2,640,480>>SCALE_SHIFT);
 	dilateFilter(temp2, temp);
+	//svga_outputBwImage(temp,640,2*(480>>SCALE_SHIFT));
 	face = detectFace(temp);
 	
 	face.bottomRightX *= SCALE;

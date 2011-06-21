@@ -9,6 +9,10 @@ ifeq ($(DEBUG), 1)
   CFLAGS+=-g
 endif
 
+ifeq ($(TEST), 1)
+  CFLAGS+=-DTEST
+endif
+
 all: $(SOURCES) $(PROGRAM)
 
 $(PROGRAM): $(OBJECTS) 

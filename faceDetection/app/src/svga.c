@@ -67,30 +67,30 @@ void svga_outputImage(image_t *image) {
 	#endif
 }
 
-void svga_outputBwImage(bwimage_t *image) {
-	#ifdef TEST
+void svga_outputBwImage(bwimage_t *image,uint32_t x_off,uint32_t y_off) {
+	//#ifdef TEST
 	int x, y;
 	rgb_color_t color;
 	uint32_t p,pp;
 	
 	// output image on touchscreen
-	for (y = 0; y < SCREEN_HEIGHT; y++) {
-		for (x = 0; x < SCREEN_WIDTH; x++) {
-			p = x >> SCALE_SHIFT;
+	for (y = 0; y < image->height; y++) {
+		for (x = 0; x < image->width; x++) {
+			p = x;
 			pp = 1 << (IMAGE_DATA_MAXVAL - (p & IMAGE_DATA_MAXVAL)); // pixelposition
 			p >>= IMAGE_DATA_BITS;
 			
 			color.b = 0;
 			color.g = 0;
 			color.r = 0;
-			if (x < image->width && y < image->height && image->data[y][p] & pp) {
+			if (image->data[y][p] & pp) {
 				color.b = 0xFF;
 				color.g = 0xFF;
 				color.r = 0xFF;
 			}
-			screenData[y*SCREEN_WIDTH+x] = (color.r << 16) | (color.g << 8) | color.b;
+			screenData[(y+y_off)*SCREEN_WIDTH+(x+x_off)] = (color.r << 16) | (color.g << 8) | color.b;
 		}
 	}
-	#endif
+	//#endif
 }
 

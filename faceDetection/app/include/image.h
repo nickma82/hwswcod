@@ -9,8 +9,8 @@
 #define IMAGE_DATA_MAXVAL	31
 #define IMAGE_DATA_BITS		5
 
-#define SCALE_SHIFT 3
-#define SCALE 8
+#define SCALE_SHIFT 2
+#define SCALE 4
 
 typedef struct {
 	int topLeftX;

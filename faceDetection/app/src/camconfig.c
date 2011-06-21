@@ -67,27 +67,27 @@ void adjust_gain(gain_t *current_gain,uint8_t current_color,uint8_t desired_colo
 	// Gain Faktoren anpassen
 	float cur_gain,new_gain;
 	
-	cur_gain = calculate_gain(current_gain);
-	new_gain = (float)(cur_gain*desired_color/current_color);
+	//cur_gain = calculate_gain(current_gain);
+	new_gain = ((float)desired_color/current_color);
 	
 	// Werte laut Empfehlungen von Tablle im Datenblatt Seite 47
 	if (new_gain <= 4.0f) {
 		current_gain->am = 0;
 		current_gain->dg = 0;
-		current_gain->ag = (uint8_t)(new_gain*8);
+		current_gain->ag = (uint8_t)(new_gain*8.0f);
 	}
 	else if (new_gain > 4.0f && new_gain <= 8.0f) {
 		current_gain->dg = 0;
 		current_gain->am = 1;
-		current_gain->ag = (uint8_t)(new_gain/2*8);
+		current_gain->ag = (uint8_t)(new_gain/2.0f*8.0f);
 	}
 	else {
-		current_gain->dg = (uint8_t)(((new_gain/8)-1)*8);
+		current_gain->dg = (uint8_t)(((new_gain/8.0f)-1.0f)*8.0f);
 		current_gain->am = 1;
 		current_gain->ag = 32;
 	}
 	
-	printf("neue gain werte am=%u ,ag=%u ,dg=%u\n",(unsigned int)current_gain->am,(unsigned int)current_gain->ag,(unsigned int)current_gain->dg);
+	//printf("farbe %u:neue gain werte am=%u ,ag=%u ,dg=%u\n",(unsigned int)current_color,(unsigned int)current_gain->am,(unsigned int)current_gain->ag,(unsigned int)current_gain->dg);
 }
 
 void calibrate_cam() {
@@ -142,6 +142,9 @@ void setup_cam() {
 	gain_b.ag = 24;
 	gain_b.dg = 0;
 	
+	
+	
+	
 	//pause mode
 	write_cam(0x0B,1<<1|1);
 	// invert pixe clock
@@ -152,9 +155,9 @@ void setup_cam() {
 	write_cam(0x03, 1919);
 		
 	// shutter width lower
-	write_cam(0x09, 800);
+	//write_cam(0x09, 1000);
 	
-	write_gain();
+	//write_gain();
 		
 	// row and column skiping => 640x480 res
 	write_cam(0x22, 0x03);

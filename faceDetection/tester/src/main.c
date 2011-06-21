@@ -116,7 +116,7 @@ int main(int argc, char **argv)
   // downloading image
   f = fopen(argv[2], "r");
   if (!f) {
-    printf("Image file <%s> not found", argv[2]);
+    printf("Image file <%s> not found\n", argv[2]);
     exit(1);
   }
   fseek(f, 0, SEEK_END);
@@ -132,10 +132,12 @@ int main(int argc, char **argv)
   printf("Downloading image \"%s\", filesize: %d bytes.\n", argv[2], filesize);
 
   
-  // send image file size
-  write(serialfd, &filesize, sizeof(filesize));
-  // send image data
-  write(serialfd, imageData, filesize);
+  #ifdef TEST
+	  // send image file size
+	  write(serialfd, &filesize, sizeof(filesize));
+	  // send image data
+	  write(serialfd, imageData, filesize);
+  #endif
   free(imageData);
   
   options.c_lflag |= (ICANON);
@@ -159,7 +161,7 @@ int main(int argc, char **argv)
   options.c_cc[VMIN]     = 1;
   tcsetattr(serialfd, TCSANOW, &options);
   
-  
+  #ifdef TEST
   //print out counters
   printf("Durations:\n");
   UART_read(serialfd, (char *)&counterSize, sizeof(counterSize));
@@ -174,6 +176,8 @@ int main(int argc, char **argv)
   
   fps = 1000 / msecSum;
   printf("Sum: %.0f ms, %.3f fps\n", msecSum, fps);
+  #endif
+  
   
   //Read image
   UART_read(serialfd, (char *)&filesize, sizeof(filesize));

@@ -41,11 +41,13 @@ int main(int argc, char **argv)
 		memset((void *)temp.data, 0, sizeof(temp.data));
 		memset((void *)temp2.data, 0, sizeof(temp2.data));
 		
-		svga_outputImage(&image);
+		//svga_outputImage(&image);
 		
 		printf("Starting computation.\n");
 		
 		svga_paintRectangle(faceDetection(&image, &temp, &temp2));
+		
+		//svga_outputBwImage(&temp);
 		
 		printf("Computation completed.\n");
 		
@@ -68,7 +70,7 @@ int main(int argc, char **argv)
 		bwimage_init(&image, &temp2);
 		rect_t face;
 		//GETFRAME_CLEAR=1;
-		while (1) {
+		while (i<100) {
 
 			*reg = (1 << COUNTER_CLEAR_BIT);
 			*reg = (1  << COUNTER_COUNT_BIT);
@@ -76,15 +78,17 @@ int main(int argc, char **argv)
 			memset((void *)temp.data, 0, sizeof(temp.data));
 			memset((void *)temp2.data, 0, sizeof(temp2.data));
 			
+			GETFRAME_START = 1;
+			getframe_wait_return();
+			
 			face = faceDetection(&image, &temp, &temp2);
 			
 			
 			GETFRAME_R1 = (face.topLeftX << 16) | face.topLeftY;
 			GETFRAME_R2 = (face.bottomRightX<<16) | face.bottomRightY;
 			
-			
-			
-			getframe_wait_return();
+			//getframe_wait_return();
+					
 			
 			*reg = 0;
 			
@@ -93,9 +97,15 @@ int main(int argc, char **argv)
 			fps_c = 1000000000 / fps_c;
 			
 			dis7seg_uint32(fps_c);
-			//printf("%i\n",fps_c);
-			i++;
 			
+			
+			//for(y = 0; y < 1000000; y++)
+			//	asm("nop");
+			
+			//printf("%i\n",fps_c);
+			#ifdef SENDIMG
+				i++;
+			#endif
 		}
 		
 		printFrameBuffer(argv[2]);

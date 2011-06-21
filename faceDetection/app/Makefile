@@ -29,6 +29,10 @@ ifeq ($(TEST), 1)
   CFLAGS+=-DTEST
 endif
 
+ifeq ($(SENDIMG), 1)
+  CFLAGS+=-DSENDIMG
+endif
+
 all: $(SOURCES) $(PROGRAM)
 
 $(PROGRAM): $(OBJECTS) 
