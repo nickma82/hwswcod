@@ -13,33 +13,41 @@
 int getIndexBelowThreshold(int *hist, int histLen, int start, int step, int threshold);
 rect_t detectFace(bwimage_t *faceMask);
 
+/**
+ * Detects the biggest skin color area within the given image
+ * and returns a surrounding rectangle.
+**/
 rect_t faceDetection(image_t* inputImage, bwimage_t* temp, bwimage_t* temp2) {
 	rect_t face;
 
-	// perform face detection
+	// mask skin color pixels
 	skinFilter(inputImage, temp);
 		#ifdef BW
 			svga_outputBwImage(temp, 640, 0);
 		#endif // BW
 
-	// nächste frame von der kamera holen
+	// get next frame from camera
 	#ifndef TEST
+		getframe_wait_return();
 		GETFRAME_START = 1;
 	#endif // TEST
 
+	// erode
 	erodeFilter(temp, temp2);
 		#ifdef BW
 			svga_outputBwImage(temp2, 640, 480 >> SCALE_SHIFT);
 		#endif // BW
+		
+	// dilate
 	dilateFilter(temp2, temp);
 		#ifdef BW
 			svga_outputBwImage(temp, 640, 2 * (480 >> SCALE_SHIFT));
 		#endif // BW
 
+	// get face
 	face = detectFace(temp);
 
-	//dis7seg_hex(face.topLeftX << 24 | face.topLeftY << 16 | face.bottomRightX << 8 | face.bottomRightY);
-
+	// upscale resulting rectangle
 	face.bottomRightX *= SCALE;
 	face.bottomRightY *= SCALE;
 	face.topLeftX *= SCALE;
@@ -52,6 +60,9 @@ rect_t faceDetection(image_t* inputImage, bwimage_t* temp, bwimage_t* temp2) {
 	return face;
 }
 
+/**
+ * Detect face in pixel bitmap.
+**/
 rect_t detectFace(bwimage_t *faceMask)
 {
 	int i, j, x, y;
