@@ -1,7 +1,7 @@
 -----------------------------------------------------------------------------
 -- Entity:      getframe
--- Author:      Johannes Kasberger
--- Description: Ein Bild in Framebuffer übertragen
+-- Author:      Johannes Kasberger, Nick Mayerhofer
+-- Description: Ein Spear2 Extension Modul um Bild von der Kamera einlesen und in Framebuffer übertragen
 -- Date:		15.05.2011
 -----------------------------------------------------------------------------
 

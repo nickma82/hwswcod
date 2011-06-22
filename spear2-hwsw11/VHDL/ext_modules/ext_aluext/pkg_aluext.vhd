@@ -1,7 +1,7 @@
 -----------------------------------------------------------------------------
 -- Entity:      alu extension
 -- Author:      Johannes Kasberger
--- Description: Erweiterung für spear2 um Multiplikation in HW durchzuführen
+-- Description: Erweiterung für spear2 um Skinfilter in HW durchzuführen
 -- Date:		15.04.2011
 -----------------------------------------------------------------------------
 library ieee;

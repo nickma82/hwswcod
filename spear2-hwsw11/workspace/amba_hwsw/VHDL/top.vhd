@@ -1,7 +1,5 @@
 library ieee;
 use ieee.std_logic_1164.all;
---Paket Infos: http://www.eda.org/rassp/vhdl/guidelines/1164qrc.pdf
---use ieee.std_logic_arith.all; --KEINE Standardisierte Library, nicht verwenden lt. Polzer
 use ieee.numeric_std.all;
 use work.top_pkg.all;
 use work.spear_pkg.all;
@@ -390,6 +388,7 @@ begin
   -- Spear extension modules
   -----------------------------------------------------------------------------
   
+	-- Für Skin Filter
 	aluext_unit : ext_aluext
 	port map(
 		clk       => clk,
@@ -398,7 +397,7 @@ begin
 		exto      => aluext_exto
 	);
 	
-
+	-- I2C Master für Konfiguration der Kamera
 	camconfig_unit : ext_camconfig
 	port map(
 		clk       => clk,
@@ -412,14 +411,10 @@ begin
 	);
 	
 	cm_sclk <= cam_sclk;
-	--sdata_out_en 0=input 1=output
+	--sdata_out_en 0=input 1=output => Für Lesen von SDATA
 	cm_sdata <= cam_sdata_out when cam_sdata_out_en = '1' else 'Z';
 	
-	gpio(0) <= clk;	
-	--gpio(1) <= cam_sclk;
-	--gpio(2) <= cm_sdata;
-	
-
+	--  Bild von Kamera einlesen und in SDRAM übertragen
 	getframe_unit: ext_getframe
   	port map(
 		clk       => clk,
@@ -441,6 +436,9 @@ begin
 	);
     
 	cm_reset <= rst;
+	
+	-- Debugleitungen von der Kameradaten an GPIO Port für Logik Analysator
+	gpio(0) <= clk;
 	gpio(4) <= cm_lval;
 	gpio(3) <= cm_fval;
 	gpio(5) <= cm_pixclk;
@@ -501,12 +499,6 @@ begin
 			-- auf 0xFFFFFE60
 			when "1111110011" =>
 				camconfig_segsel <= '1';
-			-- auf 0xFFFFFEC0
-			--when "1111110110" =>
-			--	camconfig <= '1';
-			-- auf 0xFFFFFEE0
-			--when "1111110111" =>
-			--	camconfig <= '1';
 		    when others =>
 		      null;
 		  end case;

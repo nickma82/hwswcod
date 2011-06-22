@@ -1,7 +1,7 @@
 -----------------------------------------------------------------------------
 -- Entity:      alu extension
 -- Author:      Johannes Kasberger
--- Description: Erweiterung für spear2 um Multiplikation in HW durchzuführen
+-- Description: Erweiterung für spear2 um Skinfilter in HW durchzuführen
 -- Date:		15.04.2011
 -----------------------------------------------------------------------------
 
@@ -28,16 +28,12 @@ architecture rtl of ext_aluext is
 
 	type reg_type is record
   		ifacereg	: register_set;
-		r		: std_logic_vector(8 downto 0);
-		g		: std_logic_vector(8 downto 0);
-		b		: std_logic_vector(8 downto 0);
-		rf		: signed(31 downto 0);
-		gf		: signed(31 downto 0);
-		bf 		: signed(31 downto 0);
-		--op_a	: unsigned(31 downto 0);
-		--op_b	: unsigned(31 downto 0);
-		--mult	: unsigned(31 downto 0);
-		--div		: unsigned(31 downto 0);
+		r		: std_logic_vector(8 downto 0); -- Farbwert R
+		g		: std_logic_vector(8 downto 0); -- Farbwert G
+		b		: std_logic_vector(8 downto 0); -- Farbwert B
+		rf		: signed(31 downto 0);          -- Zwischenergebnisse Rechnung r
+		gf		: signed(31 downto 0);          -- Zwischenergebnisse Rechnung g
+		bf 		: signed(31 downto 0);          -- Zwischenergebnisse Rechnung b
   	end record;
 
 	signal r_next : reg_type;
@@ -50,10 +46,6 @@ architecture rtl of ext_aluext is
 		rf => (others => '0'),
 		gf => (others => '0'),
 		bf => (others => '0')
-		--op_a => (others => '0'),
-		--op_b => (others => '0'),
-		--mult => (others => '0'),
-		--div => (others => '0')
 	);
 	
 	signal rstint : std_ulogic;
@@ -61,7 +53,7 @@ architecture rtl of ext_aluext is
 begin
 	
 	------------------------
-	---	ASync Core Ext Interface Daten übernehmen und schreiben
+	---	ASync Core Ext Interface Daten übernehmen und schreiben, Berechnung beginnen
 	------------------------
 	comb : process(r, exti, extsel,result)
 	variable v : reg_type;
@@ -69,8 +61,8 @@ begin
 	
 	begin
     	v := r;
-    	   	
-    	--schreiben
+    	   
+    	--schreiben der Daten
     	if ((extsel = '1') and (exti.write_en = '1')) then
     		case exti.addr(4 downto 2) is
 				-- byte 0 => status&config word
@@ -89,7 +81,7 @@ begin
     						v.ifacereg(3) := exti.data(31 downto 24);
     					end if;
     				end if;
-				-- op_a übernehmen
+				-- farben übernehmen
     			when "001" =>
     				if ((exti.byte_en(2) = '1')) then
 			    		v.r(8 downto 0) := "0" & exti.data(23 downto 16);
@@ -100,10 +92,6 @@ begin
 			    	if ((exti.byte_en(0) = '1')) then
 			    		v.b(8 downto 0) := "0" & exti.data(7 downto 0);
 			    	end if;
-			    --when "011" =>
-			    --	v.op_a(31 downto 0) := UNSIGNED(exti.data(31 downto 0));
-			    --when "100" =>
-			    --	v.op_b(31 downto 0) := UNSIGNED(exti.data(31 downto 0));
    				when others =>
 					null;
 			end case;
@@ -119,10 +107,6 @@ begin
 				-- ergebnis auslesen
 				when "010" =>
 					exto.data(0) <= result;
-				--when "101" =>
-				--	exto.data(31 downto 0) <= STD_LOGIC_VECTOR(r.mult);
-				--when "111" =>
-				--	exto.data(31 downto 0) <= STD_LOGIC_VECTOR(r.div);
 				when others =>
 					null;
 			end case;
@@ -153,9 +137,8 @@ begin
 		end if; 
 		exto.intreq <= r.ifacereg(STATUSREG)(STA_INT);
 		
-		--v.mult := RESIZE(r.op_a * r.op_b,32);
-		--v.div  := RESIZE(r.op_a / r.op_b,32);
-		
+
+		-- Berechnung starten, wird erst im nächsten Taktzyklus fertig
 		tmp_rf := RESIZE(signed(r.r)*to_signed(1000,16),32);
 		tmp_gf := RESIZE(signed(r.g)*to_signed(1000,16),32);
 		tmp_bf := RESIZE(signed(r.b)*to_signed(1000,16),32);
@@ -168,6 +151,9 @@ begin
     end process;	
 
     
+	------------------------
+	---	Berechnung fertig machen und entscheiden ob Farbwert eine Hautfarbe ist
+	------------------------
     color : process(r)
     variable tmp_y,tmp_cb,tmp_cr : signed(63 downto 0);
     
@@ -177,6 +163,7 @@ begin
 		tmp_cb := to_signed(500000,32)  * r.bf - to_signed(168736,32) * r.rf - to_signed(331264,32) * r.gf;
 		tmp_cr := to_signed(500000,32)  * r.rf - to_signed(418688,32) * r.gf - to_signed(81312,32)  * r.bf;
 		
+		-- Hautfarbe?
 		if tmp_y >= Y_LOW and tmp_y <= Y_HIGH and 
 			tmp_cb >= CB_LOW and tmp_cb <= CB_HIGH and 
 			tmp_cr >= CR_LOW and tmp_cr <= CR_HIGH then
