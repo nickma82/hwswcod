@@ -1,7 +1,7 @@
 -----------------------------------------------------------------------------
 -- Entity:      convert
 -- Author:      Johannes Kasberger, Nick Mayerhofer
--- Description: Bilder von der Kamera einlesen und in ein Ram speichern
+-- Description: Bayer Daten in RGB konvertieren
 -- Date:		8.06.2011
 -----------------------------------------------------------------------------
 
@@ -83,13 +83,17 @@ architecture rtl of convert is
 		next_burst	=> '0'
 	);
 begin
-read_raw : process(r, line_ready, rst, rd_data_even, rd_data_odd, frame_stop)
-	variable v 	: reg_type;
-	variable cur_dot,other_dot : dot_type;
+	------------------------
+	---	Statemachine für Konvertierung
+	------------------------
+	read_raw : process(r, line_ready, rst, rd_data_even, rd_data_odd, frame_stop)
+		variable v 	: reg_type;
+		variable cur_dot,other_dot : dot_type;
 	begin
 		v := r;
 		v.next_burst := '0';
 		
+		-- Abhängig von der Zeile müssen Daten von gerade/ungerade übernommen werden
 		if r.toggle_r = '0' then
 			cur_dot := rd_data_even;
 			other_dot := rd_data_odd;
@@ -100,7 +104,7 @@ read_raw : process(r, line_ready, rst, rd_data_even, rd_data_odd, frame_stop)
 		
 		led_red(5 downto 0) <= (others=>'0'); 
 		
-    	---Next dot descision logic
+    	---Next dot descision logic, von zeile abhängig, nach g1 folgt r, nach b folgt g2
 		if r.state = convert_line then
 			if r.toggle_r = '1' then
 				case r.dot_state is
@@ -180,30 +184,29 @@ read_raw : process(r, line_ready, rst, rd_data_even, rd_data_odd, frame_stop)
 				case r.dot_state is
 					when p_b =>
 						v.pixel_data := r.last_dot & other_dot  & cur_dot;
-						--v.pixel_data := "00000000" & "00000000"  & cur_dot;
 					when p_g2 =>
 						v.pixel_data := other_dot & cur_dot & r.last_dot;
-						--v.pixel_data := "00000000" & cur_dot & "00000000";
 					when p_g1 =>
 						v.pixel_data := r.last_dot & cur_dot & other_dot;
-						--v.pixel_data := "00000000" & cur_dot & "00000000";
 					when p_r =>
 						v.pixel_data := cur_dot & other_dot & r.last_dot;
-						--v.pixel_data := cur_dot & "00000000" & "00000000";
 				end case;
 				
-				
+				-- Ende der Zeile erreicht
 				if r.col_cnt = SCREEN_W then
 					v.state := line_done;
 				else
 					v.col_cnt := r.col_cnt + 1;
+					-- Bild ausgeben wenn Kameradaten
 					if v.col_cnt < CAM_W-1 then
 						v.rd_address := r.rd_address + 1;
+					-- oder schwarzen Rand einfügen
 					else
 						v.pixel_data := (others=>'0'); --schwarz
 					end if;
 				end if;			
 				
+				-- RAM als Ringbuffer verwenden
 				if r.pixel_addr = BURST_RAM_END_ADR then
 					v.pixel_addr := (others=> '0'); 
 				else
@@ -212,7 +215,7 @@ read_raw : process(r, line_ready, rst, rd_data_even, rd_data_odd, frame_stop)
 					end if;
 				end if;
 				
-			
+				-- Genug Daten für nächsten Burst vorhanden => Starten
 				if r.b_cnt = BURST_PIXEL_COUNT-1 then
 					v.next_burst := '1';
 					v.b_cnt := 0;
@@ -241,7 +244,6 @@ read_raw : process(r, line_ready, rst, rd_data_even, rd_data_odd, frame_stop)
 				v.pixel_addr := (others=>'0');
 				v.b_cnt := 0;
 				v.state := wait_line_ready;
-				--v.next_burst := '1';
 				led_red(3) <= '1';
 		end case;
 			
@@ -254,6 +256,7 @@ read_raw : process(r, line_ready, rst, rd_data_even, rd_data_odd, frame_stop)
 		
 		led_red(4) <= frame_stop;
 		
+		-- Wenn Bild von Kameraseite fertig mit Konvertierung aufhören
 		if frame_stop = '1' then
 			v.state := frame_done;
 		end if;

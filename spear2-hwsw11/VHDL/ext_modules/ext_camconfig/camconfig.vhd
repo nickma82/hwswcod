@@ -1,6 +1,6 @@
 -----------------------------------------------------------------------------
 -- Entity:      cam_config
--- Author:      Johannes Kasberger
+-- Author:      Johannes Kasberger, Nick Mayerhofer, Markus Klein
 -- Description: Kamera Parameter über two-wire-bus schicken
 -- Date:		24.05.2011
 -----------------------------------------------------------------------------
@@ -156,8 +156,7 @@ begin
 				when "001" =>
 					exto.data <= r.w_id & r.r_id & r.address & "00000000";
 				-- empfangene/gesendete daten auslesen
-				when "011" => 
-					--exto.data <= (15 downto 8 => r.data1, 7 downto 0 => r.data2, others => '0');
+				when "011" =>
 					exto.data <= (others => '0');
 					exto.data(15 downto 8) <= r.data1;
 					exto.data(7 downto 0) <= r.data2;
@@ -383,6 +382,9 @@ begin
 		sclk <= r.sclk;
 		sdata_out <= r.sdata_out;
 
+		------------
+		--- wenn bus gelesen werden muss auf TRI State stellen
+		------------
 		if r.state = reset or r.state = wait_ack or r.state = read1 or r.state = read2  or r.state = restore_read then
 			sdata_out_en <= '0';
 		else

@@ -1,7 +1,7 @@
 -----------------------------------------------------------------------------
 -- Entity:      getframe
--- Author:      Johannes Kasberger
--- Description: Ein Bild in Framebuffer übertragen
+-- Author:      Johannes Kasberger, Nick Mayerhofer
+-- Description: Ein Spear2 Extension Modul um Bild von der Kamera einlesen und in Framebuffer übertragen
 -- Date:		15.05.2011
 -----------------------------------------------------------------------------
 
@@ -49,16 +49,16 @@ architecture rtl of ext_getframe is
 	
 	type reg_type is record
   		ifacereg	: register_set;
-		getframe	: std_logic;
-		frame_done	: std_logic;
-		return_pgm	: std_logic;
-		wait_gf		: natural range 0 to 10;
-		clear_screen: std_logic;
-		clear_done	: std_logic;
-		tx			: natural range 0 to CAM_W-1;
-		ty			: natural range 0 to CAM_H-1;
-		bx			: natural range 0 to CAM_W-1;
-		by			: natural range 0 to CAM_H-1;
+		getframe	: std_logic;                   -- Wenn '1' => Einlesen starten
+		frame_done	: std_logic;                   -- Wenn '1' => Bild fertig eingelsen
+		return_pgm	: std_logic;                   -- Wenn '1' => Programm kann weiter arbeiten
+		wait_gf		: natural range 0 to 10;       -- Zähler um getframe wieder zurück zu setzen
+		clear_screen: std_logic;                   -- Wenn '1' => Framebuffer wird mit zwei Farben voll geschrieben
+		clear_done	: std_logic;                   -- Wenn '1' => Löschen fertig
+		tx			: natural range 0 to CAM_W-1;  -- Eckpunkte vom Rechteck für gefundenes Gesicht Top x
+		ty			: natural range 0 to CAM_H-1;  -- Eckpunkte vom Rechteck für gefundenes Gesicht Top y
+		bx			: natural range 0 to CAM_W-1;  -- Eckpunkte vom Rechteck für gefundenes Gesicht Bottom x
+		by			: natural range 0 to CAM_H-1;  -- Eckpunkte vom Rechteck für gefundenes Gesicht Bottom y
 	end record;
 	
 	signal r_next : reg_type;
@@ -149,6 +149,7 @@ begin
 			rdaddress 	=> rd_address_burst,
 			rddata_out 	=> rd_data_burst
 		);
+		
 	------------------------
 	---	Lesen von Bildern Einheit anlegen
 	------------------------
@@ -174,7 +175,10 @@ begin
 		frame_stop	=> frame_stop,
 		led_red		=> led_red(17 downto 12)
     );
-    
+
+	------------------------
+	---	Bayer in RGB Konvertierung
+	------------------------    
     convert_unit : convert
     port map (
     	clk       		 =>  clk,
@@ -191,6 +195,9 @@ begin
 		frame_stop		=> frame_stop
 	);
 	
+	------------------------
+	---	Bild in Framebuffer übertragen
+	------------------------
 	writeframe_unit : writeframe
 	port map (
 		clk     			=> clk,     		
@@ -211,6 +218,7 @@ begin
 		by					=> r.by,
 		led_red			 	=> led_red(5 downto 0)
 	);
+	
 	------------------------
 	---	ASync Core Ext Interface Daten übernehmen und schreiben
 	------------------------
@@ -246,12 +254,17 @@ begin
     					v.return_pgm := '0';
     					v.frame_done := '0';
     				end if;
+				-- Eckpunkt Top einlesen
 				when "010" =>
 					v.tx := to_integer(unsigned(exti.data(31 downto 16)));
 					v.ty := to_integer(unsigned(exti.data(15 downto 0)));
+					
+				-- Bildschirm löschen starten übernehmen
     			when "011" =>
     				v.clear_screen := '1';
     				v.clear_done := '0';
+
+				-- Eckpunkt Bottom einlesen
 				when "100" =>
 					v.bx := to_integer(unsigned(exti.data(31 downto 16)));
 					v.by := to_integer(unsigned(exti.data(15 downto 0)));
@@ -310,17 +323,20 @@ begin
 		end if; 
 		exto.intreq <= r.ifacereg(STATUSREG)(STA_INT);
 
+		-- Bild wurde fertig übertragen, in Register übernhemen
 		if frame_done = '1' then
 			v.frame_done := '1';
 			v.return_pgm := '1';
 		end if;
 		
+		-- Programm kann weiter arbeiten, in Register übernehmen
 		if return_pgm = '1' then
 			v.return_pgm := '1';
 		end if;
 		
 		int_clear_screen <= r.clear_screen;
 		
+		-- Wenn Bildschirm gelöscht wird und fertig ist in Register übernehmen
 		if r.clear_screen = '1' and clear_done = '1' then
 			v.clear_done := '1';
 			v.clear_screen := '0';

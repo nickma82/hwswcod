@@ -2,6 +2,9 @@
 -- Entity:      read_cam
 -- Author:      Johannes Kasberger, Nick Mayerhofer
 -- Description: Bilder von der Kamera einlesen und in ein Ram speichern
+--				Reagiert auf Line Valid und Frame Valid der Kamera um State zu bestimmen
+--				Immer zwei ganze Zeilen werden gespeichert (jeweils ein RAM für gerade und ungerade Zeilen). 
+--				Wenn Zeile vollständig wird Konvertierung gestartet
 -- Date:		1.06.2011
 -----------------------------------------------------------------------------
 
@@ -39,12 +42,12 @@ entity read_raw is
 		cm_trigger	: out std_logic;	--Snapshot trigger
 		cm_strobe	: in std_logic; 	--Snapshot strobe
 		
-		wr_en_odd	: out std_logic;
-		wr_en_even	: out std_logic;
-		wr_data		: out dot_type;
-		wr_address	: out dot_addr_type;
-		led_red		: out std_logic_vector(5 downto 0);
-		frame_stop	: out std_logic
+		wr_en_odd	: out std_logic;                     -- ungerade zeile schreiben
+		wr_en_even	: out std_logic;                     -- gerade zeile schreiben
+		wr_data		: out dot_type;                      -- bayer daten
+		wr_address	: out dot_addr_type;                 -- spalte der daten
+		led_red		: out std_logic_vector(5 downto 0);  -- debug leds
+		frame_stop	: out std_logic                      -- frame ist vorbei
     );
 end ;
 
@@ -115,15 +118,16 @@ begin
 				v.en_odd := '1';
 			end if;
 			
-			-- nach ersten pixel kann konvertierung gestartet werden
-			-- nach 4. pixel wieder abschalten
+			-- am ende der Zeile kann konvertierung gestartet werden
 			if r.p_c = CAM_W-20 then
 				v.conv_line_rdy := '1';
+				
+			-- nach ein paar takten signal wieder auf '0'
 			elsif r.p_c = CAM_W-10 then
 				v.conv_line_rdy := '0';
 			end if;
 			
-			-- daten übernehmen
+			-- daten übernehmen von kamera
 			v.data := cm_d(11 downto 4);
 			
 			v.address := std_logic_vector(to_unsigned(r.p_c, DOT_ADDR_WIDTH));
@@ -160,7 +164,7 @@ begin
 			
 			frame_stop <= '1';
 		
-			
+			-- nur direkt nach frame aktion ausführen
 			if r.last_fval = '1' then
 				v.running := '0';
 			else

@@ -1,7 +1,7 @@
 -----------------------------------------------------------------------------
 -- Entity:      writeframe
--- Author:      Johannes Kasberger
--- Description: Ein Bild in Framebuffer übertragen
+-- Author:      Johannes Kasberger, Nick Mayerhofer
+-- Description: Ein Bild über AHB in Framebuffer übertragen
 -- Date:		15.05.2011
 -----------------------------------------------------------------------------
 
@@ -54,19 +54,19 @@ architecture rtl of writeframe is
 	type state_type is (idle, data, done, reset, start_next_burst);
 	
 	type reg_type is record
-  		start				: std_logic;
-		address				: std_logic_vector(31 downto 0);
-		wdata				: std_logic_vector(31 downto 0);
-		state				: state_type;
-		cur_col				: natural range 0 to SCREEN_W-1;
-		cur_line			: natural range 0 to SCREEN_H-1;
-		burst_count			: natural range 0 to BURST_PER_FRAME_COUNT;
-		burst_done_count	: natural range 0 to BURST_PER_FRAME_COUNT;
-		frame_done			: std_logic;
-		return_pgm			: std_logic;
-		rd_pointer			: pix_addr_type;
-		clear_running		: std_logic;
-		frame_stop			: std_logic;
+  		start				: std_logic;                                -- Für AHB
+		address				: std_logic_vector(31 downto 0);            -- Für AHB
+		wdata				: std_logic_vector(31 downto 0);            -- Für AHB
+		state				: state_type;                               -- Statemachine
+		cur_col				: natural range 0 to SCREEN_W-1;            -- Spalte
+		cur_line			: natural range 0 to SCREEN_H-1;            -- Zeile
+		burst_count			: natural range 0 to BURST_PER_FRAME_COUNT; -- Wie viele Bursts können gestartet werden
+		burst_done_count	: natural range 0 to BURST_PER_FRAME_COUNT; -- Wie viele Bursts sind fertig
+		frame_done			: std_logic;                                -- Bild ist fertig übertragen
+		return_pgm			: std_logic;                                -- Programm kann weiter arbeiten
+		rd_pointer			: pix_addr_type;                            -- Adresse von der gelesen wird
+		clear_running		: std_logic;                                -- Bildschirm wird gelöscht
+		frame_stop			: std_logic;                                -- Bild von seiten der Kamera fertig übertragen
 	end record;
 
 	
@@ -91,7 +91,7 @@ architecture rtl of writeframe is
 begin
 
 	------------------------
-	---	ASync Daten bursten
+	---	ASync Daten Statelogic, Daten bursten
 	------------------------
 	comb : process(r,next_burst,dmao, rst,rd_data_burst,clear_screen,frame_stop,tx,ty,bx,by)
 	variable v 		: reg_type;
@@ -172,10 +172,12 @@ begin
 				end if;		
 				
 				led_red(1) <= '1';
-			when start_next_burst =>				
+			when start_next_burst =>	
+				-- wenn ein burst noch nicht abgebareitet ist => nächsten starten
 				if r.burst_count > r.burst_done_count then
 					v.state := data;
 				else
+					-- wenn fertig übertragen
 					if r.cur_line = SCREEN_H-1 and r.cur_col = SCREEN_W-1 then
 						v.state := done;
 					end if;
@@ -223,13 +225,14 @@ begin
 			if 	((r.cur_line = ty or r.cur_line = by) and (r.cur_col >= tx and r.cur_col < bx)) or
 				((r.cur_col = tx or r.cur_col = bx) and (r.cur_line >= ty and r.cur_line < by)) then
 				v.wdata := "00000000000000001111111100000000";
+			-- sonst daten vom ram ausgeben
 			else
 				v.wdata := "00000000" & rd_data_burst;
 			end if;
 		end if;
 		
 		-- Werte auf Interface zu Bus legen
-		dmai.wdata  <=  v.wdata; --"00000000000000001111111100000000";
+		dmai.wdata  <=  v.wdata;
 	    dmai.burst  <= '1';
 	    dmai.irq    <= '0';
 	    dmai.size   <= "10";
@@ -242,8 +245,6 @@ begin
 	    return_pgm <= r.return_pgm;
 	    
 	    rd_address_burst <= r.rd_pointer;
-	    
-	    --led_red(11 downto 0) <= std_logic_vector(to_unsigned(r.burst_count, 12));
 	   
 	    led_red(4) <= r.frame_done;
 	    led_red(5) <= r.clear_running;
