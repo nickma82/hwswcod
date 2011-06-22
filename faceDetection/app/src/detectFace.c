@@ -6,6 +6,7 @@
 #include "test.h"
 #include "getframe.h"
 #include "svga.h"
+#include "dis7seg.h"
 
 #define STEP_SIZE 10
 
@@ -17,24 +18,36 @@ rect_t faceDetection(image_t* inputImage, bwimage_t* temp, bwimage_t* temp2) {
 
 	// perform face detection
 	skinFilter(inputImage, temp);
-	//svga_outputBwImage(temp, 640, 0);
+		#ifdef BW
+			svga_outputBwImage(temp, 640, 0);
+		#endif // BW
 
 	// nächste frame von der kamera holen
-	//#ifndef TEST
-	//	//getframe_wait_return();
-	//	GETFRAME_START = 1;
-	//#endif
+	#ifndef TEST
+		GETFRAME_START = 1;
+	#endif // TEST
 
 	erodeFilter(temp, temp2);
-	//svga_outputBwImage(temp2, 640, 480 >> SCALE_SHIFT);
+		#ifdef BW
+			svga_outputBwImage(temp2, 640, 480 >> SCALE_SHIFT);
+		#endif // BW
 	dilateFilter(temp2, temp);
-	//svga_outputBwImage(temp, 640, 2 * (480 >> SCALE_SHIFT));
+		#ifdef BW
+			svga_outputBwImage(temp, 640, 2 * (480 >> SCALE_SHIFT));
+		#endif // BW
+
 	face = detectFace(temp);
+
+	//dis7seg_hex(face.topLeftX << 24 | face.topLeftY << 16 | face.bottomRightX << 8 | face.bottomRightY);
 
 	face.bottomRightX *= SCALE;
 	face.bottomRightY *= SCALE;
 	face.topLeftX *= SCALE;
 	face.topLeftY *= SCALE;
+
+	#ifdef TEST
+		printf("Selected rect: (x1 y1 x2 y2) = (%d %d %d %d)\n", face.topLeftX, face.topLeftY, face.bottomRightX, face.bottomRightY);
+	#endif // TEST
 
 	return face;
 }
@@ -158,7 +171,6 @@ rect_t detectFace(bwimage_t *faceMask)
 		} else {
 			resultRect.bottomRightX = resultRect.topLeftX + height;
 		}
-		//printf("Selected rect: topLeft=(%d, %d), bottomRight=(%d, %d)\n", resultRect.topLeftX, resultRect.topLeftY, resultRect.bottomRightX, resultRect.bottomRightY);
 	}
 
 	return resultRect;
@@ -173,6 +185,8 @@ int getIndexBelowThreshold(int *hist, int histLen, int start, int step, int thre
 			break;
 		}
 	}
+	if (result == start)
+		result = step > 0 ? histLen-1 : 0;
 
 	return result;
 }

@@ -214,7 +214,7 @@ begin
 	------------------------
 	---	ASync Core Ext Interface Daten übernehmen und schreiben
 	------------------------
-	comb : process(r, exti, extsel, rstint,frame_done,return_pgm,line_ready, next_burst,clear_done,pix_count)
+	comb : process(r, exti, extsel, rstint,frame_done,return_pgm,line_ready, next_burst,clear_done)
 	variable v 		: reg_type;
 	begin
     	v := r;
@@ -247,14 +247,14 @@ begin
     					v.frame_done := '0';
     				end if;
 				when "010" =>
-					v.tx := to_integer(unsigned(exti.data(31 downto 16)))-1;
-					v.ty := to_integer(unsigned(exti.data(15 downto 0)))-1;
+					v.tx := to_integer(unsigned(exti.data(31 downto 16)));
+					v.ty := to_integer(unsigned(exti.data(15 downto 0)));
     			when "011" =>
     				v.clear_screen := '1';
     				v.clear_done := '0';
 				when "100" =>
-					v.bx := to_integer(unsigned(exti.data(31 downto 16)))-1;
-					v.by := to_integer(unsigned(exti.data(15 downto 0)))-1;
+					v.bx := to_integer(unsigned(exti.data(31 downto 16)));
+					v.by := to_integer(unsigned(exti.data(15 downto 0)));
    			when others =>
 					null;
 			end case;
@@ -276,9 +276,6 @@ begin
     				if ((exti.byte_en(2) = '1')) then
     					exto.data(23 downto 16) <=  "0000000" & r.frame_done;
     				end if;
-    			when "010" =>
-    				exto.data(19 downto 0) <= pix_count(19 downto 0);
-    				exto.data(31 downto 20) <= (others =>'0');
     			when "011" =>
     				if ((exti.byte_en(0) = '1')) then
     					exto.data(7 downto 0) <= "0000000" & r.clear_done;

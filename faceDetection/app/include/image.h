@@ -9,14 +9,14 @@
 #define IMAGE_DATA_MAXVAL	31
 #define IMAGE_DATA_BITS		5
 
-#define SCALE_SHIFT 2
-#define SCALE 4
+#define SCALE_SHIFT 3
+#define SCALE 8
 
 typedef struct {
-	int topLeftX;
-	int topLeftY;
-	int bottomRightX;
-	int bottomRightY;
+	uint16_t topLeftX;
+	uint16_t topLeftY;
+	uint16_t bottomRightX;
+	uint16_t bottomRightY;
 } rect_t;
 
 typedef struct {

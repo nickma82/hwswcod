@@ -33,6 +33,10 @@ ifeq ($(SENDIMG), 1)
   CFLAGS+=-DSENDIMG
 endif
 
+ifeq ($(BW), 1)
+  CFLAGS+=-DBW
+endif
+
 all: $(SOURCES) $(PROGRAM)
 
 $(PROGRAM): $(OBJECTS)

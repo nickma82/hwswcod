@@ -104,31 +104,32 @@ int main(int argc, char **argv) {
 	filesize = write(serialfd, imageData, filesize);
 	free(imageData);
 
-	// downloading image
-	f = fopen(argv[2], "r");
-	if (!f) {
-		printf("Image file <%s> not found\n", argv[2]);
-		exit(1);
-	}
-	fseek(f, 0, SEEK_END);
-	filesize = ftell(f);
-	fseek(f, 0, SEEK_SET);
-	imageData = (unsigned char *)malloc(filesize);
-	fread(imageData, 1, filesize, f);
-	fclose(f);
-
-	// wait until program has been started on target
-	sleep(2);
-
-	printf("Downloading image \"%s\", filesize: %d bytes.\n", argv[2], filesize);
-
 	#ifdef TEST
+		// downloading image
+		f = fopen(argv[2], "r");
+		if (!f) {
+			printf("Image file <%s> not found\n", argv[2]);
+			exit(1);
+		}
+		fseek(f, 0, SEEK_END);
+		filesize = ftell(f);
+		fseek(f, 0, SEEK_SET);
+		imageData = (unsigned char *)malloc(filesize);
+		fread(imageData, 1, filesize, f);
+		fclose(f);
+
+		// wait until program has been started on target
+		sleep(2);
+	
+		printf("Downloading image \"%s\", filesize: %d bytes.\n", argv[2], filesize);
+
 		// send image file size
 		write(serialfd, &filesize, sizeof(filesize));
 		// send image data
 		write(serialfd, imageData, filesize);
-	#endif
-	free(imageData);
+		
+		free(imageData);
+	#endif // TEST
 
 	options.c_lflag |= (ICANON);
 	options.c_cc[VMIN] = 0;

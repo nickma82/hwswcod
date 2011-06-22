@@ -1,4 +1,6 @@
 20110501 - nick
+===============
+
 ##### Log zum Aufzeichnen von Vergleichswerten #####
 ##### Erster program upload: 
 "testimages/armstrong_mini.tga"
@@ -33,3 +35,17 @@ make -f spears32-Makefile
 ##### Documentation #####
 -) speqars 32 Header File location:
 	/opt/spear2_toolchain/spear32/include/drivers
+
+
+20110622 - Markus
+=================
+
+SCALE 4:
+arm: 344 100 484 300 (-1678)
+ald: 152 48 400 312  (-6094)
+col: 324 160 428 272 (-1559)
+
+SCALE 8:
+arm: 344 96 480 288  (-1278)
+ald: 168 72 368 272  (-2804)
+col: 320 152 424 280 (-1748)

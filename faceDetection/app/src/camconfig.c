@@ -3,7 +3,7 @@
 #include "svga.h"
 #include "image.h"
 #include "getframe.h"
-
+#include "dis7seg.h"
 #include "drivers.h"
 #include "image.h"
 
@@ -70,18 +70,6 @@ void restart_cam() {
 }
 
 void write_gain() {
-	// GAIN
-
-	//write_cam(0x2C,0x9A);
-	//write_cam(0x2D,0x19C);
-	//write_cam(0x2B,0x13);
-	//write_cam(0x2E,0x13);
-
-	// ganz gut: write_cam(0x2B, (0<<8)|(0<<6)|(0x13)); //Green
-	// ganz gut: write_cam(0x2E, (0<<8)|(0<<6)|(0x13)); //Green Reset
-	// ganz gut: write_cam(0x2D, (6<<8)|(0<<6)|(0xF)); //Red Reset
-	// ganz gut: write_cam(0x2C, (5<<8)|(0<<6)|(0xF)); //Blue Reset
-
 	write_cam(0x2B, (gain_g.dg<<8) | (gain_g.am<<6) | (gain_g.ag)); //Green1 GAIN
 	write_cam(0x2E, (gain_g.dg<<8) | (gain_g.am<<6) | (gain_g.ag)); //Green2 GAIN
 	write_cam(0x2D, (gain_r.dg<<8) | (gain_r.am<<6) | (gain_r.ag)); //Red GAIN
@@ -94,7 +82,6 @@ float calculate_gain(gain_t *gain) {
 
 void adjust_gain(gain_t *current_gain, uint8_t current_color, uint8_t desired_color) {
 	// Gain Faktoren anpassen
-	//float cur_gain = calculate_gain(current_gain);
  	float new_gain = ((float)desired_color/current_color);
 
 	// Werte laut Empfehlungen von Tabelle im Datenblatt Seite 47
@@ -113,7 +100,6 @@ void adjust_gain(gain_t *current_gain, uint8_t current_color, uint8_t desired_co
 		current_gain->am = 1;
 		current_gain->ag = 32;
 	}
-	//printf("farbe %u:neue gain werte am=%u ,ag=%u ,dg=%u\n",(unsigned int)current_color,(unsigned int)current_gain->am,(unsigned int)current_gain->ag,(unsigned int)current_gain->dg);
 }
 
 void calibrate_cam() {
@@ -126,6 +112,7 @@ void calibrate_cam() {
 
 	// 100 Frames einlesen
 	for (i = 0; i < 100; i++) {
+		dis7seg_uint32(i);
 		GETFRAME_START = 1;
 		getframe_wait_return();
 	}
@@ -176,20 +163,9 @@ void setup_cam() {
 	// shutter width lower
 	//write_cam(0x09, 1000);
 
-	//write_gain();
-
 	// row and column skiping => 640x480 res
 	write_cam(0x22, 0x03);
 	write_cam(0x23, 0x03);
-	/*
-	// testbild
-	write_cam(0xA1, 0x0); // Grün
-	write_cam(0xA2, 0xFFF); // Rot
-	write_cam(0xA3, 0x0); // Blau
-	write_cam(0xA0, (0 << 4) | 1);
-	*/
-	//write_cam(0xA4, 123);
-	write_cam(0xA0, 0); //Test pattern contrl
 
 	// mirror der rows
 	write_cam(0x20, 1 << 15);
