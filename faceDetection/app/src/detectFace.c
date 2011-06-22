@@ -92,9 +92,7 @@ rect_t detectFace(bwimage_t *faceMask)
 
 	for (y = 0; y < faceMask->height; y++) {
 		for (x = 0; x < faceMask->width; x++) {
-			uint32_t p = x;
-			uint32_t pp = 1 << (IMAGE_DATA_MAXVAL - (p & IMAGE_DATA_MAXVAL)); // pixelposition
-			p >>= IMAGE_DATA_BITS;
+			bwimage_pixelPosition(x);
 			if (faceMask->data[y][p] & pp) {
 				histX[x]++;
 				histY[y]++;

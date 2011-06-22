@@ -11,8 +11,8 @@ const uint8_t color_white = FOREGROUND_COLOR;
 const uint8_t color_black = BACKGROUND_COLOR;
 
 void bwimage_init(image_t *template, bwimage_t *image) {
-	image->width = template->width/SCALE;
-	image->height = template->height/SCALE;
+	image->width = template->width / SCALE;
+	image->height = template->height / SCALE;
 }
 
 void image_setPixelValue(image_t *i, int x, int y, rgb_color_t cl) {
@@ -47,28 +47,31 @@ void image_paintRectangle(image_t *image, rect_t rectangle) {
 }
 
 #ifdef SENDIMG
+	/**
+	 * Make copy of current screen and send via serial line to PC.
+	**/
 	void sendFrameBuffer(const char *targetPath) {
-			uint32_t x,y;
-			rgb_color_t col;
-			image_t outImg;
+		uint32_t x,y;
+		rgb_color_t col;
+		image_t outImg;
 
-			outImg.width = SCREEN_WIDTH;
-			outImg.height = SCREEN_HEIGHT;
-			outImg.dataLength = 3 * SCREEN_WIDTH * SCREEN_HEIGHT;
-			outImg.data = (unsigned char *)(SDRAM_BASE+sdramBytesAllocated);
+		outImg.width = SCREEN_WIDTH;
+		outImg.height = SCREEN_HEIGHT;
+		outImg.dataLength = 3 * SCREEN_WIDTH * SCREEN_HEIGHT;
+		outImg.data = (unsigned char *)(SDRAM_BASE+sdramBytesAllocated);
 
-			sdramBytesAllocated += outImg.dataLength;
+		sdramBytesAllocated += outImg.dataLength;
 
-			for (y = 0; y < SCREEN_HEIGHT; y++) {
-				for (x = 0; x < SCREEN_WIDTH; x++) {
-					col.r = (uint8_t)((screenData[y*SCREEN_WIDTH+x] & 0x00FF0000)>>16);
-					col.g = (uint8_t)((screenData[y*SCREEN_WIDTH+x] & 0x0000FF00)>>8);
-					col.b = (uint8_t)(screenData[y*SCREEN_WIDTH+x] & 0x000000FF);
-					image_setPixelValue(&outImg, x, y, col);
-					//printf("(%3u,%2u): %8X \n",(unsigned int)x,(unsigned int)y,(unsigned int));
-				}
+		for (y = 0; y < SCREEN_HEIGHT; y++) {
+			for (x = 0; x < SCREEN_WIDTH; x++) {
+				col.r = (uint8_t)((screenData[y*SCREEN_WIDTH+x] & 0x00FF0000) >> 16);
+				col.g = (uint8_t)((screenData[y*SCREEN_WIDTH+x] & 0x0000FF00) >> 8);
+				col.b = (uint8_t)((screenData[y*SCREEN_WIDTH+x] & 0x000000FF));
+				image_setPixelValue(&outImg, x, y, col);
+				//printf("(%3u,%2u): %8X \n",(unsigned int)x,(unsigned int)y,(unsigned int));
 			}
-			test_sendImage(&outImg, targetPath);
+		}
+		test_sendImage(&outImg, targetPath);
 	}
 #endif
 

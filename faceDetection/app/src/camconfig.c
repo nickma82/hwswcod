@@ -38,7 +38,6 @@ uint8_t write_cam(uint8_t address, uint16_t data);
 void restart_cam(void);
 void calibrate_cam(void);
 void write_gain(void);
-float calculate_gain(gain_t *gain);
 void adjust_gain(gain_t *current_gain, uint8_t current_color, uint8_t desired_color);
 
 gain_t gain_r, gain_g, gain_b;
@@ -74,10 +73,6 @@ void write_gain() {
 	write_cam(0x2E, (gain_g.dg<<8) | (gain_g.am<<6) | (gain_g.ag)); //Green2 GAIN
 	write_cam(0x2D, (gain_r.dg<<8) | (gain_r.am<<6) | (gain_r.ag)); //Red GAIN
 	write_cam(0x2C, (gain_b.dg<<8) | (gain_b.am<<6) | (gain_b.ag)); //Blue GAIN
-}
-
-float calculate_gain(gain_t *gain) {
-	return (1+(float)gain->am)*(gain->ag/8.0f)*(1+(gain->dg/8.0f));
 }
 
 void adjust_gain(gain_t *current_gain, uint8_t current_color, uint8_t desired_color) {

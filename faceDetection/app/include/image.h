@@ -41,7 +41,7 @@ typedef struct {
 typedef struct {
 	uint16_t width;
 	uint16_t height;
-	uint32_t data[480][20];
+	uint32_t data[IMAGE_HEIGHT][IMAGE_WIDTH / (8 * sizeof(uint32_t))];
 } bwimage_t;
 
 #define BACKGROUND_COLOR 0
@@ -54,6 +54,11 @@ void image_setPixelValue(image_t *i, int x, int y, rgb_color_t cl);
 void image_paintRectangle(image_t *image, rect_t rectangle);
 
 void bwimage_init(image_t *template, bwimage_t *image);
+
+#define bwimage_pixelPosition(x) \
+		uint32_t p = x; \
+		uint32_t pp = 1 << (IMAGE_DATA_MAXVAL - (p & IMAGE_DATA_MAXVAL)); \
+		p >>= IMAGE_DATA_BITS
 
 #ifdef SENDIMG
 	void sendFrameBuffer(const char *targetPath);
