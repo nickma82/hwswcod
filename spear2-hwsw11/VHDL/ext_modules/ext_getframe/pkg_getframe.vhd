@@ -50,7 +50,7 @@ package pkg_getframe is
 	
 	-- PIXEL definitions
 	constant PIXEL_WIDTH				: natural := 24; 
-	constant PIXEL_ADDR_WIDTH			: natural := 14; 
+	constant PIXEL_ADDR_WIDTH			: natural := 12; 
 	constant BURST_BUFFER_LENGTH		: natural := (2**PIXEL_ADDR_WIDTH)/BURST_PIXEL_COUNT;
 	
 		
